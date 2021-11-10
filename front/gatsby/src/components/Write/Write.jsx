@@ -3,6 +3,7 @@ import { connect, useDispatch } from 'react-redux'
 import 'codemirror/mode/markdown/markdown'
 import { Controlled as CodeMirror } from 'react-codemirror2'
 import throttle from 'lodash/throttle'
+import debounce from 'lodash/debounce'
 
 import askGraphQL from '../../helpers/graphQL'
 import styles from './write.module.scss'
@@ -12,16 +13,13 @@ import WriteRight from './WriteRight'
 import Compare from './Compare'
 import CompareSelect from './CompareSelect'
 import Loading from '../Loading'
-
-import useDebounce from '../../hooks/debounce'
 import 'codemirror/lib/codemirror.css'
-import VersionService from "../../services/VersionService";
 
-const mapStateToProps = ({ activeUser, applicationConfig }) => {
-  return { activeUser, applicationConfig }
+const mapStateToProps = ({ activeUser, article, articleVersions, applicationConfig }) => {
+  return { activeUser, article, articleVersions, applicationConfig }
 }
 
-function ConnectedWrite ({ version: currentVersion, id: articleId, compareTo, activeUser, applicationConfig }) {
+function ConnectedWrite ({ version: currentVersion, id: articleId, compareTo, activeUser, article, articleVersions: versions, applicationConfig }) {
   const [readOnly, setReadOnly] = useState(Boolean(currentVersion))
   const dispatch = useDispatch()
   const deriveArticleStructureAndStats = useCallback(
@@ -31,7 +29,24 @@ function ConnectedWrite ({ version: currentVersion, id: articleId, compareTo, ac
     }, 250, { leading: false, trailing: true }),
     []
   )
-  const versionService = new VersionService(activeUser._id, articleId, applicationConfig)
+  const updateArticleText = useCallback(
+    debounce(({ md }) => {
+      dispatch({
+        type: 'UPDATE_CURRENT_ARTICLE_TEXT',
+        text: md,
+      })
+    }, 1000),
+    []
+  )
+  const updateArticleMetadata = useCallback(
+    debounce(({ yaml }) => {
+      dispatch({
+        type: 'UPDATE_CURRENT_ARTICLE_METADATA',
+        metadata: yaml,
+      })
+    }, 1000),
+    []
+  )
 
   const fullQuery = `query($article:ID!, $hasVersion: Boolean!, $version:ID!) {
     article(article:$article) {
@@ -104,8 +119,6 @@ function ConnectedWrite ({ version: currentVersion, id: articleId, compareTo, ac
 
   const [graphqlError, setError] = useState()
   const [isLoading, setIsLoading] = useState(true)
-  const [live, setLive] = useState({})
-  const [versions, setVersions] = useState([])
   const [articleInfos, setArticleInfos] = useState({
     title: '',
     owners: [],
@@ -127,67 +140,40 @@ function ConnectedWrite ({ version: currentVersion, id: articleId, compareTo, ac
     },
   }
 
-  const handleSaveVersion = useCallback(async (autosave = true, major = false, message = '') => {
-    await sendVersion(autosave, major, message)
-  }, [live, versions, activeUser, articleId, currentVersion])
-
-  const sendVersion = async (autosave = true, major = false, message = '') => {
-    try {
-      const response = await askGraphQL(
-        {
-          query: saveVersionQuery,
-          variables: { ...variables, ...live, autosave, major, message },
-        },
-        'saving new version',
-        null,
-        applicationConfig
-      )
-      if (versions[0]._id !== response.saveVersion._id) {
-        setVersions([response.saveVersion, ...versions])
-      } else {
-        //Last version had same _id, we gucchi to update!
-        const immutableV = [...versions]
-        //shift the first item of the array
-        const [_, ...rest] = immutableV
-        setVersions([response.saveVersion, ...rest])
-      }
-      return response
-    } catch (err) {
-      console.error('Something went wrong while saving a new version', err)
-      alert(err)
-    }
-  }
-
-  //Autosave debouncing on the live
+  // Autosave debouncing on the live
   // TODO: Do not save when opening
-  const debouncedLive = useDebounce(live, 1000)
+  // const debouncedLive = useDebounce(live, 1000)
   useEffect(() => {
     if (!readOnly && !isLoading && !firstLoad) {
+      /*
       dispatch({
         type: 'UPDATE_CURRENT_ARTICLE_VERSION',
-        updateCurrentArticleVersion: {
-          userId: activeUser._id,
-          articleId,
-          applicationConfig,
-          md: live.md,
-          bib: live.bib,
-          yaml: live.yaml
-        }
+        md: live.md,
+        bib: live.bib,
+        yaml: live.yaml
       })
+       */
     } else if (!readOnly && !isLoading) {
       setFirstLoad(false)
     } else {
       setFirstLoad(true)
     }
-  }, [debouncedLive])
+  }, [])
 
   const handleMDCM = async (___, __, md) => {
     deriveArticleStructureAndStats({ md })
-
-    await setLive({ ...live, md: md })
+    dispatch({
+      type: 'SET_CURRENT_ARTICLE_TEXT',
+      text: md,
+    })
+    updateArticleText({ md })
   }
   const handleYaml = async (yaml) => {
-    await setLive({ ...live, yaml: yaml })
+    dispatch({
+      type: 'SET_CURRENT_ARTICLE_METADATA',
+      text: md,
+    })
+    updateArticleMetadata({ yaml })
   }
 
   //Reload when version switching
@@ -209,21 +195,28 @@ function ConnectedWrite ({ version: currentVersion, id: articleId, compareTo, ac
       if (data?.article) {
         const article = data.article
         const version = currentVersion ? data.version : article.live
-        setLive(version)
+        console.log({version})
+        dispatch({
+          type: 'UPDATE_CURRENT_ARTICLE',
+          article: {
+            ...version,
+            _id: article._id,
+            title: article.title,
+          },
+        })
         setArticleInfos({
           _id: article._id,
           title: article.title,
           zoteroLink: article.zoteroLink,
           owners: article.owners.map((o) => o.displayName),
         })
-
-        setVersions(article.versions)
-
         const md = version.md
         const bib = version.bib
+        // REMIND: we should use a `batch` to combine (and avoid multiple re-render)
         dispatch({ type: 'UPDATE_ARTICLE_STATS', md })
         dispatch({ type: 'UPDATE_ARTICLE_STRUCTURE', md })
         dispatch({ type: 'UPDATE_ARTICLE_BIB', bib })
+        dispatch({ type: 'SET_ARTICLE_VERSIONS', versions: article.versions })
       }
 
       setIsLoading(false)
@@ -248,24 +241,22 @@ function ConnectedWrite ({ version: currentVersion, id: articleId, compareTo, ac
   return (
     <section className={styles.container}>
       <WriteLeft
-        bib={live.bib}
+        bib={article.bib}
         article={articleInfos}
-        md={live.md}
-        version={live.version}
-        revision={live.revision}
-        versionId={live._id}
+        md={article.md}
+        version={article.version}
+        revision={article.revision}
+        versionId={article._id}
         compareTo={compareTo}
         selectedVersion={currentVersion}
-        versions={versions}
         readOnly={readOnly}
-        sendVersion={handleSaveVersion}
         onTableOfContentClick={handleUpdateCursorPosition}
       />
-      <WriteRight {...live} handleYaml={handleYaml} readOnly={readOnly}/>
+      <WriteRight {...article} handleYaml={handleYaml} readOnly={readOnly}/>
       {compareTo && (
         <CompareSelect
           compareTo={compareTo}
-          live={live}
+          live={article}
           versions={versions}
           readOnly={readOnly}
           article={articleInfos}
@@ -275,10 +266,10 @@ function ConnectedWrite ({ version: currentVersion, id: articleId, compareTo, ac
 
       <article className={styles.article}>
         <>
-          {readOnly && <pre>{live.md}</pre>}
+          {readOnly && <pre>{article.md}</pre>}
           {!readOnly && (
             <CodeMirror
-              value={live.md}
+              value={article.md}
               cursor={{ line: 0, character: 0 }}
               editorDidMount={(_) => {
                 window.scrollTo(0, 0)
@@ -289,7 +280,7 @@ function ConnectedWrite ({ version: currentVersion, id: articleId, compareTo, ac
               ref={instanceCM}
             />
           )}
-          {compareTo && <Compare compareTo={compareTo} live={live}/>}
+          {compareTo && <Compare compareTo={compareTo} live={article}/>}
         </>
       </article>
     </section>

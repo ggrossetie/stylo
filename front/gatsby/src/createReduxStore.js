@@ -18,7 +18,9 @@ const initialState = {
   users: [],
   password: undefined,
   sessionToken: undefined,
+  article: {},
   articleStructure: [],
+  articleVersions: [],
   articleStats: {
     wordCount: 0,
     charCountNoSpace: 0,
@@ -43,23 +45,58 @@ const reducer = createReducer(initialState, {
   UPDATE_ARTICLE_STRUCTURE: updateArticleStructure,
   UPDATE_ARTICLE_BIB: updateArticleBib,
 
+  UPDATE_CURRENT_ARTICLE: setCurrentArticle,
+  SET_CURRENT_ARTICLE_TEXT: setCurrentArticleText,
+  SET_CURRENT_ARTICLE_METADATA: setCurrentArticleMetadata,
+
   SET_ARTICLE_VERSIONS: setArticleVersions
 })
+
+const updateCurrentVersion = async function(versionService, md, bib, yaml, articleVersions, store) {
+  console.log('versionService.updateCurrentVersion')
+  const response = await versionService.updateCurrentVersion(md, bib, yaml)
+  // Last version had same _id, we gucchi to update!
+  const immutableVersions = [...articleVersions]
+  // shift the first item of the array
+  const [_, ...rest] = immutableVersions
+  // REMIND: we could dispatch a `SET_CURRENT_ARTICLE_VERSION` instead
+  console.log('SET_ARTICLE_VERSIONS')
+  store.dispatch({ type: 'SET_ARTICLE_VERSIONS', versions: [response.saveVersion, ...rest] })
+}
 
 const updateCurrentArticleVersion = store => {
   return next => {
     return async (action) => {
-      if (action.type === 'UPDATE_CURRENT_ARTICLE_VERSION') {
-        const {userId,articleId ,applicationConfig, md, yaml, bib} = action.updateCurrentArticleVersion
-        const versionService = new VersionService(userId, articleId, applicationConfig);
-        const response = await versionService.updateCurrentVersion(md, bib, yaml)
-        // Last version had same _id, we gucchi to update!
-        const immutableVersions = [...versions]
-        // shift the first item of the array
-        const [_, ...rest] = immutableVersions
-        setVersions([response.saveVersion, ...rest])
-        console.log(store)
-        console.log(action)
+      // QUESTION: should use the verb "save" or "persist" (i.e., save changes into the database)
+      if (action.type === 'UPDATE_CURRENT_ARTICLE_TEXT') {
+        const { articleVersions, activeUser, article, applicationConfig } = store.getState()
+        console.log({state: store.getState()})
+        const userId = activeUser._id
+        const articleId = article._id
+        const md = action.text
+        const { yaml, bib } = article
+        const versionService = new VersionService(userId, articleId, applicationConfig)
+        await updateCurrentVersion(versionService, md, bib, yaml, articleVersions, store)
+        return next(action)
+      } else  if (action.type === 'UPDATE_CURRENT_ARTICLE_METADATA') {
+        const { articleVersions, activeUser, article, applicationConfig } = store.getState()
+        const userId = activeUser._id
+        const articleId = article._id
+        const yaml = action.metadata
+        const { md, bib }  = article
+        const versionService = new VersionService(userId, articleId, applicationConfig)
+        await updateCurrentVersion(versionService, md, bib, yaml, articleVersions, store)
+        return next(action)
+      } else if (action.type === 'SAVE_NEW_VERSION') {
+        const { articleVersions, article, activeUser, applicationConfig } = store.getState()
+        console.log({state: store.getState()})
+        const userId = activeUser._id
+        const articleId = article._id
+        const { message, major } = action
+        const versionService = new VersionService(userId, articleId, applicationConfig)
+        const response = await versionService.saveNewVersion(article.md, article.bib, article.yaml, major, message)
+        // REMIND: we could dispatch a `SET_CURRENT_ARTICLE_VERSION` instead
+        store.dispatch({ type: 'SET_ARTICLE_VERSIONS', versions: [response.saveVersion, ...articleVersions] })
         return next(action)
       } else {
         return next(action)
@@ -216,6 +253,27 @@ function updateArticleBib(state, { bib }) {
 
 function setArticleVersions(state, { versions }) {
   return { ...state, articleVersions: versions }
+}
+
+function setCurrentArticleText(state, { text }) {
+  return {
+    ...state,
+    article: { ...state.article, md: text }
+  }
+}
+
+function setCurrentArticleMetadata(state, { metadata }) {
+  return {
+    ...state,
+    article: { ...state.article, yaml: metadata }
+  }
+}
+
+function setCurrentArticle(state, { article }) {
+  return {
+    ...state,
+    article
+  }
 }
 
 export default () => createStore(

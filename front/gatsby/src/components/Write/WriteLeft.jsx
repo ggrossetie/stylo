@@ -9,7 +9,7 @@ import Versions from './Versions'
 
 const mapStateToProps = ({ articleStats }) => ({ articleStats })
 
-function WriteLeft ({ bib, article, md, articleStats, readOnly, versions, version, revision, compareTo, versionId, selectedVersion, sendVersion, onTableOfContentClick }) {
+function WriteLeft ({ bib, article, md, articleStats, readOnly, version, revision, compareTo, versionId, selectedVersion, sendVersion, onTableOfContentClick }) {
   const [expanded, setExpanded] = useState(true)
 
   return (
@@ -28,12 +28,10 @@ function WriteLeft ({ bib, article, md, articleStats, readOnly, versions, versio
           </header>
           <Versions
             article={article}
-            versions={versions}
             readOnly={readOnly}
             version={version}
             revision={revision}
             versionId={versionId}
-            sendVersion={sendVersion}
             selectedVersion={selectedVersion}
             compareTo={compareTo}
           />

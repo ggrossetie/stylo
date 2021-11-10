@@ -34,6 +34,7 @@ export default class VersionService {
   }
 
   async updateCurrentVersion (md, bib, yaml) {
+    console.log(`Updating current version on article id: ${this.articleId} (userId: ${this.userId})...`)
     return await askGraphQL(
       {
         query: saveVersionQuery,
@@ -55,6 +56,7 @@ export default class VersionService {
   }
 
   async saveNewVersion (md, bib, yaml, major = false, message = '') {
+    console.log(`Saving a new version on article id: ${this.articleId} (userId: ${this.userId})...`)
     return await askGraphQL(
       {
         query: saveVersionQuery,

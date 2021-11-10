@@ -7,7 +7,7 @@ import buttonStyles from '../button.module.scss'
 
 import Modal from '../Modal'
 import Export from '../Export'
-import { connect } from 'react-redux'
+import { connect, useDispatch } from 'react-redux'
 
 import { ChevronDown, ChevronRight, Save } from 'react-feather'
 import Button from '../Button'
@@ -55,11 +55,11 @@ Date.prototype.formatMMDDYYYY = function () {
   )
 }
 
-const mapStateToProps = ({ applicationConfig }) => {
-  return { applicationConfig }
+const mapStateToProps = ({ articleVersions }) => {
+  return { articleVersions }
 }
 
-const Versions = ({ article, versions, readOnly, version, revision, versionId, sendVersion, selectedVersion, compareTo }) => {
+const Versions = ({ article, readOnly, version, revision, versionId, selectedVersion, compareTo, articleVersions: versions }) => {
   //Default if live
   let expVar = {
     article: true,
@@ -80,6 +80,7 @@ const Versions = ({ article, versions, readOnly, version, revision, versionId, s
       revision: revision,
     }
   }
+  const dispatch = useDispatch()
 
   const [message, setMessage] = useState('')
   const [expand, setExpand] = useState(true)
@@ -92,7 +93,7 @@ const Versions = ({ article, versions, readOnly, version, revision, versionId, s
 
   const saveVersion = async (e, major = false) => {
     e.preventDefault()
-    await sendVersion(false, major, message)
+    dispatch({ type: 'SAVE_NEW_VERSION', articleId: article._id, message, major })
     setMessage('')
     setExpandSaveForm(false)
   }
