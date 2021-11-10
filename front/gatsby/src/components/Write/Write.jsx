@@ -15,6 +15,7 @@ import Loading from '../Loading'
 
 import useDebounce from '../../hooks/debounce'
 import 'codemirror/lib/codemirror.css'
+import VersionService from "../../services/VersionService";
 
 const mapStateToProps = ({ activeUser, applicationConfig }) => {
   return { activeUser, applicationConfig }
@@ -30,6 +31,7 @@ function ConnectedWrite ({ version: currentVersion, id: articleId, compareTo, ac
     }, 250, { leading: false, trailing: true }),
     []
   )
+  const versionService = new VersionService(activeUser._id, articleId, applicationConfig)
 
   const fullQuery = `query($article:ID!, $hasVersion: Boolean!, $version:ID!) {
     article(article:$article) {
@@ -125,31 +127,6 @@ function ConnectedWrite ({ version: currentVersion, id: articleId, compareTo, ac
     },
   }
 
-  const saveVersionQuery = `mutation($user: ID!, $article: ID!, $md: String!, $bib: String!, $yaml: String!, $autosave: Boolean!, $major: Boolean!, $message: String) {
-  saveVersion(
-    version: {
-      article: $article,
-      major: $major,
-      auto: $autosave,
-      md: $md,
-      yaml: $yaml,
-      bib: $bib,
-      message: $message
-    },
-    user: $user
-  ) { 
-    _id 
-    version
-    revision
-    message
-    autosave
-    updatedAt
-    owner { 
-      displayName
-    }
-  }
-}`
-
   const handleSaveVersion = useCallback(async (autosave = true, major = false, message = '') => {
     await sendVersion(autosave, major, message)
   }, [live, versions, activeUser, articleId, currentVersion])
@@ -186,7 +163,17 @@ function ConnectedWrite ({ version: currentVersion, id: articleId, compareTo, ac
   const debouncedLive = useDebounce(live, 1000)
   useEffect(() => {
     if (!readOnly && !isLoading && !firstLoad) {
-      sendVersion(true, false, 'Current version')
+      dispatch({
+        type: 'UPDATE_CURRENT_ARTICLE_VERSION',
+        updateCurrentArticleVersion: {
+          userId: activeUser._id,
+          articleId,
+          applicationConfig,
+          md: live.md,
+          bib: live.bib,
+          yaml: live.yaml
+        }
+      })
     } else if (!readOnly && !isLoading) {
       setFirstLoad(false)
     } else {

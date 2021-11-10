@@ -49,6 +49,7 @@
     "@babel/preset-react": "^7.13.13",
     "@snowpack/plugin-react-refresh": "^2.5.0",
     "@snowpack/plugin-sass": "^1.4.0",
+    "@welldone-software/why-did-you-render": "^6.2.1",
     "jest": "^26.4.2",
     "node-fetch": "^2.6.1",
     "prettier": "^2.3.0",

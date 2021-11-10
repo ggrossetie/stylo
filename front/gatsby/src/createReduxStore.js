@@ -1,5 +1,6 @@
 import { applyMiddleware, createStore } from 'redux'
 import { toEntries } from './helpers/bibtex'
+import VersionService from "./services/VersionService";
 
 function createReducer (initialState, handlers) {
   return function reducer (state = initialState, action) {
@@ -26,7 +27,7 @@ const initialState = {
   },
 }
 
-const reducer = createReducer([], {
+const reducer = createReducer(initialState, {
   APPLICATION_CONFIG: setApplicationConfig,
   PROFILE: setProfile,
   CLEAR_ZOTERO_TOKEN: clearZoteroToken,
@@ -41,8 +42,31 @@ const reducer = createReducer([], {
   UPDATE_ARTICLE_STATS: updateArticleStats,
   UPDATE_ARTICLE_STRUCTURE: updateArticleStructure,
   UPDATE_ARTICLE_BIB: updateArticleBib,
+
+  SET_ARTICLE_VERSIONS: setArticleVersions
 })
 
+const updateCurrentArticleVersion = store => {
+  return next => {
+    return async (action) => {
+      if (action.type === 'UPDATE_CURRENT_ARTICLE_VERSION') {
+        const {userId,articleId ,applicationConfig, md, yaml, bib} = action.updateCurrentArticleVersion
+        const versionService = new VersionService(userId, articleId, applicationConfig);
+        const response = await versionService.updateCurrentVersion(md, bib, yaml)
+        // Last version had same _id, we gucchi to update!
+        const immutableVersions = [...versions]
+        // shift the first item of the array
+        const [_, ...rest] = immutableVersions
+        setVersions([response.saveVersion, ...rest])
+        console.log(store)
+        console.log(action)
+        return next(action)
+      } else {
+        return next(action)
+      }
+    }
+  }
+}
 
 function setApplicationConfig (state, action) {
   const applicationConfig = {
@@ -71,7 +95,15 @@ function setProfile (state, action) {
   })
 }
 
-function clearZoteroToken (state) {
+function clearZoteroToken (state) {      if (versions[0]._id !== response.saveVersion._id) {
+        setVersions([response.saveVersion, ...versions])
+      } else {
+        //Last version had same _id, we gucchi to update!
+        const immutableV = [...versions]
+        //shift the first item of the array
+        const [_, ...rest] = immutableV
+        setVersions([response.saveVersion, ...rest])
+      }
   state.activeUser.zoteroToken = null
 
   return state
@@ -182,4 +214,11 @@ function updateArticleBib(state, { bib }) {
   return { ...state, articleBib: bib, articleBibTeXEntries }
 }
 
-export default () => createStore(reducer, initialState, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__())
+function setArticleVersions(state, { versions }) {
+  return { ...state, articleVersions: versions }
+}
+
+export default () => createStore(
+  reducer,
+  applyMiddleware(updateCurrentArticleVersion),
+  window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__())
