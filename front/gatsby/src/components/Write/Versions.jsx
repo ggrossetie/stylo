@@ -60,6 +60,7 @@ const mapStateToProps = ({ articleVersions }) => {
 }
 
 const Versions = ({ article, readOnly, version, revision, versionId, selectedVersion, compareTo, articleVersions: versions }) => {
+  console.log('<Versions>')
   //Default if live
   let expVar = {
     article: true,

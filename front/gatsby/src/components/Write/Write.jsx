@@ -124,7 +124,6 @@ function ConnectedWrite ({ version: currentVersion, id: articleId, compareTo, ac
     owners: [],
     zoteroLink: '',
   })
-  const [firstLoad, setFirstLoad] = useState(true)
 
   const codeMirrorOptions = {
     mode: 'markdown',
@@ -139,26 +138,6 @@ function ConnectedWrite ({ version: currentVersion, id: articleId, compareTo, ac
       },
     },
   }
-
-  // Autosave debouncing on the live
-  // TODO: Do not save when opening
-  // const debouncedLive = useDebounce(live, 1000)
-  useEffect(() => {
-    if (!readOnly && !isLoading && !firstLoad) {
-      /*
-      dispatch({
-        type: 'UPDATE_CURRENT_ARTICLE_VERSION',
-        md: live.md,
-        bib: live.bib,
-        yaml: live.yaml
-      })
-       */
-    } else if (!readOnly && !isLoading) {
-      setFirstLoad(false)
-    } else {
-      setFirstLoad(true)
-    }
-  }, [])
 
   const handleMDCM = async (___, __, md) => {
     deriveArticleStructureAndStats({ md })

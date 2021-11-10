@@ -56,12 +56,12 @@ const updateCurrentVersion = async function(versionService, md, bib, yaml, artic
   console.log('versionService.updateCurrentVersion')
   const response = await versionService.updateCurrentVersion(md, bib, yaml)
   // Last version had same _id, we gucchi to update!
-  const immutableVersions = [...articleVersions]
+  //const immutableVersions = [...articleVersions]
   // shift the first item of the array
-  const [_, ...rest] = immutableVersions
+  //const [_, ...rest] = immutableVersions
   // REMIND: we could dispatch a `SET_CURRENT_ARTICLE_VERSION` instead
   console.log('SET_ARTICLE_VERSIONS')
-  store.dispatch({ type: 'SET_ARTICLE_VERSIONS', versions: [response.saveVersion, ...rest] })
+  store.dispatch({ type: 'SET_ARTICLE_VERSIONS', versions: [response.saveVersion, ...articleVersions] })
 }
 
 const updateCurrentArticleVersion = store => {
@@ -252,6 +252,7 @@ function updateArticleBib(state, { bib }) {
 }
 
 function setArticleVersions(state, { versions }) {
+  console.log('setArticleVersions')
   return { ...state, articleVersions: versions }
 }
 
