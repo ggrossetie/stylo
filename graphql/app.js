@@ -137,20 +137,53 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 app.use(function (req, res, next) {
-  const jwtToken = req.headers.authorization
-    ? req.headers.authorization.replace(/^Bearer /, '')
-    : req.cookies['graphQL-jwt']
-
-  if (jwtToken) {
-    try {
-      req.user = jwt.verify(jwtToken, jwtSecret)
-      req.isAuth = true
-    } catch (error) {
-      return next(error)
-    }
+  console.log({ user: req.user })
+  const jwtToken = req.cookies['graphQL-jwt']
+  const result = jwt.verify(jwtToken, jwtSecret)
+  // TOKEN
+  const sessionValue = {
+    user: {
+      users: [[]],
+      unlock: '2020-09-16T08:21:19.436Z',
+      active: true,
+      _id: '5f61d0d22cfd2b3e20d68b43',
+      email: 'ggrossetie1@gmail.com',
+      username: 'ggrossetie1',
+      password: '$2a$10$x6Qo3O0noIuapBByBLqMqubD7e3gVFeqINhiNtM94NMGAcduodTny',
+      createdAt: '2020-09-16T08:46:10.342Z',
+      updatedAt: '2020-11-25T18:08:08.874Z',
+      __v: 2,
+    },
   }
+  const tokenValue = {
+    result: {
+      email: 'ggrossetie1@gmail.com',
+      usersIds: ['5f61d0d22cfd2b3e20d68b42'],
+      passwordId: '5f61d0d22cfd2b3e20d68b43',
+      admin: false,
+      session: true,
+      iat: 1638359526,
+    },
+  }
+  if (req.user) {
+    // we have a session!
+    return next()
+  }
+  const token =
+    req.headers.authorization && req.headers.authorization.split(' ')[1]
+  if (token) {
+    // assign session from the JWT token
+    jwt.verify(token, jwtSecret, (err, user) => {
+      if (err) {
+        return res.status(403).json({})
+      }
 
-  return next()
+      req.user = user
+      next()
+    })
+  } else {
+    res.status(401).json({})
+  }
 })
 
 app.get('/version', (req, res) => res.json({
