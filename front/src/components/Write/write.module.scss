@@ -25,3 +25,39 @@
   position: relative;
   height: 100%;
 }
+
+.editorActions {
+  gap: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.boldIcon {
+  cursor: pointer;
+  background-image: url('/images/bold.svg');
+  height: 2rem;
+  width: 2rem;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.interpunctIcon {
+  cursor: pointer;
+  height: 2rem;
+  width: 2rem;
+  font-size: 2rem;
+  align-items: center;
+  display: flex;
+  justify-content: center;
+}
+
+.italicIcon {
+  cursor: pointer;
+  background-image: url('/images/italic.svg');
+  height: 2rem;
+  width: 2rem;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}

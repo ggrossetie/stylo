@@ -13,11 +13,10 @@ import askGraphQL from '../../helpers/graphQL'
 import WriteLeft from './WriteLeft'
 import WriteRight from './WriteRight'
 import Compare from './Compare'
-import CompareSelect from './CompareSelect'
 import Loading from '../Loading'
 import { registerBibliographyCompletion } from "../../helpers/monacoEditor";
 
-function Write() {
+function Write () {
   const { version: currentVersion, id: articleId, compareTo } = useParams()
   const articleBibTeXEntries = useSelector(state => state.workingArticle.bibliography.entries)
   const userId = useSelector((state) => state.activeUser._id)
@@ -32,6 +31,127 @@ function Write() {
 
   function handleEditorDidMount (editor, monaco) {
     monacoRef.current = editor
+    editor.addAction({
+      // An unique identifier of the contributed action.
+      id: 'bold',
+
+      // A label of the action that will be presented to the user.
+      label: 'Bold',
+
+      // An optional array of keybindings for the action.
+      keybindings: [
+        monaco.KeyMod.chord(
+          monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_B,
+        )
+      ],
+
+      // A precondition for this action.
+      precondition: null,
+
+      // A rule to evaluate on top of the precondition in order to dispatch the keybindings.
+      keybindingContext: null,
+
+      contextMenuGroupId: 'navigation',
+
+      contextMenuOrder: 1.5,
+
+      // Method that will be executed when the action is triggered.
+      // @param editor The editor instance is passed in as a convenience
+      run: function (ed) {
+        alert("i'm running => " + ed.getPosition());
+      }
+    });
+    editor.addAction({
+      // An unique identifier of the contributed action.
+      id: 'italic',
+
+      // A label of the action that will be presented to the user.
+      label: 'Italic',
+
+      // An optional array of keybindings for the action.
+      keybindings: [
+        monaco.KeyMod.chord(
+          monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_I
+        )
+      ],
+
+      // A precondition for this action.
+      precondition: null,
+
+      // A rule to evaluate on top of the precondition in order to dispatch the keybindings.
+      keybindingContext: null,
+
+      contextMenuGroupId: 'navigation',
+
+      contextMenuOrder: 1.5,
+
+      // Method that will be executed when the action is triggered.
+      // @param editor The editor instance is passed in as a convenience
+      run: function (ed) {
+        console.log('getSelection.getPosition', ed.getSelection().getPosition())
+        console.log('getSelection.getPosition', ed.getPosition())
+        console.log('getSelection.getStartPosition', ed.getSelection().getStartPosition())
+        console.log('getSelection.getEndPosition', ed.getSelection().getEndPosition())
+        console.log('getSelection.getSelections', ed.getSelections())
+        const selections = ed.getSelections()
+        ed.setSelections(selections.map((selection) => {
+          editor.getModel().pushEditOperations([], [
+            {
+              range: new monaco.Range(selection.getStartPosition().lineNumber, selection.getStartPosition().column, selection.getStartPosition().lineNumber, selection.getStartPosition().column),
+              text: '**',
+              forceMoveMarkers: false
+            },
+            {
+              range: new monaco.Range(selection.getEndPosition().lineNumber, selection.getEndPosition().column, selection.getEndPosition().lineNumber, selection.getEndPosition().column),
+              text: '**',
+              forceMoveMarkers: false
+            }
+          ])
+          return selection
+            .setStartPosition(selection.getStartPosition().lineNumber, selection.getStartPosition().column + 2)
+            .setEndPosition(selection.getEndPosition().lineNumber, selection.getEndPosition().column + 2)
+          /*
+          editor.executeEdits('make-bold', [{
+            range: selection.getStartPosition(),
+            text: '**',
+          },
+            {
+              range: selection.getEndPosition(),
+              text: '**'
+            }
+          ])
+           */
+        }))
+      }
+    });
+    editor.addAction({
+      // An unique identifier of the contributed action.
+      id: 'interpunct',
+
+      // A label of the action that will be presented to the user.
+      label: 'Middle Dot',
+
+      // An optional array of keybindings for the action.
+      keybindings: [
+        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_M,
+      ],
+
+      // A precondition for this action.
+      precondition: null,
+
+      // A rule to evaluate on top of the precondition in order to dispatch the keybindings.
+      keybindingContext: null,
+
+      contextMenuGroupId: 'navigation',
+
+      contextMenuOrder: 1.5,
+
+      // Method that will be executed when the action is triggered.
+      // @param editor The editor instance is passed in as a convenience
+      run: function (ed) {
+        alert("i'm running => " + ed.getPosition());
+      }
+    });
     registerBibliographyCompletion(monaco, articleBibTeXEntries)
   }
 
@@ -137,7 +257,7 @@ function Write() {
         editor?.focus()
         const model = editor?.getModel()
         const endOfLineColumn = model.getLineMaxColumn(line + 1)
-        editor?.setPosition({lineNumber: line + 1, column: endOfLineColumn})
+        editor?.setPosition({ lineNumber: line + 1, column: endOfLineColumn })
         editor?.revealLine(line + 1, 1) // smooth
       } catch (err) {
         console.error('Unable to update Monaco cursor position', err)
@@ -253,7 +373,7 @@ function Write() {
   }
 
   if (isLoading) {
-    return <Loading />
+    return <Loading/>
   }
 
   return (
@@ -273,6 +393,12 @@ function Write() {
       <article>
         <>
           {!compareTo &&
+          <>
+            <ul className={styles.editorActions}>
+              <li className={styles.boldIcon}></li>
+              <li className={styles.italicIcon}></li>
+              <li className={styles.interpunctIcon}>·</li>
+            </ul>
             <Editor
               defaultValue={live.md}
               height="calc(80vh - 49px)"
@@ -294,6 +420,7 @@ function Write() {
               }}
               onMount={handleEditorDidMount}
             />
+          </>
           }
           {compareTo && <Compare
             articleId={articleInfos._id}
