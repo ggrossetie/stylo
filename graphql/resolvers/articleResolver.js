@@ -1,4 +1,5 @@
 const defaultsData = require('../data/defaultsData')
+const mongoose = require('mongoose')
 
 const Article = require('../models/article');
 const User = require('../models/user');
@@ -8,6 +9,8 @@ const isUser = require('../policies/isUser')
 const populateArgs = require('../helpers/populateArgs')
 const { ApiError } = require('../helpers/errors')
 
+const { logger } = require('../logger')
+
 module.exports = {
   /**
    * Create an article as the current user
@@ -16,16 +19,16 @@ module.exports = {
    * @param {*} param1
    * @returns
    */
-  createArticle: async (args,{req}) => {
+  createArticle: async (args, { req }) => {
     //filter bad requests
-    args = populateArgs(args,req)
+    args = populateArgs(args, req)
     const allowedIds = await User.findAccountAccessUserIds(req.user._id)
     isUser(args, req, allowedIds)
 
     //fetch user
     const thisUser = await User.findOne({ _id: args.user })
 
-    if(!thisUser){
+    if (!thisUser) {
       throw new Error('This user does not exist')
     }
 
@@ -46,7 +49,7 @@ module.exports = {
     await thisUser.save();
 
     //Save the article and version ID in the req object, for other resolver to consum with "new" ID
-    req.created = {...req.created, article:createdArticle.id}
+    req.created = { ...req.created, article: createdArticle.id }
 
     return createdArticle
   },
@@ -58,15 +61,15 @@ module.exports = {
    * @param {*} param1
    * @returns
    */
-  updateWorkingVersion: async (args, {req}) => {
+  updateWorkingVersion: async (args, { req }) => {
     const ALLOWED_PARAMS = ['bib', 'md', 'yaml']
 
-    args = populateArgs(args,req)
-    isUser(args,req)
+    args = populateArgs(args, req)
+    isUser(args, req)
 
     //fetch user
-    const thisUser = await User.findOne({_id: args.user})
-    if(!thisUser){
+    const thisUser = await User.findOne({ _id: args.user })
+    if (!thisUser) {
       throw new Error('This user does not exist')
     }
 
@@ -74,7 +77,7 @@ module.exports = {
     const userIds = await User.findAccountAccessUserIds(req.user._id)
     const fetchedArticle = await Article.findAndPopulateOneByOwners(args.article, [req.user._id, userIds])
 
-    if(!fetchedArticle){
+    if (!fetchedArticle) {
       throw new Error('Wrong article ID')
     }
 
@@ -92,7 +95,7 @@ module.exports = {
    * @param {*} param1
    * @returns
    */
-  shareArticle: async (args, {req}) => {
+  shareArticle: async (args, { req }) => {
     populateArgs(args, req)
     const allowedIds = await User.findAccountAccessUserIds(req.user._id)
     isUser(args, req, allowedIds)
@@ -102,21 +105,21 @@ module.exports = {
       .findOne({ _id: args.article, owner: { $in: allowedIds.concat([args.user]) } })
       .populate({ path: 'contributors', populate: 'user' })
 
-    if(!fetchedArticle){
+    if (!fetchedArticle) {
       throw new Error('Unable to find article')
     }
     const fetchedUser = await User.findOne({ _id: args.to })
-    if(!fetchedUser){
+    if (!fetchedUser) {
       throw new Error('Unable to find user')
     }
 
     //Check if user is not already in array
-    if(fetchedArticle.contributors.find(({ user }) => user.id === fetchedUser.id)){
+    if (fetchedArticle.contributors.find(({ user }) => user.id === fetchedUser.id)) {
       throw new Error('Article already shared with this user')
     }
 
     //Add user to list of owner
-    fetchedArticle.contributors.push({ user: fetchedUser, roles: ['read', 'write']})
+    fetchedArticle.contributors.push({ user: fetchedUser, roles: ['read', 'write'] })
 
     const returnArticle = await fetchedArticle.save()
     await fetchedUser.save({ timestamps: false })
@@ -131,22 +134,22 @@ module.exports = {
    * @param {*} param1
    * @returns
    */
-  unshareArticle: async (args,{req}) => {
-    populateArgs(args,req)
+  unshareArticle: async (args, { req }) => {
+    populateArgs(args, req)
     const allowedIds = await User.findAccountAccessUserIds(req.user._id)
-    isUser(args,req)
+    isUser(args, req)
 
     //Fetch article and user to send to
     const fetchedArticle = await Article
       .findOne({ _id: args.article, owner: { $in: allowedIds.concat([args.user]) } })
       .populate({ path: 'contributors', populate: 'user' })
 
-    if(!fetchedArticle){
+    if (!fetchedArticle) {
       throw new Error('Unable to find article')
     }
 
-    const fetchedUser = await User.findOne({_id:args.to})
-    if(!fetchedUser){
+    const fetchedUser = await User.findOne({ _id: args.to })
+    if (!fetchedUser) {
       throw new Error('Unable to find user')
     }
 
@@ -166,19 +169,19 @@ module.exports = {
    * @param {*} param1
    * @returns
    */
-  duplicateArticle: async (args,{req}) => {
-    populateArgs(args,req)
+  duplicateArticle: async (args, { req }) => {
+    populateArgs(args, req)
     const userIds = await User.findAccountAccessUserIds(req.user._id)
     isUser(args, req, userIds)
 
     //Fetch article and user to send to
     const fetchedArticle = await Article.findAndPopulateOneByOwners(args.article, [req.user._id, userIds])
 
-    if(!fetchedArticle){
+    if (!fetchedArticle) {
       throw new Error('Unable to find article')
     }
     const fetchedUser = await User.findOne({ _id: args.to })
-    if(!fetchedUser){
+    if (!fetchedUser) {
       throw new Error('Unable to find user')
     }
 
@@ -212,15 +215,15 @@ module.exports = {
    * @param {*} param1
    * @returns
    */
-  renameArticle: async (args,{req}) => {
-    populateArgs(args,req)
+  renameArticle: async (args, { req }) => {
+    populateArgs(args, req)
     const allowedIds = await User.findAccountAccessUserIds(req.user._id)
     isUser(args, req, allowedIds)
 
     //Fetch Article
     const { article: _id, user } = args
     const fetchedArticle = await Article.findOneByOwner({ _id, user })
-    if(!fetchedArticle){throw new Error('Unable to find article')}
+    if (!fetchedArticle) {throw new Error('Unable to find article')}
 
     //If all good, change title
     fetchedArticle.title = args.title
@@ -234,14 +237,14 @@ module.exports = {
    * @param {*} param1
    * @returns
    */
-  zoteroArticle: async (args,{req}) => {
-    populateArgs(args,req)
-    isUser(args,req)
+  zoteroArticle: async (args, { req }) => {
+    populateArgs(args, req)
+    isUser(args, req)
 
     //Fetch Article
     const { article: _id, user } = args
     const fetchedArticle = await Article.findOneByOwner({ _id, user })
-    if(!fetchedArticle){throw new Error('Unable to find article')}
+    if (!fetchedArticle) {throw new Error('Unable to find article')}
 
     //If all good, change title
     fetchedArticle.zoteroLink = args.zotero
@@ -255,18 +258,18 @@ module.exports = {
    * @param {*} param1
    * @returns
    */
-  deleteArticle: async (args, {req}) => {
-    populateArgs(args,req)
-    isUser(args,req)
+  deleteArticle: async (args, { req }) => {
+    populateArgs(args, req)
+    isUser(args, req)
 
     //Fetch article
     const { article: _id, user } = args
     const fetchedArticle = await Article.findOneByOwner({ _id, user })
-    if(!fetchedArticle){throw new Error('Unable to find article')}
+    if (!fetchedArticle) {throw new Error('Unable to find article')}
 
     //fetch User
-    const fetchedUser = await User.findOne({_id:args.user})
-    if(!fetchedUser){throw new Error('Unable to find user')}
+    const fetchedUser = await User.findOne({ _id: args.user })
+    if (!fetchedUser) {throw new Error('Unable to find user')}
 
 
     //if all good remove user from owners
@@ -275,7 +278,7 @@ module.exports = {
     fetchedUser.articles.pull(args.article)
 
     //Remove from all of user's tag
-    await Tag.updateMany({owner:fetchedUser.id},{$pull: {articles:fetchedArticle.id}},{safe:true})
+    await Tag.updateMany({ owner: fetchedUser.id }, { $pull: { articles: fetchedArticle.id } }, { safe: true })
 
     //save
     const returnedArticle = await fetchedArticle.save()
@@ -326,23 +329,96 @@ module.exports = {
    * @param {*} param1
    * @returns
    */
-  articles: async (args, {req}) => {
+  articles: async (args, { req }) => {
+    logger.info({ args, reqUser: req.user })
     // if the userId is not provided
     // we assume it is the user from the token
-    // otherwise, it is expected we request articles from a shared account
+    // otherwise, it is expected that we request articles from a shared account
     args.user = ('user' in args) === false && req.user ? String(req.user._id) : args.user
-
     const fromSharedUserId = args.user !== req.user?._id ? args.user : null
     const userId = String(req.user?._id)
-
+    const userObjectId = mongoose.Types.ObjectId(args.user)
+    logger.info({ userObjectId })
+    /*
+    db.users.aggregate([
+    { $match: { permissions: { $elemMatch: { user: ObjectId("636e494e916c4049de3be3f7"), scope: 'user', roles: { $in: ['read'] } } } } },
+    { $graphLookup: { from: "users", startWith: "$_id", connectFromField: "_id", connectToField: "permissions.user", as: "sharedUserAccounts" } }
+    ]).pretty()
+     */
+    const result = await User.collection.aggregate([
+      { $match: { "_id": userObjectId } },
+      {
+        $graphLookup: {
+          from: "users",
+          startWith: "$_id",
+          connectFromField: "_id",
+          connectToField: "permissions.user",
+          as: "sharedUserAccounts"
+        }
+      },
+      {
+        $lookup: {
+          from: "articles",
+          localField: "articles",
+          foreignField: "_id",
+          as: "myArticles"
+        }
+      },
+      {
+        $lookup: {
+          from: "articles",
+          localField: "_id",
+          foreignField: "contributors.user",
+          as: "contributedArticles"
+        }
+      },
+      {
+        $lookup: {
+          from: "articles",
+          localField: "sharedUserAccounts.articles",
+          foreignField: "_id",
+          as: "sharedUserArticles"
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "contributedArticles.owner",
+          foreignField: "_id",
+          as: "contributedOwners"
+        }
+      },
+      {
+        $unset: [
+          "myArticles.workingVersion",
+          "contributedArticles.workingVersion",
+          "contributedArticles.contributors",
+          "sharedUserArticles.workingVersion",
+          "sharedUserArticles.contributors"
+        ]
+      },
+      {
+        $project: {
+          "myArticles": 1,
+          "contributedArticles": 1,
+          "contributedOwners._id": 1,
+          "contributedOwners.email": 1,
+          "contributedOwners.displayName": 1,
+          "sharedUserArticles": 1,
+          "sharedUserAccounts._id": 1,
+          "sharedUserAccounts.email": 1,
+          "sharedUserAccounts.displayName": 1
+        }
+      }
+    ]).toArray()
+    logger.info({ result })
     if (fromSharedUserId) {
       const sharedUserIds = await User.findAccountAccessUserIds(userId)
 
       if (!sharedUserIds.includes(fromSharedUserId)) {
         throw new Error("Forbidden")
       }
-    }
-    else {
+    } else {
       isUser(args, req)
     }
 

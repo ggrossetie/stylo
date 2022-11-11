@@ -6,22 +6,22 @@ const ArticleContributorSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
-  roles: [ String ]
+  roles: [String]
 })
 
 const articleSchema = new Schema({
   title: {
-    type:String,
-    required:true,
+    type: String,
+    required: true,
     default: 'autocreated'
   },
   owner: {
     type: Schema.Types.ObjectId,
     ref: 'User'
   },
-  contributors: [ ArticleContributorSchema ],
-  zoteroLink:{
-    type:String,
+  contributors: [ArticleContributorSchema],
+  zoteroLink: {
+    type: String,
     default: ''
   },
   workingVersion: {
@@ -38,19 +38,19 @@ const articleSchema = new Schema({
       default: ''
     },
   },
-  versions:[
+  versions: [
     {
       type: Schema.Types.ObjectId,
       ref: 'Version'
     }
   ],
-  tags:[
+  tags: [
     {
       type: Schema.Types.ObjectId,
       ref: 'Tag'
     }
   ]
-}, {timestamps: true});
+}, { timestamps: true });
 
 
 /**
@@ -59,9 +59,9 @@ const articleSchema = new Schema({
  * @param {{ _id: String, user: String }}
  * @returns Article
  */
- articleSchema.statics.findOneByOwner = function findOneByOwner ({ _id, user }) {
+articleSchema.statics.findOneByOwner = function findOneByOwner ({ _id, user }) {
   return this
-    .findOne({ _id, $or: [ { owner: { $in: user } }, { contributors: { $elemMatch: {user: { $in: user }} } } ]})
+    .findOne({ _id, $or: [{ owner: { $in: user } }, { contributors: { $elemMatch: { user: { $in: user } } } }] })
     .populate({ path: 'contributors', populate: 'user' })
 }
 
@@ -102,7 +102,7 @@ articleSchema.statics.findAndPopulateOneByOwners = function findAndPopulateOneBy
   // AND match it with a single owner
   // OR match it with one of many contributors
   const query = Array.isArray($in) && $in.length
-    ? { _id, $or: [ { owner: { $in } }, { contributors: { $elemMatch: {user: { $in }} } } ] }
+    ? { _id, $or: [{ owner: { $in } }, { contributors: { $elemMatch: { user: { $in } } } }] }
     : { _id }
 
   return this
