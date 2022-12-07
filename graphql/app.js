@@ -1,9 +1,11 @@
 const pkg = require('./package.json')
-const jwt = require('jsonwebtoken')
 const express = require('express')
+const graphql = require('graphql')
+const { createHandler } = require('graphql-http/lib/use/express')
+
+const jwt = require('jsonwebtoken')
 const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser')
-const { graphqlHTTP } = require('express-graphql')
 const mongoose = require('mongoose')
 const cors = require('cors')
 
@@ -24,8 +26,6 @@ const graphQlResolvers = require('./resolvers/index')
 const { createJWTToken, populateUserFromJWT } = require('./helpers/token')
 const User = require('./models/user')
 const { postCreate } = User
-
-const app = express()
 
 const mongoServer = process.env.MONGO_SERVER
 const mongoServerPort = process.env.MONGO_SERVER_PORT
@@ -146,6 +146,7 @@ passport.deserializeUser(async (id, next) => {
   next(null, user)
 })
 
+const app = express()
 app.set('trust proxy', true)
 app.use(pino)
 app.use(cors(corsOptions))
@@ -285,22 +286,24 @@ app.post('/login',
     res.json({ error })
   })
 
-app.post('/graphql', populateUserFromJWT({ jwtSecret }), graphqlHTTP((req, res) => ({
-  schema: graphQlSchema,
-  rootValue: graphQlResolvers,
-  graphiql: false,
-  context: { req, res }
-})))
-
-if (process.env.NODE_ENV === 'dev') {
-  app.get('/graphql', graphqlHTTP((req, res) => ({
-    schema: graphQlSchema,
-    rootValue: graphQlResolvers,
-    graphiql: true,
-    context: { req, res }
-  })))
-}
-
+app.all('/graphql', populateUserFromJWT({ jwtSecret }), createHandler({
+  // hack until https://github.com/graphql/graphql-http/issues/30 is fixed
+  onSubscribe: async (req, params) => {
+    const { operationName, query, variables } = params
+    // can throw a GraphQLError, we should probably catch the error and return a 500
+    const document = graphql.parse(query)
+    return {
+      operationName,
+      document,
+      variableValues: variables,
+      rootValue: graphQlResolvers,
+      schema: graphQlSchema,
+    }
+  },
+  context: async (req) => {
+    return { req: req.raw }
+  }
+}))
 
 // fix deprecation warnings: https://mongoosejs.com/docs/deprecations.html
 mongoose.set('useNewUrlParser', true)

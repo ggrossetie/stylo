@@ -59,7 +59,7 @@ const articleSchema = new Schema({
  * @param {{ _id: String, user: String }}
  * @returns Article
  */
- articleSchema.statics.findOneByOwner = function findOneByOwner ({ _id, user }) {
+articleSchema.statics.findOneByOwner = function findOneByOwner ({ _id, user }) {
   return this
     .findOne({ _id, $or: [ { owner: { $in: user } }, { contributors: { $elemMatch: {user: { $in: user }} } } ]})
     .populate({ path: 'contributors', populate: 'user' })
