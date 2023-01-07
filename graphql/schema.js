@@ -74,7 +74,7 @@ type Article {
   createdAt: String
   updatedAt: String
 
-  groups: [Group!]
+  workspaces: [Workspace!]
   members: [User!]
 }
 
@@ -99,23 +99,23 @@ input VersionInput {
   message: String
 }
 
-type ArticleWithinGroup {
-  group: Group!
+type WorkspaceArticle {
+  workspace: Workspace!
   article: Article
   
   # mutation
-  remove: Group!
+  remove: Workspace!
 }
 
-type MemberWithinGroup {
-  group: Group!
+type WorkspaceMember {
+  workspace: Workspace!
   user: User
 
   # mutation
-  remove: Group!
+  remove: Workspace!
 }
 
-type Group {
+type Workspace {
   _id: String!
   name: String!
   color: String!
@@ -125,17 +125,17 @@ type Group {
   createdAt: String
   updatedAt: String
 
-  article(articleId: ID!): ArticleWithinGroup
-  member(userId: ID!): MemberWithinGroup
+  article(articleId: ID!): WorkspaceArticle
+  member(userId: ID!): WorkspaceMember
 
   # mutations
-  leave: Group
-  inviteMember(userId: ID!): Group
-  addArticle(articleId: ID!): Group
+  leave: Workspace
+  inviteMember(userId: ID!): Workspace
+  addArticle(articleId: ID!): Workspace
 }
 
-"Input to create a new group"
-input CreateGroupInput {
+"Input to create a new workspace"
+input CreateWorkspaceInput {
   name: String!
   color: String!
 }
@@ -165,11 +165,11 @@ type Query {
   "Fetch version info"
   version(version: ID!): Version
 
-  "Get a given group"
-  group(groupId: ID!): Group
+  "Get a given workspace"
+  workspace(workspaceId: ID!): Workspace
 
-  "Get groups for a given user"
-  groups(userId: ID): [Group!]
+  "Get workspaces for a given user"
+  workspaces(userId: ID): [Workspace!]
 }
 
 type Mutation {
@@ -265,11 +265,11 @@ type Mutation {
   "Remove from owners"
   deleteArticle(article: ID!, user: ID!): Article
 
-  "Create a new group"
-  createGroup(createGroupInput: CreateGroupInput!): Group
+  "Create a new workspace"
+  createWorkspace(createWorkspaceInput: CreateWorkspaceInput!): Workspace
 
-  "Get a group for mutation"
-  group(groupId: ID!): Group
+  "Get a workspace for mutation"
+  workspace(workspaceId: ID!): Workspace
 }`
 
 module.exports = makeExecutableSchema({ typeDefs, resolvers })

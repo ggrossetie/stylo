@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
-const groupSchema = new Schema({
+const workspaceSchema = new Schema({
   name: {
     type: String,
     required: true,
@@ -23,5 +23,5 @@ const groupSchema = new Schema({
   },
 }, { timestamps: true })
 
-module.exports = mongoose.model('Group', groupSchema)
-module.exports.schema = groupSchema
+module.exports = mongoose.model('Workspace', workspaceSchema)
+module.exports.schema = workspaceSchema
