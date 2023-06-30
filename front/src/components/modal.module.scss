@@ -5,17 +5,6 @@ dialog::backdrop {
   background-color: rgba(0, 0, 0, 0.7);
 }
 
-:global {
-  body[data-scrolling="false"] {
-    overflow: hidden;
-  }
-
-  #root {
-    display: flex;
-    flex-direction: column;
-  }
-}
-
 :root {
   --spacing: 1rem;
 }

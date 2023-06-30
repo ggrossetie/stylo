@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import { useHistory, useParams } from 'react-router-dom'
 import useGraphQL, { useMutation } from '../../hooks/graphql.js'
+import EditorFrame from '../editor/EditorFrame.jsx'
+import ArticleVersionsTimeline from './ArticleVersionsTimeline.jsx'
 
 import { stopCollaborativeSession, getCollaborativeSession } from './CollaborativeSession.graphql'
 
@@ -65,6 +67,11 @@ export default function CollaborativeEditor () {
     </div>
   }
 
+
+  return (
+    <EditorFrame></EditorFrame>
+  )
+/*
   return (
     <div className={styles.container}>
       {collaborativeSessionData?.article?.collaborativeSession?.creator?._id === activeUser?._id && <div className={styles.actions}>
@@ -82,7 +89,8 @@ export default function CollaborativeEditor () {
       </GeistModal>
 
       <CollaborativeEditorArticleHeader articleId={articleId}/>
+      <ArticleVersionsTimeline/>
       <CollaborativeTextEditor collaborativeSessionId={collaborativeSessionId}/>
       <CollaborativeEditorArticleStats/>
-    </div>)
+    </div>)*/
 }

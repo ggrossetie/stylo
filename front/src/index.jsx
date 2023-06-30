@@ -187,7 +187,6 @@ render(
               </Route>
             </Switch>
           </App>
-
           <Footer/>
         </Router>
         </Suspense>

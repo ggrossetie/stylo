@@ -4,7 +4,7 @@
   align-items: center;
   justify-items: center;
   gap: 0.5em;
-  padding-bottom: 0.5em;
+  flex: 1;
 }
 
 .tocTooltip {
@@ -12,5 +12,15 @@
 }
 
 .tocTooltip > svg {
+  display: flex;
+}
+
+
+.header {
+  display: flex;
+  padding-bottom: 0.5em;
+}
+
+.actions {
   display: flex;
 }

@@ -1,0 +1,44 @@
+.container {
+  max-width: 1024px;
+  padding-left: 1em;
+  padding-right: 1em;
+  margin-left: 0;
+  margin-right: 0;
+  flex: 1;
+  transition: width 200ms ease, margin-right 200ms ease, margin-left 200ms ease;
+
+  > section {
+    height: auto !important;
+  }
+}
+
+
+/* 1024px + 16px + 16px (padding)  */
+@media screen and (min-width: 1056px) {
+  .container {
+    margin-left: calc(calc(100vw - 1056px) / 2);
+    margin-right: calc(calc(100vw - 1056px) / 2);
+  }
+}
+
+.active {
+  max-width: 850px;
+  margin-right: 0;
+  margin-left: auto;
+}
+
+
+.writers {
+  margin-bottom: 1em;
+  margin-left: 1em;
+}
+
+.main {
+  display: flex;
+  align-items: center;
+}
+
+.navbar {
+  width: 2em;
+  margin-top: -1em;
+}
