@@ -1,0 +1,14 @@
+.container {
+  position: relative;
+  min-width: 150px;
+}
+
+.action {
+  margin-top: 0.5em;
+  position: absolute;
+  right: calc(-50% - 1em);
+}
+
+.icon {
+  margin-right: 0.35em;
+}

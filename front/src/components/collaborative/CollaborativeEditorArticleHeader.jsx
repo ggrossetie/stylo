@@ -11,6 +11,9 @@ import { getArticleInfo } from '../Article.graphql'
 import Button from '../Button.jsx'
 import buttonStyles from '../button.module.scss'
 import Export from '../Export.jsx'
+import NewVersionItem from '../timeline/NewVersionItem.jsx'
+import Timeline from '../timeline/Timeline.jsx'
+import VersionItem from '../timeline/VersionItem.jsx'
 
 import styles from './CollaborativeEditorArticleHeader.module.scss'
 
@@ -45,47 +48,78 @@ export default function CollaborativeEditorArticleHeader ({ articleId }) {
     if (articleStructure.length === 0) {
       return <></>
     }
-    return  <>
+    return <>
       <Popover.Item title>
         <span>Table Of Contents</span>
       </Popover.Item>
       {articleStructure.map((item) => (
         <Popover.Item key={`line-${item.index}-${item.line}`} tabIndex={0}>
-          <GeistLink href="#" data-index={item.index} onClick={handleTableOfContentsEntryClicked}>{item.title}</GeistLink>
+          <GeistLink href="#" data-index={item.index}
+                     onClick={handleTableOfContentsEntryClicked}>{item.title}</GeistLink>
         </Popover.Item>
       ))}
     </>
   }
 
-  return (<header className={styles.header}>
-    <h1 className={styles.title}>
-      <Popover className={clsx(styles.tocTooltip, articleStructure.length === 0 && styles.empty)} placement="bottomStart" content={content} hideArrow={articleStructure.length === 0}>
-        <AlignLeft/>
-      </Popover>
-      {data?.article?.title}
-    </h1>
-
-    <div className={styles.actions}>
-      <Button icon title="Download a printable version" onClick={handleOpenExportModal}>
-        <Printer/>
-      </Button>
-      <Link to={`/article/${articleId}/preview`}
-            title="Preview (open a new window)"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={buttonStyles.icon}>
-        <Eye/>
-      </Link>
+  return (<>
+    <div className={styles.timeline}>
+      <Timeline items={[
+        {
+          key: 'new',
+          state: 'inactive',
+          content: <NewVersionItem/>
+        },
+        {
+          key: '1.0',
+          content: <VersionItem title="v1.0" description="First publication!" createdAt="il y a quelques instants"
+                                createdByName="Guillaume"/>
+        },
+        {
+          key: '0.3',
+          content: <VersionItem title="v0.3" description="First draft!" createdAt="il y a une semaine"
+                                createdByName="Roch"/>
+        },
+        {
+          key: '0.2',
+          content: <VersionItem title="v0.2" description="" createdAt="il y a deux semaines" createdByName="Margot"/>
+        },
+        {
+          key: '0.1',
+          content: <VersionItem title="v0.1" description="" createdAt="il y a trois semaines" createdByName="Margot"/>
+        }
+      ]}></Timeline>
     </div>
+    <header className={styles.header}>
+      <h1 className={styles.title}>
+        <Popover className={clsx(styles.tocTooltip, articleStructure.length === 0 && styles.empty)}
+                 placement="bottomStart" content={content} hideArrow={articleStructure.length === 0}>
+          <AlignLeft/>
+        </Popover>
+        {data?.article?.title}
+      </h1>
 
-    <GeistModal width="40rem" visible={exportModalVisible} {...exportModalBinding}>
-      <h2>Export</h2>
-      <GeistModal.Content>
-        <Export articleId={articleId} name={data?.article?.title} bib={data?.article?.workingVersion?.bibPreview}/>
-      </GeistModal.Content>
-      <GeistModal.Action passive onClick={() => setExportModalVisible(false)}>Cancel</GeistModal.Action>
-    </GeistModal>
-  </header>)
+      <div className={styles.actions}>
+        <Button icon title="Download a printable version" onClick={handleOpenExportModal}>
+          <Printer/>
+        </Button>
+        <Link to={`/article/${articleId}/preview`}
+              title="Preview (open a new window)"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonStyles.icon}>
+          <Eye/>
+        </Link>
+      </div>
+
+      <GeistModal width="40rem" visible={exportModalVisible} {...exportModalBinding}>
+        <h2>Export</h2>
+        <GeistModal.Content>
+          <Export articleId={articleId} name={data?.article?.title} bib={data?.article?.workingVersion?.bibPreview}/>
+        </GeistModal.Content>
+        <GeistModal.Action passive onClick={() => setExportModalVisible(false)}>Cancel</GeistModal.Action>
+      </GeistModal>
+    </header>
+  </>)
 }
 
 CollaborativeEditorArticleHeader.propTypes = {

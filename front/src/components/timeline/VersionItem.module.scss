@@ -1,0 +1,53 @@
+.title {
+  font-weight: 700;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex: 1;
+}
+
+.description {
+  font-size: 0.9em;
+  color: #666666;
+  padding-bottom: 0.75em;
+}
+
+.header {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.footer {
+  font-size: 0.8em;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex: 1;
+}
+
+.by {
+
+}
+
+.createdBy {
+}
+
+.name {
+  font-weight: 500;
+}
+
+.createdAt {
+  font-weight: 300;
+}
+
+.actions {
+  margin-top: 0.5em;
+  display: flex;
+  gap: 0.5em;
+}

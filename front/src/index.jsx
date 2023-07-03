@@ -10,6 +10,9 @@ import './i18n.js'
 import './styles/general.scss'
 import './styles/general.scss'
 import CollaborativeEditor from './components/collaborative/CollaborativeEditor.jsx'
+import NewVersionItem from './components/timeline/NewVersionItem.jsx'
+import Timeline from './components/timeline/Timeline.jsx'
+import VersionItem from './components/timeline/VersionItem.jsx'
 import App from './layouts/App'
 import createStore from './createReduxStore'
 import { getUserProfile } from './helpers/userProfile'
@@ -178,6 +181,29 @@ render(
                 </Select>
                 <h4>Tabs</h4>
                 <h4>Form actions</h4>
+                <Timeline items={[
+                  {
+                    key: 'new',
+                    state: 'inactive',
+                    content: <NewVersionItem/>
+                  },
+                  {
+                    key: '1.0',
+                    content: <VersionItem title="v1.0"  description="First publication!" createdAt="il y a quelques instants" createdByName="Guillaume"/>
+                  },
+                  {
+                    key: '0.3',
+                    content: <VersionItem title="v0.3" description="First draft!" createdAt="il y a une semaine" createdByName="Roch"/>
+                  },
+                  {
+                    key: '0.2',
+                    content: <VersionItem title="v0.2" description="" createdAt="il y a deux semaines" createdByName="Margot"/>
+                  },
+                  {
+                    key: '0.1',
+                    content: <VersionItem title="v0.1" description="" createdAt="il y a trois semaines" createdByName="Margot"/>
+                  }
+                ]}></Timeline>
               </Route>
               <Route exact path="/error">
                 <Error/>
