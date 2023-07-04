@@ -16,16 +16,8 @@ const tagSchema = new Schema({
   },
   color: {
     type: String,
-    get: color => {
-      return toHex((color ?? '').replace('grey', 'gray')) || color || '#ccc'
-    }
-  },
-  articles:[
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Article'
-    }
-  ]
+    get: color => toHex(color) || color || '#cccccc'
+  }
 }, {timestamps: true});
 
 tagSchema.post('remove', async function () {

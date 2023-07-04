@@ -7,7 +7,7 @@ const { ApiError } = require('../helpers/errors')
 
 module.exports = {
   Mutation: {
-    async createTag (_, args, context){
+    async createTag (_, args, context) {
       const { userId } = isUser(args, context)
 
       //fetch user
@@ -31,33 +31,25 @@ module.exports = {
     },
     async deleteTag (_, args, context) {
       const { userId } = isUser(args, context)
-
-      //Recover tag, and all articles
       const tag = await Tag.findOne({ _id: args.tag, owner: userId })
       if (!tag) {
-        throw new Error('Unable to find tag')
+        throw new ApiError('NOT_FOUND', `Unable to find tag with id ${args.tag} and user: ${userId}`)
       }
-
-      //pull tags from user and article + remove tag
       await tag.remove()
-
       return tag.$isDeleted()
     },
     async updateTag (_, args, context) {
       const { userId } = isUser(args, context)
-
       const thisTag = await Tag.findOne({ _id: args.tag, owner: userId })
       if (!thisTag) {
-        throw new Error('Unable to find tag')
+        throw new ApiError('NOT_FOUND', `Unable to find tag with id ${args.tag} and user: ${userId}`)
       }
-
       ['name', 'description', 'color'].forEach(field => {
         if (Object.hasOwn(args, field)) {
           /* eslint-disable security/detect-object-injection */
           thisTag.set(field, args[field])
         }
       })
-
       return thisTag.save()
     },
   },
@@ -69,15 +61,10 @@ module.exports = {
         ? { _id: args.tag }
         : { _id: args.tag, owner: userId }
 
-      const tag = Tag.findOne(query).populate({
-        path: 'articles',
-        populate: { path: 'versions' },
-      })
-
+      const tag = Tag.findOne(query)
       if (!tag) {
         throw new ApiError('NOT_FOUND', `Unable to find tag with id ${args.tag}`)
       }
-
       return tag
     },
 
@@ -85,20 +72,5 @@ module.exports = {
       const { userId } = isUser(args, context)
       return Tag.find({ owner: userId })
     },
-  },
-
-  Tag: {
-    async articles (tag, { limit }) {
-      await tag.populate({ path: 'articles', options: { limit } }).execPopulate()
-
-      return tag.articles
-    },
-
-    // @TODO when `owner: ID!` changes into `owner: User!`
-    // async owner (tag) {
-    //   await tag.populate({ path: 'owner', populate: { path: 'user' }}).execPopulate()
-
-    //   return tag.owner
-    // }
-  },
+  }
 }

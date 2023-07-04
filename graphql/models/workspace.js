@@ -19,7 +19,7 @@ const workspaceSchema = new Schema({
   color: {
     type: String,
     required: true,
-    get: color => toHex(color) || color || '#ccc'
+    get: color => toHex(color) || color || '#cccccc'
   },
   description: {
     type: String

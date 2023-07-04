@@ -67,7 +67,6 @@ type Tag {
   owner: ID
   description: String
   color: HexColorCode
-  articles: [Article]
   createdAt: DateTime
   updatedAt: DateTime
 }
