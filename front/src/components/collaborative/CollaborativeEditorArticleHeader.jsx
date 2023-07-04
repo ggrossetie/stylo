@@ -62,33 +62,6 @@ export default function CollaborativeEditorArticleHeader ({ articleId }) {
   }
 
   return (<>
-    <div className={styles.timeline}>
-      <Timeline items={[
-        {
-          key: 'new',
-          state: 'inactive',
-          content: <NewVersionItem/>
-        },
-        {
-          key: '1.0',
-          content: <VersionItem title="v1.0" description="First publication!" createdAt="il y a quelques instants"
-                                createdByName="Guillaume"/>
-        },
-        {
-          key: '0.3',
-          content: <VersionItem title="v0.3" description="First draft!" createdAt="il y a une semaine"
-                                createdByName="Roch"/>
-        },
-        {
-          key: '0.2',
-          content: <VersionItem title="v0.2" description="" createdAt="il y a deux semaines" createdByName="Margot"/>
-        },
-        {
-          key: '0.1',
-          content: <VersionItem title="v0.1" description="" createdAt="il y a trois semaines" createdByName="Margot"/>
-        }
-      ]}></Timeline>
-    </div>
     <header className={styles.header}>
       <h1 className={styles.title}>
         <Popover className={clsx(styles.tocTooltip, articleStructure.length === 0 && styles.empty)}

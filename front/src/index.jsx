@@ -9,6 +9,7 @@ import { GeistProvider, Loading } from '@geist-ui/core'
 import './i18n.js'
 import './styles/general.scss'
 import './styles/general.scss'
+import Affix from './components/affix/Affix.jsx'
 import CollaborativeEditor from './components/collaborative/CollaborativeEditor.jsx'
 import NewVersionItem from './components/timeline/NewVersionItem.jsx'
 import Timeline from './components/timeline/Timeline.jsx'
@@ -155,6 +156,9 @@ render(
               </PrivateRoute>
               <Route exact path="/privacy">
                 <Privacy/>
+              </Route>
+              <Route exact path="/affix">
+                <Affix/>
               </Route>
               <Route exact path="/ux">
                 <h2>Buttons</h2>

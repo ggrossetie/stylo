@@ -7,7 +7,7 @@ import styles from './Timeline.module.scss'
 export default function Timeline({items}) {
     return (
       <div className={styles.container}>
-        {items.map((item) => (<TimelineItem key={item.key} {...item} />))}
+        {items.reverse().map((item) => (<TimelineItem key={item.key} {...item} />))}
       </div>
     )
 }

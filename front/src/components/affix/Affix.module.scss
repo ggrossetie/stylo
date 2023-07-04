@@ -1,0 +1,18 @@
+.container {
+
+  max-width: 1024px;
+  margin: auto;
+}
+
+.header {
+  position: sticky;
+  top: 5em;
+  height: 5em;
+  background-color: black;
+  z-index: 10;
+}
+
+.main {
+  z-index: 3;
+  background-color: #f8f9fa;
+}

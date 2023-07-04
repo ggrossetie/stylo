@@ -6,6 +6,28 @@
   margin: auto;
   padding-left: 1em;
   padding-right: 1em;
+  position: sticky;
+  top: -2em;
+}
+
+.bg {
+  height: calc(100vh - 38px);
+  background-color: #f8f9fa;
+  box-shadow: 0 -0.0625rem 0.1875rem rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05) 0 -0.625rem 0.9375rem -0.3125rem, rgba(0, 0, 0, 0.04) 0 -0.4375rem 0.4375rem -0.3125rem;
+}
+
+.timeline {
+  z-index: -1;
+  position: sticky;
+  top: 0;
+  background-color: #fcfcfd;
+  padding-bottom: 2em;
+  display: flex;
+  justify-content: space-around;
+}
+
+.spacer {
+  height: 0;
 }
 
 .errorContainer {
