@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react'
 import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
-import { Link} from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import clsx from 'clsx'
 import { Modal as GeistModal, Note, Spacer, useModal, useToasts } from '@geist-ui/core'
 import { useActiveWorkspace } from '../hooks/workspace.js'
@@ -152,7 +152,7 @@ export default function Article ({ article, onArticleUpdated, onArticleDeleted, 
     } catch (err) {
       setToast({
         type: 'error',
-        text: t('article.delete.toastError', {errMessage: err.message})
+        text: t('article.delete.toastError', { errMessage: err.message })
       })
     }
   }
@@ -176,7 +176,7 @@ export default function Article ({ article, onArticleUpdated, onArticleDeleted, 
     <article className={styles.article}>
       {exporting && (
         <Modal title="Export" cancel={() => setExporting(false)}>
-          <Export articleId={article._id} bib={article.workingVersion.bibPreview} name={article.title}/>
+          <Export articleId={article._id} bib={article.workingVersion?.bibPreview} name={article.title}/>
         </Modal>
       )}
 
@@ -228,9 +228,10 @@ export default function Article ({ article, onArticleUpdated, onArticleDeleted, 
 
           <span className={styles.titleText}>
             {article.title}
-            <Button title={t('article.editName.button')} icon={true} className={styles.editTitleButton} onClick={(evt) =>
-              evt.stopPropagation() || setRenaming(true)
-            }>
+            <Button title={t('article.editName.button')} icon={true} className={styles.editTitleButton}
+                    onClick={(evt) =>
+                      evt.stopPropagation() || setRenaming(true)
+                    }>
             <Edit3 size="20"/>
           </Button>
           </span>
@@ -292,7 +293,8 @@ export default function Article ({ article, onArticleUpdated, onArticleDeleted, 
 
         <CollaborativeSessionAction collaborativeSession={article.collaborativeSession} articleId={articleId}/>
 
-        <SoloSessionAction collaborativeSession={article.collaborativeSession} soloSession={article.soloSession} articleId={articleId}/>
+        <SoloSessionAction collaborativeSession={article.collaborativeSession} soloSession={article.soloSession}
+                           articleId={articleId}/>
 
         <Link title={t('article.preview.button')} target="_blank" className={buttonStyles.icon}
               to={`/article/${article._id}/preview`}>
