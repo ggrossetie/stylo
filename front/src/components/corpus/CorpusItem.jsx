@@ -1,28 +1,31 @@
-import {Modal as GeistModal, useModal, useToasts} from '@geist-ui/core'
-import React, {useCallback, useMemo, useState} from 'react'
+import { Modal as GeistModal, useModal, useToasts } from '@geist-ui/core'
+import React, { useCallback, useMemo, useState } from 'react'
 import PropTypes from 'prop-types'
-import {ChevronDown, ChevronRight, Eye, List, Printer, Settings, Trash} from 'react-feather'
-import {useTranslation} from 'react-i18next'
-import {useDispatch} from 'react-redux'
-import {Link} from 'react-router-dom'
-import {useGraphQL} from '../../helpers/graphQL.js'
+import { ChevronDown, ChevronRight, Eye, List, Printer, Settings, Trash } from 'react-feather'
+import { useTranslation } from 'react-i18next'
+import { useDispatch } from 'react-redux'
+import { Link } from 'react-router-dom'
+import YAML from 'js-yaml'
+
+import corpusSchema from '../../schemas/corpus-metadata.schema.json'
+import corpusUiSchema from '../../schemas/corpus-ui-schema.json'
+import { useGraphQL } from '../../helpers/graphQL.js'
+
 import Button from '../Button.jsx'
-import buttonStyles from '../button.module.scss'
 import Export from '../Export.jsx'
 import TimeAgo from '../TimeAgo.jsx'
-
 import CorpusArticles from './CorpusArticles.jsx'
 import CorpusUpdate from './CorpusUpdate.jsx'
+import MetadataForm from '../metadata/MetadataForm.jsx'
 
-import {deleteCorpus, updateMetadata} from './Corpus.graphql'
+import { deleteCorpus, updateMetadata } from './Corpus.graphql'
+
 import styles from './corpusItem.module.scss'
-import MetadataForm from "../metadata/MetadataForm.jsx";
-import YAML from "js-yaml";
+import buttonStyles from '../button.module.scss'
 
-
-export default function CorpusItem({corpus}) {
-  const {t} = useTranslation()
-  const {setToast} = useToasts()
+export default function CorpusItem ({ corpus }) {
+  const { t } = useTranslation()
+  const { setToast } = useToasts()
   const dispatch = useDispatch()
   const {
     visible: deleteCorpusVisible,
@@ -50,15 +53,16 @@ export default function CorpusItem({corpus}) {
 
   const runQuery = useGraphQL()
   const corpusId = useMemo(() => corpus._id, [corpus])
-  const corpusMetadata = useMemo(() =>  YAML.loadAll(corpus.metadata || '')[0] || {}, [corpus])
+  const corpusMetadata = useMemo(() => YAML.loadAll(corpus.metadata || '')[0] || {}, [corpus])
 
-  console.log({corpus})
   const handleCorpusUpdated = useCallback(() => {
     setEditCorpusVisible(false)
-    dispatch({type: 'SET_LATEST_CORPUS_UPDATED', data: {corpusId, date: new Date()}})
+    dispatch({ type: 'SET_LATEST_CORPUS_UPDATED', data: { corpusId, date: new Date() } })
   }, [corpusId])
 
   const handleMetadataUpdated = useCallback(async (metadata) => {
+    console.log("handleMetadataUpdated", {metadata})
+    /*
     await runQuery({
       query: updateMetadata,
       variables: {
@@ -66,13 +70,13 @@ export default function CorpusItem({corpus}) {
         metadata
       }
     })
-    dispatch({type: 'SET_LATEST_CORPUS_UPDATED', data: {corpusId, date: new Date()}})
+    dispatch({ type: 'SET_LATEST_CORPUS_UPDATED', data: { corpusId, date: new Date() } })*/
   }, [corpusId, dispatch, runQuery, updateMetadata, corpusId])
 
   const handleDeleteCorpus = useCallback(async () => {
     try {
-      await runQuery({query: deleteCorpus, variables: {corpusId}})
-      dispatch({type: 'SET_LATEST_CORPUS_DELETED', data: {corpusId}})
+      await runQuery({ query: deleteCorpus, variables: { corpusId } })
+      dispatch({ type: 'SET_LATEST_CORPUS_DELETED', data: { corpusId } })
       setToast({
         text: t('corpus.delete.toastSuccess'),
         type: 'default'
@@ -142,7 +146,8 @@ export default function CorpusItem({corpus}) {
           {t('corpus.deleteModal.confirmMessage')}
         </GeistModal.Content>
         <GeistModal.Action passive
-                           onClick={() => setDeleteCorpusVisible(false)}>{t('modal.cancelButton.text')}</GeistModal.Action>
+                           onClick={() => setDeleteCorpusVisible(false)}>{t('modal.cancelButton.text')}
+        </GeistModal.Action>
         <GeistModal.Action onClick={handleDeleteCorpus}>{t('modal.confirmButton.text')}</GeistModal.Action>
       </GeistModal>
 
@@ -152,7 +157,8 @@ export default function CorpusItem({corpus}) {
           <Export bookId={corpusId} name={corpus.name}/>
         </GeistModal.Content>
         <GeistModal.Action passive
-                           onClick={() => setExportCorpusVisible(false)}>{t('modal.cancelButton.text')}</GeistModal.Action>
+                           onClick={() => setExportCorpusVisible(false)}>{t('modal.cancelButton.text')}
+        </GeistModal.Action>
       </GeistModal>
 
       <GeistModal width="40rem" visible={editCorpusVisible} {...editCorpusBindings}>
@@ -161,20 +167,24 @@ export default function CorpusItem({corpus}) {
           <CorpusUpdate corpus={corpus} onSubmit={handleCorpusUpdated}/>
         </GeistModal.Content>
         <GeistModal.Action passive
-                           onClick={() => setEditCorpusVisible(false)}>{t('modal.cancelButton.text')}</GeistModal.Action>
+                           onClick={() => setEditCorpusVisible(false)}>{t('modal.cancelButton.text')}
+        </GeistModal.Action>
       </GeistModal>
 
       <GeistModal width="40rem" visible={editMetadataVisible} {...editMetadataBindings}>
         <h2>{t('corpus.metadataModal.title')}</h2>
         <GeistModal.Content>
           <MetadataForm
-          data={corpusMetadata}
-          templates={['basic']}
-          onChange={handleMetadataUpdated}
+            schema={corpusSchema}
+            uiSchema={corpusUiSchema}
+            data={corpusMetadata}
+            templates={['basic']}
+            onChange={handleMetadataUpdated}
           />
         </GeistModal.Content>
         <GeistModal.Action passive
-                           onClick={() => setEditMetadataVisible(false)}>{t('modal.close.text')}</GeistModal.Action>
+                           onClick={() => setEditMetadataVisible(false)}>{t('modal.close.text')}
+        </GeistModal.Action>
       </GeistModal>
     </div>
   )

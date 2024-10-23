@@ -182,5 +182,13 @@
   "workingVersion.stateUiProps.savingText": "Saving",
   "workingVersion.stateUiProps.saveErrorText": "Error",
   "workingVersion.spanWorkingCopy.text": "working copy",
-  "workingVersion.by.text": "by"
+  "workingVersion.by.text": "by",
+  "corpus.metadata.form.book": "Book",
+  "corpus.metadata.form.journal": "Journal",
+  "corpus.metadata.form.name": "Name",
+  "corpus.metadata.form.publication": "Publication",
+  "corpus.metadata.form.issue": "Issue",
+  "corpus.metadata.form.issue.title": "Title",
+  "corpus.metadata.form.issue.identifier": "Identifier",
+  "corpus.metadata.form.issue.number": "N°"
 }

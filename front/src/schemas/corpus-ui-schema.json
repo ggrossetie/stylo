@@ -1,0 +1,37 @@
+{
+  "ui:groups": [
+    {
+      "fields": [
+        "publication"
+      ]
+    }
+  ],
+  "publication": {
+    "type": {
+      "ui:widget": "hidden"
+    },
+    "name": {
+      "ui:title": "corpus.metadata.form.name"
+    },
+    "ui:title": {
+      "publication": "corpus.metadata.form.publication",
+      "journal": "corpus.metadata.form.journal",
+      "book": "corpus.metadata.form.book"
+    },
+    "issue": {
+      "ui:title": "corpus.metadata.form.issue",
+      "name": {
+        "ui:title": "corpus.metadata.form.issue.name"
+      },
+      "title": {
+        "ui:title": "corpus.metadata.form.issue.title"
+      },
+      "identifier": {
+        "ui:title": "corpus.metadata.form.issue.identifier"
+      },
+      "number": {
+        "ui:title": "corpus.metadata.form.issue.number"
+      }
+    }
+  }
+}

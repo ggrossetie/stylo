@@ -180,5 +180,13 @@
   "workingVersion.stateUiProps.savingText": "En cours de sauvegarde",
   "workingVersion.stateUiProps.saveErrorText": "Erreur",
   "workingVersion.spanWorkingCopy.text": "version de travail",
-  "workingVersion.by.text": "par"
+  "workingVersion.by.text": "par",
+  "corpus.metadata.form.book": "Livre",
+  "corpus.metadata.form.journal": "Revue",
+  "corpus.metadata.form.publication": "Publication",
+  "corpus.metadata.form.name": "Publication",
+  "corpus.metadata.form.issue": "Numéro de revue",
+  "corpus.metadata.form.issue.title": "Titre",
+  "corpus.metadata.form.issue.identifier": "Identifiant",
+  "corpus.metadata.form.issue.number": "N°"
 }

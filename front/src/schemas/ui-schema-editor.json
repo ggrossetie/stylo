@@ -226,5 +226,8 @@
   },
   "diffnum": {
     "ui:title": "Diffnum"
+  },
+  "funder": {
+    "ui:title": ""
   }
 }

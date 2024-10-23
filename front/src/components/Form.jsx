@@ -1,9 +1,10 @@
-import React, {Fragment, useCallback, useMemo, useState} from 'react'
+import React, { Fragment, useCallback, useMemo, useState } from 'react'
 import Form from '@rjsf/core'
 import { set } from 'object-path-immutable'
+import { useTranslation } from 'react-i18next'
 import basicUiSchema from '../schemas/ui-schema-basic-override.json'
-import uiSchema from '../schemas/ui-schema-editor.json'
-import schema from '../schemas/data-schema.json'
+import defaultUiSchema from '../schemas/ui-schema-editor.json'
+import defaultSchema from '../schemas/data-schema.json'
 import { toYaml } from './Write/metadata/yaml'
 
 // REMIND: use a custom SelectWidget to support "ui:emptyValue"
@@ -17,12 +18,29 @@ import Button from './Button'
 import { Plus, Trash } from 'react-feather'
 import IsidoreAuthorAPIAutocompleteField from './Write/metadata/isidoreAuthor'
 
-const CustomSelect = function(props) {
-  return (<div className={styles.selectContainer}>
-      <SelectWidget {...props}/>
+
+const CustomSelectBuilder = function ({ translationHook }) {
+  return function CustomSelect (props) {
+    const { options, title } = props
+    const enumOptions = options?.enumOptions?.map((opt) => {
+      if (title && opt.label in title) {
+        return {
+          label: translationHook(title[opt.label]),
+          value: opt.value
+        }
+      }
+      return {
+        label: translationHook(opt.label),
+        value: opt.value
+      }
+    })
+    return (<div className={styles.selectContainer}>
+      <SelectWidget {...{ ...props, options: { enumOptions: enumOptions } }}/>
     </div>)
+  }
 }
-function ArrayFieldTemplate(props) {
+
+function ArrayFieldTemplate (props) {
   const addItemTitle = props.uiSchema['ui:add-item-title'] || 'Ajouter'
   const removeItemTitle = props.uiSchema['ui:remove-item-title'] || 'Supprimer'
   const title = props.uiSchema['ui:title']
@@ -69,64 +87,94 @@ function ArrayFieldTemplate(props) {
   )
 }
 
-function ObjectFieldTemplate(props) {
-  if (props.uiSchema['ui:groups']) {
-    const groups = props.uiSchema['ui:groups']
-    const groupedElements = groups.map(({ fields, title }) => {
-      const elements = fields
-        .filter(
-          (field) => (props.uiSchema[field] || {})['ui:widget'] !== 'hidden'
-        )
-        .map((field) => {
-          const element = props.properties.find((element) => element.name === field)
-
-          if (!element) {
-            console.error('Field configuration not found for "%s" in \'ui:groups\' "%s" — part of %o', field, title, fields)
-          }
-
-          return [field, element]
-        })
-
-        if (elements && elements.length > 0) {
-          return (
-            <fieldset className={styles.fieldset} key={fields.join('-')}>
-              {title && <legend>{title}</legend>}
-              {elements.map(([field, element]) => (
-                element
-                  ? <Fragment key={field}>{element.content}</Fragment>
-                  : <p key={field} className={styles.fieldHasNoElementError}>
-                      Field <code>{field}</code> defined in <code>ui:groups</code> is not an
-                      entry of <code>data-schema.json[properties]</code> object.
-                    </p>
-              ))}
-            </fieldset>
-          )
-        }
-    })
-
-    return <>{groupedElements}</>
-  }
-
-  if (props) {
-    const autocomplete = props.uiSchema['ui:autocomplete']
+function FieldTemplateBuilder ({ translationHook }) {
+  return function FieldTemplate (props) {
+    const { id, classNames, style, help, description, errors, children } = props
+    const label = props.schema.$id
+      ? props.label[props.schema.$id]
+      : props.label
+    const title = props.schema.$id
+      ? props.uiSchema?.['ui:title']?.[props.schema.$id] ?? ''
+      : props.uiSchema?.['ui:title'] ?? ''
     return (
-      <Fragment key={props.key}>
-        {props.title}
-        {props.description}
-        {autocomplete === "IsidoreAuthorSearch" && <IsidoreAuthorAPIAutocompleteField {...props}/>}
-        {props.properties.map((element) => (
-          <Fragment key={element.name}>{element.content}</Fragment>
-        ))}
-      </Fragment>
+      <div className={classNames} style={style}>
+        <label htmlFor={id} style={{ display: title === '' ? 'none' : 'block' }}>
+          {translationHook(label)}
+        </label>
+        {description}
+        {children}
+        {errors}
+        {help}
+      </div>
     )
   }
 }
 
+function ObjectFieldTemplateBuilder ({ translationHook }) {
+  return function ObjectFieldTemplate (props) {
+    if (props.uiSchema['ui:groups']) {
+      const groups = props.uiSchema['ui:groups']
+      const groupedElements = groups.map(({ fields, title }) => {
+        const elements = fields
+          .filter(
+            (field) => (props.uiSchema[field] || {})['ui:widget'] !== 'hidden'
+          )
+          .map((field) => {
+            const element = props.properties.find((element) => element.name === field)
+
+            if (!element) {
+              console.error('Field configuration not found for "%s" in \'ui:groups\' "%s" — part of %o', field, title, fields)
+            }
+
+            return [field, element]
+          })
+
+        if (elements && elements.length > 0) {
+          return (
+            <fieldset className={styles.fieldset} key={fields.join('-')}>
+              {title && <legend>{translationHook(title)}</legend>}
+              {elements.map(([field, element]) => (
+                element
+                  ? <Fragment key={field}>{element.content}</Fragment>
+                  : <p key={field} className={styles.fieldHasNoElementError}>
+                    Field <code>{field}</code> defined in <code>ui:groups</code> is not an
+                    entry of <code>data-schema.json[properties]</code> object.
+                  </p>
+              ))}
+            </fieldset>
+          )
+        }
+      })
+
+      return <>{groupedElements}</>
+    }
+
+    if (props) {
+      const autocomplete = props.uiSchema['ui:autocomplete']
+      return (
+        <Fragment key={props.key}>
+          {props.description}
+          {autocomplete === 'IsidoreAuthorSearch' && <IsidoreAuthorAPIAutocompleteField {...props}/>}
+          {props.properties.map((element) => (
+            <Fragment key={element.name}>{element.content}</Fragment>
+          ))}
+        </Fragment>
+      )
+    }
+  }
+}
+
 export default function SchemaForm ({
+  schema,
+  uiSchema,
   formData: initialFormData,
   basicMode,
-  onChange = () => {},
+  onChange = () => {
+  },
 }) {
+  const { t } = useTranslation()
+  const baseSchema = schema ?? defaultSchema
+  const baseUiSchema = uiSchema ?? defaultUiSchema
   const [formData, setFormData] = useState(initialFormData)
   const [errors, setErrors] = useState({})
   const formContext = {
@@ -141,12 +189,12 @@ export default function SchemaForm ({
   }
 
   const effectiveUiSchema = useMemo(
-    () => (basicMode ? { ...uiSchema, ...basicUiSchema } : uiSchema),
+    () => (basicMode ? { ...baseUiSchema, ...basicUiSchema } : baseUiSchema),
     [basicMode]
   )
 
   const customWidgets = {
-    SelectWidget: CustomSelect,
+    SelectWidget: CustomSelectBuilder({ translationHook: t }),
   }
 
   const customFields = {
@@ -163,10 +211,11 @@ export default function SchemaForm ({
   return (
     <Form
       className={styles.form}
-      ObjectFieldTemplate={ObjectFieldTemplate}
+      ObjectFieldTemplate={ObjectFieldTemplateBuilder({ translationHook: t })}
+      FieldTemplate={FieldTemplateBuilder({ translationHook: t })}
       ArrayFieldTemplate={ArrayFieldTemplate}
       formContext={formContext}
-      schema={schema}
+      schema={baseSchema}
       widgets={customWidgets}
       fields={customFields}
       uiSchema={effectiveUiSchema}
@@ -174,7 +223,7 @@ export default function SchemaForm ({
       onChange={handleUpdate}
       onError={setErrors}
     >
-      <hr hidden={true} />
+      <hr hidden={true}/>
     </Form>
   )
 }
