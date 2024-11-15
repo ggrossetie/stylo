@@ -176,21 +176,25 @@
         "$ref": "#/definitions/person"
       }
     },
-    "issn": {
-      "type": "string"
-    },
-    "producer": {
-      "type": "string"
-    },
-    "prodNum": {
-      "type": "string"
-    },
-    "diffNum": {
-      "type": "string"
+    "production": {
+      "type": "object",
+      "properties": {
+        "issn": {
+          "type": "string"
+        },
+        "producer": {
+          "type": "string"
+        },
+        "prodNum": {
+          "type": "string"
+        },
+        "diffNum": {
+          "type": "string"
+        }
+      }
     },
     "funder": {
       "type": "object",
-      "title": "",
       "properties": {
         "organization": {
           "type": "string"
