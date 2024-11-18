@@ -109,11 +109,32 @@
     "license": {
       "type": "string"
     },
+    "acknowledgements": {
+      "type": "string"
+    },
     "localizedContent": {
       "type": "array",
       "items": {
         "$ref": "#/definitions/localizedContent"
       }
+    },
+    "controlledKeywords": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "idRameau": {
+            "type": "string"
+          },
+          "uriRameau": {
+            "type": "string"
+          }
+        }
+      },
+      "uniqueItems": true
     },
     "authors": {
       "type": "array",
@@ -139,20 +160,17 @@
         "$ref": "#/definitions/person"
       }
     },
-    "translations": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string"
-          },
-          "url": {
-            "type": "string"
-          },
-          "lang": {
-            "$ref": "#/definitions/lang"
-          }
+    "translationOf": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "lang": {
+          "$ref": "#/definitions/lang"
         }
       }
     },
