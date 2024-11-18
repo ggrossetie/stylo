@@ -1,0 +1,11 @@
+= Metadata
+
+- https://scholar.google.com/intl/en/scholar/inclusion.html[Google Scholar]
+- https://www.erudit.org/xsd/article/3.0.0/eruditarticle.xsd[Érudit]
+- https://www.dublincore.org/specifications/dublin-core/dcmi-terms/[Dublin Core]
+- https://www.w3.org/submissions/prism/[PRISM]
+- https://www.loc.gov/marc/relators/relaterm.html[MARC Relators]
+- https://tdg.docbook.org/tdg/publishers/5.0/dcterms.html[DocBook DCTERMS]
+- http://xmlns.com/foaf/spec/[FOAF]
+
+Schéma non utilisé, mais pouvant servir d'inspiration : https://schema.org/Article
