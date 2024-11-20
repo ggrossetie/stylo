@@ -72,10 +72,6 @@ export default function ArticleEditorMetadata({ handleYaml, readOnly, yaml }) {
                 name: t('write.basicMode.metadataButton'),
               },
               {
-                value: 'editor',
-                name: t('write.editorMode.metadataButton'),
-              },
-              {
                 value: 'raw',
                 name: t('write.rawMode.metadataButton'),
               },
@@ -92,22 +88,9 @@ export default function ArticleEditorMetadata({ handleYaml, readOnly, yaml }) {
               />
             </>
           )}
-          {selector !== 'raw' && readOnly && (
+          {selector !== 'raw' && (
             <YamlEditor
               yaml={rawYaml}
-              basicMode={selector === 'basic'}
-              error={(reason) => {
-                setError(reason)
-                if (reason !== '') {
-                  setSelector('raw')
-                }
-              }}
-            />
-          )}
-          {selector !== 'raw' && !readOnly && (
-            <YamlEditor
-              yaml={rawYaml}
-              basicMode={selector === 'basic'}
               error={(reason) => {
                 setError(reason)
                 if (reason !== '') {
@@ -115,6 +98,9 @@ export default function ArticleEditorMetadata({ handleYaml, readOnly, yaml }) {
                 }
               }}
               onChange={(yaml) => {
+                if (readOnly) {
+                  return
+                }
                 setRawYaml(yaml)
                 handleYaml(yaml)
               }}

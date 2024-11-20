@@ -287,7 +287,18 @@ function toLegacyFormat(metadata) {
     ],
     translations: [], // MISSING!
     translator: metadata.translators,
-    typeArticle: [], // MISSING!
+    typeArticle: [], // MISSING! TODO: senspublic.categories
+    // production
+    // diffuseur / publisher
+    // producteur / producer
+    // editeur / editor
+    // {
+    //   "type": "publisher",
+    //   "media": "digital", // print, digital, ebook
+    //   "name": ""
+    // }
+    // Ajouter une entité responsable de la production...
+    // Add a new production entity...
   }
 }
 
