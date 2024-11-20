@@ -1,9 +1,12 @@
+import { Modal as GeistModal, useModal } from '@geist-ui/core'
+import clsx from 'clsx'
 import PropTypes from 'prop-types'
 import React, { Fragment, useCallback, useMemo, useState } from 'react'
 import Form, { getDefaultRegistry } from '@rjsf/core'
 import validator from '@rjsf/validator-ajv8'
-import { set } from 'object-path-immutable'
+import { del, set } from 'object-path-immutable'
 import { Translation } from 'react-i18next'
+import ArticleCreate from './ArticleCreate.jsx'
 
 // REMIND: use a custom SelectWidget to support "ui:emptyValue"
 // remove once fixed in https://github.com/rjsf-team/react-jsonschema-form/issues/1041
@@ -18,7 +21,7 @@ import IsidoreAuthorAPIAutocompleteField from './Write/metadata/isidoreAuthor'
 
 const {
   templates: { BaseInputTemplate: DefaultBaseInputTemplate },
-  widgets: { CheckboxesWidget}
+  widgets: { CheckboxesWidget }
 } = getDefaultRegistry()
 
 /**
@@ -96,19 +99,43 @@ function ArrayFieldTemplate (properties) {
   const addItemTitle = properties.uiSchema['ui:add-item-title'] ?? 'form.addItem.title'
   const removeItemTitle = properties.uiSchema['ui:remove-item-title'] ?? 'form.removeItem.title'
   const title = properties.uiSchema['ui:title']
-
+  const fields = properties.uiSchema['ui:item-fields']
   const inlineRemoveButton = properties.schema?.items?.type === 'string' || !removeItemTitle
   return (
     <fieldset className={styles.fieldset} key={properties.key}>
       {title && <Translation>{(t) => <legend id={properties.id}>{t(title)}</legend>}</Translation>}
-      {properties.items &&
-        properties.items.map((element) => (
+      {properties.items && properties.items.map((element, index) => {
+        const data = element.children.props.formData
+        const { $id: id } = properties.idSchema
+        const itemId = `${id}_${index}`
+        if (data && data.creating === true) {
+          return <GeistModal key={element.key} width="40rem" visible={true} onClose={() => {
+            properties.formContext.partialRemove({ id: itemId })
+          }}>
+            <h2>Create</h2>
+            <GeistModal.Content>{element.children}</GeistModal.Content>
+            <GeistModal.Action onClick={() => {
+              const data = element.children.props.formData
+              properties.formContext.partialUpdate({ id: itemId, value: { ...data, creating: undefined } })
+            }}>Create</GeistModal.Action>
+            <GeistModal.Action passive onClick={() => {
+              properties.formContext.partialRemove({ id: itemId })
+            }}>Close</GeistModal.Action>
+          </GeistModal>
+        }
+        return (
           <div
             id={element.key}
             key={element.key}
-            className={`${element.className} can-add-remove`}
+            className={clsx(element.className, 'can-add-remove', fields && styles.inline)}
           >
-            {element.children}
+            {fields && <div className={styles.fields}>
+              <span className={styles.forename}>{'forname' in data && data.forname}</span>
+              <span className={styles.surname}>{'surname' in data && data.surname}</span>
+              <span className={styles.affiliations}>{'affiliations' in data && data.affiliations}</span>
+            </div>
+            }
+            {!fields && <>{element.children}</>}
             {element.hasRemove && (
               <Button
                 icon={inlineRemoveButton}
@@ -125,13 +152,18 @@ function ArrayFieldTemplate (properties) {
               </Button>
             )}
           </div>
-        ))}
+        )
+      })}
       {properties.canAdd && (
         <Button
           type="button"
           className={styles.addButton}
           tabIndex={-1}
-          onClick={properties.onAddClick}
+          onClick={() => {
+            const { $id: id } = properties.idSchema
+            const itemId = `${id}_${properties.items.length + 1}`
+            properties.formContext.partialUpdate({ id: itemId, value: { creating: true } })
+          }}
         >
           <Plus/>
           <Translation>
@@ -254,6 +286,14 @@ export default function SchemaForm ({
       const path = id.replace('root_', '').replace('_', '.')
       setFormData((state) => {
         const newFormData = set(state, path, value)
+        onChange(newFormData)
+        return newFormData
+      })
+    },
+    partialRemove: ({ id }) => {
+      const path = id.replace('root_', '').replace('_', '.')
+      setFormData((state) => {
+        const newFormData = del(state, path)
         onChange(newFormData)
         return newFormData
       })

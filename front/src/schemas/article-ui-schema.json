@@ -451,6 +451,11 @@
   },
   "reviewers": {
     "ui:title": "article.metadata.reviewers",
+    "ui:item-fields": {
+      "forname":  true,
+      "surname":  true,
+      "affiliations":  true
+    },
     "items": {
       "surname": {
         "ui:title": "article.metadata.people.surname"

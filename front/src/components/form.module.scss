@@ -113,7 +113,7 @@
       &.field-string,
       &.field-boolean {
         label {
-         padding-bottom: 0.15rem;
+          padding-bottom: 0.15rem;
         }
       }
 
@@ -239,4 +239,21 @@
   border: 1px solid red;
   margin: .5em;
   padding: .5rem;
+}
+
+.inline {
+  display: flex;
+}
+
+.fields {
+  display: flex;
+}
+
+.forename {
+}
+
+.surname {
+}
+
+.affiliations {
 }
