@@ -16,7 +16,7 @@ import isidoreAuthorSearch from './Write/metadata/isidoreAuthor'
 
 import styles from './form.module.scss'
 import Button from './Button'
-import { Plus, Trash } from 'react-feather'
+import { Edit, Plus, Trash } from 'react-feather'
 import IsidoreAuthorAPIAutocompleteField from './Write/metadata/isidoreAuthor'
 
 const {
@@ -92,6 +92,20 @@ function CustomCheckboxesWidget (properties) {
   </Translation>)
 }
 
+const PersonEntryTemplate = (data) => {
+  return (
+    <div className={styles.personEntry}>
+      <div className={styles.personHeader}>
+        <div className={styles.forename}>{data.forname}</div>
+        <div className={styles.surname}>{data.surname}</div>
+      </div>
+      <div className={styles.personFooter}>
+      <div className={styles.affiliations}>{data.affiliations}</div>
+      </div>
+    </div>
+  )
+}
+
 /**
  * @param {ArrayFieldTemplateProps} properties
  */
@@ -100,6 +114,7 @@ function ArrayFieldTemplate (properties) {
   const removeItemTitle = properties.uiSchema['ui:remove-item-title'] ?? 'form.removeItem.title'
   const title = properties.uiSchema['ui:title']
   const fields = properties.uiSchema['ui:item-fields']
+  const editItemTitle = properties.uiSchema['ui:edit-item-title']
   const inlineRemoveButton = properties.schema?.items?.type === 'string' || !removeItemTitle
   return (
     <fieldset className={styles.fieldset} key={properties.key}>
@@ -129,12 +144,7 @@ function ArrayFieldTemplate (properties) {
             key={element.key}
             className={clsx(element.className, 'can-add-remove', fields && styles.inline)}
           >
-            {fields && <div className={styles.fields}>
-              <span className={styles.forename}>{'forname' in data && data.forname}</span>
-              <span className={styles.surname}>{'surname' in data && data.surname}</span>
-              <span className={styles.affiliations}>{'affiliations' in data && data.affiliations}</span>
-            </div>
-            }
+            {fields && data && PersonEntryTemplate(data)}
             {!fields && <>{element.children}</>}
             {element.hasRemove && (
               <Button
@@ -149,6 +159,21 @@ function ArrayFieldTemplate (properties) {
                 {inlineRemoveButton ? '' : <Translation>
                   {(t) => t(removeItemTitle)}
                 </Translation>}
+              </Button>
+            )}
+            {editItemTitle && (
+              <Button
+                type="button"
+                className={[styles.removeButton, inlineRemoveButton ? styles.inlineRemoveButton : ''].join(' ')}
+                tabIndex={-1}
+                onClick={() => {
+                  console.log(`OPEN POPUP editing... ${element.index}`)
+                }}
+              >
+                <Edit/>
+                <Translation>
+                  {(t) => t(editItemTitle)}
+                </Translation>
               </Button>
             )}
           </div>

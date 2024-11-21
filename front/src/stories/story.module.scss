@@ -9,3 +9,39 @@
     }
   }
 }
+
+.nav {
+  display: flex;
+  max-width: 350px;
+  min-width: 350px;
+  border: 1px solid #1DCC4D;
+}
+
+.block {
+  display: flex;
+  border: 1px solid #440044;
+  min-width: 0;
+}
+
+.item {
+  display: flex;
+  border: 1px solid #9C3916;
+}
+
+.item {
+  display: flex;
+  border: 1px solid #0645ad;
+  overflow: hidden;
+}
+
+.text {
+  border: 1px solid #FF9865;
+  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn {
+  border: 1px solid #A7D1F5;
+}

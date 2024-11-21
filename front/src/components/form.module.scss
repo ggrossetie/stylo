@@ -207,6 +207,7 @@
   border: none;
   margin: 0 0 0.75rem;
   padding: 0;
+  min-width: 0;
 
   legend {
     @include legend;
@@ -243,16 +244,40 @@
 
 .inline {
   display: flex;
+  gap: 0.5rem;
+  margin-left: 1rem;
 }
 
 .fields {
   display: flex;
 }
 
-.forename {
+.personEntry {
+  display: flex;
+  overflow: hidden;
+}
+
+.personHeader {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  display: flex;
+  gap: 0.35rem;
+}
+
+.personFooter {
+  font-weight: 300;
+}
+
+.forename, .surname {
+  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .surname {
+  flex: 1;
 }
 
 .affiliations {
