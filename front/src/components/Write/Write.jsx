@@ -327,13 +327,6 @@ export default function Write() {
         </GeistModal.Content>
         <GeistModal.Action onClick={() => setSoloSessionTakeOverModalVisible(false)}>{t('modal.confirmButton.text')}</GeistModal.Action>
       </GeistModal>
-
-      <ArticleEditorMenu
-        articleInfos={articleInfos}
-        compareTo={compareTo}
-        selectedVersion={currentVersion}
-        readOnly={mode === MODES_READONLY}
-      />
       <article className={clsx({[styles.article]: mode !== MODES_PREVIEW})}>
         <WorkingVersion articleInfos={articleInfos} live={live} selectedVersion={currentVersion} mode={mode} />
 
@@ -355,6 +348,12 @@ export default function Write() {
           </Route>
         </Switch>
       </article>
+      <ArticleEditorMenu
+        articleInfos={articleInfos}
+        compareTo={compareTo}
+        selectedVersion={currentVersion}
+        readOnly={mode === MODES_READONLY}
+      />
       <ArticleEditorMetadata
         yaml={live.yaml}
         handleYaml={handleYaml}

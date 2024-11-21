@@ -3,10 +3,10 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useRouteMatch } from 'react-router-dom'
 import { ChevronDown, ChevronRight } from 'react-feather'
 import { useTranslation } from 'react-i18next'
-import { usePandocAnchoring } from '../../hooks/pandoc.js'
+import { usePandocAnchoring } from '../../../hooks/pandoc.js'
 
 import styles from './sommaire.module.scss'
-import menuStyles from './menu.module.scss'
+import menuStyles from '../menu.module.scss'
 
 
 export default function Sommaire () {

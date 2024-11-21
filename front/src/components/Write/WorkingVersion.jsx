@@ -80,10 +80,6 @@ export default function WorkingVersion ({ articleInfos, live, selectedVersion, m
   const openExport = useCallback(() => setExporting(true), [])
   const { t } = useTranslation()
 
-
-  const previewUrl = selectedVersion
-    ? `/article/${articleInfos._id}/version/${selectedVersion}/preview`
-    : `/article/${articleInfos._id}/preview`
   const articleOwnerAndContributors = [
     articleInfos.owner.displayName,
     ...articleInfos.contributors.map(contributor => contributor.user.displayName)
@@ -93,40 +89,8 @@ export default function WorkingVersion ({ articleInfos, live, selectedVersion, m
     <>
       <section className={styles.section}>
         <header className={styles.header}>
-          <h1 className={styles.title}>
-            <AlignLeft/>
-            {articleInfos.title}
-          </h1>
+          <h1 className={styles.title}>{articleInfos.title}</h1>
         </header>
-        {exporting && (
-          <Modal title="Export" cancel={cancelExport}>
-            <Export articleVersionId={selectedVersion} articleId={articleInfos._id} bib={live.bibPreview} name={articleInfos.title} />
-          </Modal>
-        )}
-        <ul className={styles.actions}>
-          {articleInfos.preview.stylesheet && (<><li>
-            <Link to={`/article/${articleInfos._id}`} className={mode === 'write' ? buttonStyles.primaryDisabled : buttonStyles.secondary} title="Edit article">
-              <Edit3/> Edit
-            </Link>
-          </li>
-          <li>
-            <Link to={`/article/${articleInfos._id}/preview`} className={mode === 'preview' ? buttonStyles.primaryDisabled : buttonStyles.secondary} title="Preview article">
-              <Eye/>{articleInfos.preview.stylesheet ? 'Paged.js' : <abbr title="HyperText Markup Language">HTML</abbr>}
-            &nbsp;Preview
-            </Link>
-          </li></>)}
-          <li>
-            <Button icon title={t('write.title.buttonExport')} onClick={openExport}>
-              <Printer/>
-            </Button>
-          </li>
-          <li>
-            <Link to={previewUrl} title={t('write.title.buttonPreview')} target="_blank" rel="noopener noreferrer"
-                  className={buttonStyles.icon}>
-              <Eye/>
-            </Link>
-          </li>
-        </ul>
       </section>
       <section>
         <div className={styles.meta}>
