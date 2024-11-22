@@ -1,0 +1,32 @@
+import { Canvas, Meta } from '@storybook/blocks';
+
+import * as CheckboxStories from './Form.stories.jsx';
+
+<Meta of={CheckboxStories}/>
+
+# Schema Form
+
+Based on [React JSON Schema Form](https://github.com/rjsf-team/react-jsonschema-form)
+
+Here's a simple example using the following JSON schema:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "url": {
+      "type": "string"
+    }
+  }
+}
+```
+
+<Canvas of={CheckboxStories.Basic}/>
+

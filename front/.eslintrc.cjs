@@ -4,11 +4,7 @@ module.exports = {
     browser: true,
     es2021: true,
   },
-  extends: [
-    'eslint:recommended',
-    'plugin:react/recommended',
-    'plugin:jsonc/recommended-with-json',
-  ],
+  extends: ['eslint:recommended', 'plugin:react/recommended', 'plugin:jsonc/recommended-with-json', 'plugin:storybook/recommended'],
   parserOptions: {
     ecmaFeatures: {
       jsx: true,

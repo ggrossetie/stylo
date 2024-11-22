@@ -232,7 +232,6 @@ const customFields = {
 }
 
 /**
- *
  * @param initialFormData
  * @param schema
  * @param uiSchema

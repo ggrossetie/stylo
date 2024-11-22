@@ -24,7 +24,9 @@
     "preview": "vite preview",
     "develop": "npm run start",
     "test": "vitest --coverage",
-    "posttest": "eslint ./src"
+    "posttest": "eslint ./src",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@babel/plugin-proposal-async-generator-functions": "^7.20.1",
@@ -88,7 +90,15 @@
     "url": "https://github.com/ecrituresnumeriques/stylo/issues"
   },
   "devDependencies": {
+    "@chromatic-com/storybook": "^3.2.2",
     "@sentry/vite-plugin": "^2.22.6",
+    "@storybook/addon-essentials": "^8.4.5",
+    "@storybook/addon-interactions": "^8.4.5",
+    "@storybook/addon-onboarding": "^8.4.5",
+    "@storybook/blocks": "^8.4.5",
+    "@storybook/react": "^8.4.5",
+    "@storybook/react-vite": "^8.4.5",
+    "@storybook/test": "^8.4.5",
     "@testing-library/jest-dom": "^6.5.0",
     "@testing-library/react": "^16.0.1",
     "@testing-library/user-event": "^14.5.2",
@@ -97,10 +107,12 @@
     "eslint": "^8.2.0",
     "eslint-plugin-jsonc": "^2.5.0",
     "eslint-plugin-react": "^7.27.0",
+    "eslint-plugin-storybook": "^0.11.1",
     "eslint-plugin-vitest": "^0.5.4",
     "jsdom": "^25.0.1",
     "lodash.merge": "^4.6.2",
     "prettier": "^2.3.0",
+    "storybook": "^8.4.5",
     "vitest": "^2.1.2"
   },
   "volta": {
