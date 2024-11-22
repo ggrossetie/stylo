@@ -31,7 +31,7 @@ export default function ArticleEditorMenu ({ articleInfos, readOnly, compareTo, 
       <button onClick={toggleExpand}>
         {expanded ? <XSquare/> : <Sidebar/>} {expanded ? t('write.sidebar.closeButton') : t('write.sidebar.menu')}
       </button>
-      {expanded && (<div>
+      {expanded && (<div className={styles.navigation}>
         <Navigation items={[
           {
             key: 'toc',

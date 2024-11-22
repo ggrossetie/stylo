@@ -3,10 +3,8 @@
 
 .menu {
   min-width: 350px;
-  max-height: calc(100vh - 76px);
-  background-color: #f4f4f4;
   padding: 0 1rem 1rem;
-  overflow: auto;
+  margin-top: -3rem;
 
   > button {
     @extend .clickable;
@@ -21,4 +19,11 @@
     height: 2rem;
     margin-bottom: 1rem;
   }
+}
+
+.navigation {
+  height: calc(100vh - 159px);
+  background-color: #f4f4f4;
+  padding: 1rem;
+  overflow: auto;
 }
