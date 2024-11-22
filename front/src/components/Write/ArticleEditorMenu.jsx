@@ -1,21 +1,19 @@
+import { Modal as GeistModal, useModal } from '@geist-ui/core'
+import clsx from 'clsx'
 import React, { useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
-import Button from '../Button.jsx'
-import buttonStyles from '../button.module.scss'
 import Export from '../Export.jsx'
-import Modal from '../Modal.jsx'
+import Navigation from '../navigation/Navigation.jsx'
 
 import styles from './articleEditorMenu.module.scss'
-import Biblio from './Biblio'
-import ArticleExportButton from './menu/ArticleExportButton.jsx'
-import ArticlePreviewLink from './menu/ArticlePreviewLink.jsx'
-import Sommaire from './menu/Sommaire.jsx'
+import ArticleEditorMetadata from './ArticleEditorMetadata.jsx'
+import Bibliography from './Bibliography.jsx'
+import TableOfContents from './menu/TableOfContents.jsx'
 import Versions from './menu/Versions.jsx'
-import { Edit3, Eye, Printer, Sidebar } from 'react-feather'
+import { Sidebar, XSquare } from 'react-feather'
 
-export default function ArticleEditorMenu ({ articleInfos, readOnly, compareTo, selectedVersion }) {
+export default function ArticleEditorMenu ({ articleInfos, readOnly, compareTo, selectedVersion, yaml, handleYaml }) {
   const previewUrl = selectedVersion
     ? `/article/${articleInfos._id}/version/${selectedVersion}/preview`
     : `/article/${articleInfos._id}/preview`
@@ -23,28 +21,67 @@ export default function ArticleEditorMenu ({ articleInfos, readOnly, compareTo, 
   const dispatch = useDispatch()
   const toggleExpand = useCallback(() => dispatch({ type: 'ARTICLE_PREFERENCES_TOGGLE', key: 'expandSidebarLeft' }), [])
   const { t } = useTranslation()
-
+  const {
+    visible,
+    setVisible,
+    bindings
+  } = useModal()
   return (
-    <nav className={`${expanded ? styles.expandleft : styles.retractleft}`}>
-      <button onClick={toggleExpand} className={expanded ? styles.close : styles.open}>
-        <Sidebar/> {expanded ? t('write.sidebar.closeButton') : t('write.sidebar.biblioAndCoButton')}
+    <nav className={styles.menu}>
+      <button onClick={toggleExpand}>
+        {expanded ? <XSquare/> : <Sidebar/>} {expanded ? t('write.sidebar.closeButton') : t('write.sidebar.menu')}
       </button>
       {expanded && (<div>
-        <Versions
-          article={articleInfos}
-          selectedVersion={selectedVersion}
-          compareTo={compareTo}
-          readOnly={readOnly}
-        />
-        <Sommaire/>
-        <Biblio readOnly={readOnly} article={articleInfos}/>
-        <ArticleExportButton 
-          articleId={articleInfos._id}
-          bibPreview={'TODO: BIB Preview'}
-          articleVersionId={selectedVersion}
-          articleTitle={articleInfos.title}
-        ></ArticleExportButton>
-        <ArticlePreviewLink articleId={articleInfos._id} version={selectedVersion}></ArticlePreviewLink>
+        <Navigation items={[
+          {
+            key: 'toc',
+            title: t('write.titleToc.sidebar'),
+            content: <TableOfContents/>
+          },
+          {
+            key: 'bibliography',
+            title: t('write.sidebar.biblioTitle'),
+            content: <Bibliography readOnly={readOnly} article={articleInfos}/>
+          },
+          {
+            key: 'versions',
+            title: t('write.titleVersion.sidebar'),
+            content: <Versions
+              article={articleInfos}
+              selectedVersion={selectedVersion}
+              compareTo={compareTo}
+              readOnly={readOnly}
+            />
+          },
+          {
+            key: 'metadata',
+            title: 'Métadonnées',
+            content: <ArticleEditorMetadata readOnly={readOnly} article={articleInfos} yaml={yaml} handleYaml={handleYaml}/>
+          },
+          {
+            key: 'export',
+            title: 'Export',
+            onClick: () => {
+              setVisible(true)
+            }
+          },
+          {
+            key: 'preview',
+            title: 'Preview',
+            href: previewUrl
+          }
+        ]}/>
+        <GeistModal width="40rem" visible={visible} {...bindings}>
+          <h2>{t('article.export.title')}</h2>
+          <GeistModal.Content>
+            <Export
+              articleVersionId={selectedVersion}
+              articleId={articleInfos._id}
+              bib={'TODO: BIB Preview'}
+              name={articleInfos.title}
+            />
+          </GeistModal.Content>
+        </GeistModal>
       </div>)}
     </nav>
   )

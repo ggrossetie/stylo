@@ -131,6 +131,7 @@
   "footer.navStats.checkbox": "J'accepte de partager mes statistiques de navigation",
   "footer.privacy.link": "Confidentialité",
   "write.sidebar.closeButton": "Fermer",
+  "write.sidebar.menu": "Menu",
   "write.sidebar.biblioAndCoButton": "Bibliographie & cie",
   "write.title.buttonExport": "Exporter",
   "write.title.buttonPreview": "Prévisualiser (ouvrir une nouvelle fenêtre)",
@@ -267,5 +268,6 @@
   "corpus.metadata.form.issue": "Numéro de revue",
   "corpus.metadata.form.issue.title": "Titre",
   "corpus.metadata.form.issue.number": "N°",
-  "corpus.metadata.form.issue.identifier": "Identifiant"
+  "corpus.metadata.form.issue.identifier": "Identifiant",
+  "article.export.title": "Export"
 }

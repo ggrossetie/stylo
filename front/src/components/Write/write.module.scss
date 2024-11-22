@@ -52,6 +52,12 @@
   }
 }
 
+@media screen and (max-width: 1200px) {
+  .article {
+    margin-left: 0.5rem;
+  }
+}
+
 .error {
   @extend .simplePage;
   color: $error-color;
@@ -79,4 +85,14 @@
   .monaco-editor {
     position: absolute;
   }
+}
+
+.editorPanel {
+  display: flex;
+}
+
+.editor {
+  width: 100ch;
+  min-width: 50ch;
+
 }

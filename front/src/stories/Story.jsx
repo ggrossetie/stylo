@@ -3,6 +3,7 @@ import React from 'react'
 import { Search } from 'react-feather'
 import buttonStyles from '../components/button.module.scss'
 import Field from '../components/Field.jsx'
+import Navigation from '../components/navigation/Navigation.jsx'
 import Select from '../components/Select.jsx'
 import ButtonStory from './Button.story.jsx'
 import FormStory from './Form.story.jsx'
@@ -32,6 +33,10 @@ export default function Story () {
           <option>Reblochon</option>
           <option>St Marcellin</option>
         </Select>
+      </Tabs.Item>
+      <Tabs.Item label="navigations" value="4">
+        <h2>Navigations</h2>
+        <Navigation/>
       </Tabs.Item>
     </Tabs>
   </div>

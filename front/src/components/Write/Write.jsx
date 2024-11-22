@@ -33,16 +33,14 @@ const MODES_WRITE = 'write'
 export function deriveModeFrom ({ path, currentVersion }) {
   if (path === '/article/:id/preview') {
     return MODES_PREVIEW
-  }
-
-  else if (currentVersion) {
+  } else if (currentVersion) {
     return MODES_READONLY
   }
 
   return MODES_WRITE
 }
 
-export default function Write() {
+export default function Write () {
   const { setToast } = useToasts()
   const backendEndpoint = useSelector(state => state.applicationConfig.backendEndpoint)
   const { t } = useTranslation()
@@ -55,10 +53,10 @@ export default function Write() {
   const [collaborativeSessionActive, setCollaborativeSessionActive] = useState(false)
   const [soloSessionActive, setSoloSessionActive] = useState(false)
   const mode = useMemo(() => {
-    if (collaborativeSessionActive || soloSessionActive)  {
+    if (collaborativeSessionActive || soloSessionActive) {
       return MODES_READONLY
     }
-    return deriveModeFrom({ currentVersion, path: routeMatch.path})
+    return deriveModeFrom({ currentVersion, path: routeMatch.path })
   }, [currentVersion, routeMatch.path, collaborativeSessionActive, soloSessionActive])
   const [graphQLError, setGraphQLError] = useState()
   const [isLoading, setIsLoading] = useState(true)
@@ -299,7 +297,7 @@ export default function Write() {
   }
 
   if (isLoading) {
-    return <Loading />
+    return <Loading/>
   }
 
   return (
@@ -309,7 +307,8 @@ export default function Write() {
         <GeistModal.Content>
           {t('article.collaborativeSessionActive.message')}
         </GeistModal.Content>
-        <GeistModal.Action onClick={() => setCollaborativeSessionActiveVisible(false)}>{t('modal.confirmButton.text')}</GeistModal.Action>
+        <GeistModal.Action
+          onClick={() => setCollaborativeSessionActiveVisible(false)}>{t('modal.confirmButton.text')}</GeistModal.Action>
       </GeistModal>
 
       <GeistModal width="40rem" visible={soloSessionActiveVisible} {...soloSessionActiveBinding}>
@@ -317,7 +316,8 @@ export default function Write() {
         <GeistModal.Content>
           {t('article.soloSessionActive.message')}
         </GeistModal.Content>
-        <GeistModal.Action onClick={() => setSoloSessionActiveVisible(false)}>{t('modal.confirmButton.text')}</GeistModal.Action>
+        <GeistModal.Action
+          onClick={() => setSoloSessionActiveVisible(false)}>{t('modal.confirmButton.text')}</GeistModal.Action>
       </GeistModal>
 
       <GeistModal width="40rem" visible={soloSessionTakeOverModalVisible} {...soloSessionTakeOverModalBinding}>
@@ -325,40 +325,40 @@ export default function Write() {
         <GeistModal.Content>
           {t('article.soloSessionTakeOver.message', { username: soloSessionTakenOverBy })}
         </GeistModal.Content>
-        <GeistModal.Action onClick={() => setSoloSessionTakeOverModalVisible(false)}>{t('modal.confirmButton.text')}</GeistModal.Action>
+        <GeistModal.Action
+          onClick={() => setSoloSessionTakeOverModalVisible(false)}>{t('modal.confirmButton.text')}</GeistModal.Action>
       </GeistModal>
-      <article className={clsx({[styles.article]: mode !== MODES_PREVIEW})}>
-        <WorkingVersion articleInfos={articleInfos} live={live} selectedVersion={currentVersion} mode={mode} />
-
+      <article className={clsx({ [styles.article]: mode !== MODES_PREVIEW })}>
+        <WorkingVersion articleInfos={articleInfos} live={live} selectedVersion={currentVersion} mode={mode}/>
         <Switch>
           <Route path="*/preview" exact>
-            <PreviewComponent preview={articleInfos.preview} yaml={live.yaml} />
+            <PreviewComponent preview={articleInfos.preview} yaml={live.yaml}/>
           </Route>
           <Route path="*">
-            <MonacoEditor
-              text={live.md}
-              readOnly={mode === MODES_READONLY}
-              onTextUpdate={handleMDCM}
-              articleId={articleInfos._id}
-              selectedVersion={currentVersion}
-              compareTo={compareTo}
-              currentArticleVersion={live.version} />
-
-            <ArticleStats/>
+            <div className={styles.editorPanel}>
+              <div className={styles.editor}>
+                <MonacoEditor
+                  text={live.md}
+                  readOnly={mode === MODES_READONLY}
+                  onTextUpdate={handleMDCM}
+                  articleId={articleInfos._id}
+                  selectedVersion={currentVersion}
+                  compareTo={compareTo}
+                  currentArticleVersion={live.version}/>
+                <ArticleStats/>
+              </div>
+              <ArticleEditorMenu
+                articleInfos={articleInfos}
+                compareTo={compareTo}
+                selectedVersion={currentVersion}
+                yaml={live.yaml}
+                handleYaml={handleYaml}
+                readOnly={mode === MODES_READONLY}
+              />
+            </div>
           </Route>
         </Switch>
       </article>
-      <ArticleEditorMenu
-        articleInfos={articleInfos}
-        compareTo={compareTo}
-        selectedVersion={currentVersion}
-        readOnly={mode === MODES_READONLY}
-      />
-      <ArticleEditorMetadata
-        yaml={live.yaml}
-        handleYaml={handleYaml}
-        readOnly={mode === MODES_READONLY}
-      />
     </section>
   )
 }

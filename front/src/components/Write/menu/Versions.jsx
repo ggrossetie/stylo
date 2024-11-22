@@ -2,8 +2,8 @@ import React, { useCallback, useState } from 'react'
 import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { shallowEqual, useDispatch, useSelector } from 'react-redux'
-import { ArrowLeft, Check, ChevronDown, ChevronRight, Edit3 } from 'react-feather'
+import { shallowEqual, useSelector } from 'react-redux'
+import { ArrowLeft, Check, Edit3 } from 'react-feather'
 import TimeAgo from '../../TimeAgo.jsx'
 
 import styles from './versions.module.scss'
@@ -58,12 +58,13 @@ function Version ({ articleId, compareTo, readOnly, selectedVersion, v }) {
             <Check/> {t('write.saveVersionName.buttonText')}
           </Button>
           <Button title={t('write.cancelVersionName.buttonTitle')} type="button" onClick={cancelRenaming}>
-          {t('write.cancelVersionName.buttonText')}
+            {t('write.cancelVersionName.buttonText')}
           </Button>
         </div>
       </form>
     )}
-    <Link to={`/article/${articleId}/version/${v._id}`} className={clsx(styles.versionLink, selectedVersion && styles.versionLinkCompare)}>
+    <Link to={`/article/${articleId}/version/${v._id}`}
+          className={clsx(styles.versionLink, selectedVersion && styles.versionLinkCompare)}>
       {!renaming && versionType === 'editingSessionEnded' && <header>
         {t('version.editingSessionEnded.text')}
       </header>}
@@ -76,15 +77,17 @@ function Version ({ articleId, compareTo, readOnly, selectedVersion, v }) {
         <span className={styles.versionLabel}>
           v{v.version}.{v.revision}{' '}{title || ''}
         </span>
-        {!readOnly && <Button title={t('write.editVersionName.buttonTitle')} icon={true} className={styles.editTitleButton} onClick={startRenaming}>
-          <Edit3 size="20"/>
-        </Button>}
+        {!readOnly &&
+          <Button title={t('write.editVersionName.buttonTitle')} icon={true} className={styles.editTitleButton}
+                  onClick={startRenaming}>
+            <Edit3 size="20"/>
+          </Button>}
       </header>}
 
       {!renaming && <p>
         {v.owner && (
           <span className={styles.author}>
-          {t('version.by.text', {owner: v.owner.displayName || v.owner.username})}
+          {t('version.by.text', { owner: v.owner.displayName || v.owner.username })}
         </span>
         )}
         <span className={styles.momentsAgo}>
@@ -127,16 +130,12 @@ Version.propTypes = {
 
 export default function Versions ({ article, selectedVersion, compareTo, readOnly }) {
   const articleVersions = useSelector(state => state.articleVersions, shallowEqual)
-  const expand = useSelector(state => state.articlePreferences.expandVersions)
-  const dispatch = useDispatch()
   const [exportParams, setExportParams] = useState({})
   const [expandCreateForm, setExpandCreateForm] = useState(false)
 
-  const toggleExpand = useCallback(() => dispatch({ type: 'ARTICLE_PREFERENCES_TOGGLE', key: 'expandVersions' }), [])
   const closeNewVersion = useCallback(() => setExpandCreateForm(false), [])
   const createNewVersion = useCallback((event) => {
     event.preventDefault()
-    dispatch({ type: 'ARTICLE_PREFERENCES_TOGGLE', key: 'expandVersions', value: false })
     setExpandCreateForm(true)
   }, [])
   const cancelExport = useCallback(() => setExportParams({}), [])
@@ -144,41 +143,39 @@ export default function Versions ({ article, selectedVersion, compareTo, readOnl
 
   return (
     <section className={clsx(menuStyles.section)}>
-      <h1 className={expand ? null : styles.closed} onClick={toggleExpand}>
-        {expand ? <ChevronDown/> : <ChevronRight/>}
-        {t('write.titleVersion.sidebar')}
-
-        {!readOnly && <Button className={styles.headingAction} small={true} disabled={readOnly} onClick={createNewVersion}>
-        {t('write.newVersion.button')}
+      {!readOnly &&
+        <Button className={styles.headingAction} small={true} disabled={readOnly} onClick={createNewVersion}>
+          {t('write.newVersion.button')}
         </Button>}
-        {readOnly && <Link className={clsx(buttonStyles.button, buttonStyles.secondary, styles.editMode, styles.headingAction)} to={`/article/${article._id}`}> <ArrowLeft/> Edit Mode</Link>}
-      </h1>
+      {readOnly &&
+        <Link className={clsx(buttonStyles.button, buttonStyles.secondary, styles.editMode, styles.headingAction)}
+              to={`/article/${article._id}`}> <ArrowLeft/> Edit Mode</Link>}
+
       {exportParams.articleId && (
         <Modal title="Export" cancel={cancelExport}>
           <Export {...exportParams} />
         </Modal>
       )}
-      {expand && (
-        <>
-          {expandCreateForm && <CreateVersion articleId={article._id} readOnly={readOnly} onClose={closeNewVersion}/>}
 
-          {articleVersions.length === 0 && (<p>
-            <strong>All changes are automatically saved.</strong><br/>
-            Create a new version to keep track of particular changes.
-          </p>)}
+      <>
+        {expandCreateForm && <CreateVersion articleId={article._id} readOnly={readOnly} onClose={closeNewVersion}/>}
 
-          <ul className={styles.versionsList}>
-            {articleVersions.map((v) => (
-              <Version key={`showVersion-${v._id}`}
-                       articleId={article._id}
-                       selectedVersion={selectedVersion}
-                       compareTo={compareTo}
-                       readOnly={readOnly}
-                       v={v}/>
-            ))}
-          </ul>
-        </>
-      )}
+        {articleVersions.length === 0 && (<p>
+          <strong>All changes are automatically saved.</strong><br/>
+          Create a new version to keep track of particular changes.
+        </p>)}
+
+        <ul className={styles.versionsList}>
+          {articleVersions.map((v) => (
+            <Version key={`showVersion-${v._id}`}
+                     articleId={article._id}
+                     selectedVersion={selectedVersion}
+                     compareTo={compareTo}
+                     readOnly={readOnly}
+                     v={v}/>
+          ))}
+        </ul>
+      </>
     </section>
   )
 }

@@ -1,38 +1,24 @@
 @use '../../styles/defaults' as *;
 @use '../../styles/variables' as *;
 
-
-.expandleft {
-  @extend .details;
-  padding-bottom: 1em;
-  border-right: 1px solid $main-border-color;
-  border-bottom: 1px solid $main-border-color;
-  margin-top: -1em;
-  padding-top: 1em;
-  display: flex;
-  flex-direction: column;
-  min-width: 300px;
-  overflow-y: auto;
+.menu {
+  min-width: 350px;
   max-height: calc(100vh - 76px);
-  > button {
-    color: $main-color;
-    margin-left: auto;
-    margin-right: 1em;
-  }
-}
+  background-color: #f4f4f4;
+  padding: 0 1rem 1rem;
+  overflow: auto;
 
-.retractleft {
-  @extend .details;
-  margin-top: -1em;
-  padding-top: 1em;
-  display: flex;
-  flex-direction: column;
   > button {
-    margin-left: 1em;
-    margin-right: 1em;
-  }
-  .open {
-    background-color: rgba(0, 0, 0, 0);
-    white-space: nowrap;
+    @extend .clickable;
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    padding: .5rem 0.75rem;
+    transition: background-color 0.5s ease;
+    border:solid 1px currentColor;
+    border-radius: 26px;
+    color: $main-color;
+    height: 2rem;
+    margin-bottom: 1rem;
   }
 }
