@@ -132,7 +132,7 @@ export default function Versions ({ article, selectedVersion, compareTo, readOnl
   const articleVersions = useSelector(state => state.articleVersions, shallowEqual)
   const [exportParams, setExportParams] = useState({})
   const [expandCreateForm, setExpandCreateForm] = useState(false)
-
+  
   const closeNewVersion = useCallback(() => setExpandCreateForm(false), [])
   const createNewVersion = useCallback((event) => {
     event.preventDefault()

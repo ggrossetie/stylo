@@ -2,9 +2,8 @@
 @use '../../styles/variables' as *;
 
 .menu {
-  min-width: 350px;
+  width: 350px;
   padding: 0 1rem 1rem;
-  margin-top: -3rem;
 
   > button {
     @extend .clickable;
@@ -22,7 +21,7 @@
 }
 
 .navigation {
-  height: calc(100vh - 159px);
+  height: calc(100vh - 145px);
   background-color: #f4f4f4;
   padding: 1rem;
   overflow: auto;

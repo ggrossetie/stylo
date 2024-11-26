@@ -45,6 +45,7 @@ export default function Write () {
   const backendEndpoint = useSelector(state => state.applicationConfig.backendEndpoint)
   const { t } = useTranslation()
   const { version: currentVersion, id: articleId, compareTo } = useParams()
+  console.log('params', {currentVersion, articleId, compareTo})
   const workingArticle = useSelector(state => state.workingArticle, shallowEqual)
   const userId = useActiveUserId()
   const dispatch = useDispatch()
@@ -302,34 +303,7 @@ export default function Write () {
 
   return (
     <section className={styles.container}>
-      <GeistModal width="40rem" visible={collaborativeSessionActiveVisible} {...collaborativeSessionActiveBinding}>
-        <h2>{t('article.collaborativeSessionActive.title')}</h2>
-        <GeistModal.Content>
-          {t('article.collaborativeSessionActive.message')}
-        </GeistModal.Content>
-        <GeistModal.Action
-          onClick={() => setCollaborativeSessionActiveVisible(false)}>{t('modal.confirmButton.text')}</GeistModal.Action>
-      </GeistModal>
-
-      <GeistModal width="40rem" visible={soloSessionActiveVisible} {...soloSessionActiveBinding}>
-        <h2>{t('article.soloSessionActive.title')}</h2>
-        <GeistModal.Content>
-          {t('article.soloSessionActive.message')}
-        </GeistModal.Content>
-        <GeistModal.Action
-          onClick={() => setSoloSessionActiveVisible(false)}>{t('modal.confirmButton.text')}</GeistModal.Action>
-      </GeistModal>
-
-      <GeistModal width="40rem" visible={soloSessionTakeOverModalVisible} {...soloSessionTakeOverModalBinding}>
-        <h2>{t('article.soloSessionTakeOver.title')}</h2>
-        <GeistModal.Content>
-          {t('article.soloSessionTakeOver.message', { username: soloSessionTakenOverBy })}
-        </GeistModal.Content>
-        <GeistModal.Action
-          onClick={() => setSoloSessionTakeOverModalVisible(false)}>{t('modal.confirmButton.text')}</GeistModal.Action>
-      </GeistModal>
       <article className={clsx({ [styles.article]: mode !== MODES_PREVIEW })}>
-        <WorkingVersion articleInfos={articleInfos} live={live} selectedVersion={currentVersion} mode={mode}/>
         <Switch>
           <Route path="*/preview" exact>
             <PreviewComponent preview={articleInfos.preview} yaml={live.yaml}/>
@@ -337,6 +311,7 @@ export default function Write () {
           <Route path="*">
             <div className={styles.editorPanel}>
               <div className={styles.editor}>
+                <WorkingVersion articleInfos={articleInfos} live={live}/>
                 <MonacoEditor
                   text={live.md}
                   readOnly={mode === MODES_READONLY}
@@ -345,7 +320,6 @@ export default function Write () {
                   selectedVersion={currentVersion}
                   compareTo={compareTo}
                   currentArticleVersion={live.version}/>
-                <ArticleStats/>
               </div>
               <ArticleEditorMenu
                 articleInfos={articleInfos}
@@ -359,6 +333,30 @@ export default function Write () {
           </Route>
         </Switch>
       </article>
+      <GeistModal width="40rem" visible={collaborativeSessionActiveVisible} {...collaborativeSessionActiveBinding}>
+        <h2>{t('article.collaborativeSessionActive.title')}</h2>
+        <GeistModal.Content>
+          {t('article.collaborativeSessionActive.message')}
+        </GeistModal.Content>
+        <GeistModal.Action
+          onClick={() => setCollaborativeSessionActiveVisible(false)}>{t('modal.confirmButton.text')}</GeistModal.Action>
+      </GeistModal>
+      <GeistModal width="40rem" visible={soloSessionActiveVisible} {...soloSessionActiveBinding}>
+        <h2>{t('article.soloSessionActive.title')}</h2>
+        <GeistModal.Content>
+          {t('article.soloSessionActive.message')}
+        </GeistModal.Content>
+        <GeistModal.Action
+          onClick={() => setSoloSessionActiveVisible(false)}>{t('modal.confirmButton.text')}</GeistModal.Action>
+      </GeistModal>
+      <GeistModal width="40rem" visible={soloSessionTakeOverModalVisible} {...soloSessionTakeOverModalBinding}>
+        <h2>{t('article.soloSessionTakeOver.title')}</h2>
+        <GeistModal.Content>
+          {t('article.soloSessionTakeOver.message', { username: soloSessionTakenOverBy })}
+        </GeistModal.Content>
+        <GeistModal.Action
+          onClick={() => setSoloSessionTakeOverModalVisible(false)}>{t('modal.confirmButton.text')}</GeistModal.Action>
+      </GeistModal>
     </section>
   )
 }

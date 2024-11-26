@@ -1,15 +1,10 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { shallowEqual, useSelector } from 'react-redux'
-import { Link } from "react-router-dom";
-import { AlertCircle, AlignLeft, Check, Edit3, Eye, Loader, Printer } from 'react-feather'
+import { AlertCircle, Check, Loader } from 'react-feather'
 import { useTranslation } from 'react-i18next'
 import TimeAgo from '../TimeAgo.jsx'
 
 import styles from './workingVersion.module.scss'
-import buttonStyles from "../button.module.scss";
-import Button from "../Button";
-import Modal from "../Modal";
-import Export from "../Export";
 
 const ONE_MINUTE = 60000
 
@@ -73,11 +68,8 @@ export function ArticleSaveState ({ state, updatedAt, stateMessage }) {
   </>)
 }
 
-export default function WorkingVersion ({ articleInfos, live, selectedVersion, mode }) {
-  const [exporting, setExporting] = useState(false)
+export default function WorkingVersion ({ articleInfos, live }) {
   const workingArticle = useSelector(state => state.workingArticle, shallowEqual)
-  const cancelExport = useCallback(() => setExporting(false), [])
-  const openExport = useCallback(() => setExporting(true), [])
   const { t } = useTranslation()
 
   const articleOwnerAndContributors = [

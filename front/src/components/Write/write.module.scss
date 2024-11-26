@@ -38,7 +38,6 @@
   overflow: hidden;
 
   textarea {
-    padding: 1rem;
     width: 100%;
   }
 
@@ -49,12 +48,6 @@
     width: 100%;
     white-space: pre-wrap;
     flex: 1 1 50%;
-  }
-}
-
-@media screen and (max-width: 1200px) {
-  .article {
-    margin-left: 0.5rem;
   }
 }
 
@@ -93,6 +86,6 @@
 
 .editor {
   width: 100ch;
-  min-width: 50ch;
-
+  flex: 1;
+  max-width: 120ch;
 }

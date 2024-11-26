@@ -23,18 +23,11 @@ $button-primary-color: $main-background-color;
 $button-secondary-background: $extra-background-color;
 $button-secondary-color: $main-border-color;
 
-$phone-width: 100%;
+$tablet-breakpoint: 1280px;
+$tablet-width: calc(1280px - 2rem);
 
-$tablet-breakpoint: 1080px;
-$tablet-width: calc(1080px - 2rem);
+$screen-breakpoint: 1440px;
+$screen-width: 1280px;
 
-$screen-breakpoint: 1400px;
-$screen-width: 1080px;
-
-$large-screen-breakpoint: 2160px;
-$large-screen-width: 1500px;
-
-// TODO remove when https://github.com/snowpackjs/snowpack/issues/2967 is solved
-html {
-  font-size: inherit;
-}
+$large-screen-breakpoint: 1920px;
+$large-screen-width: 1440px;

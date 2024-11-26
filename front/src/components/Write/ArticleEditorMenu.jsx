@@ -26,6 +26,7 @@ export default function ArticleEditorMenu ({ articleInfos, readOnly, compareTo, 
     setVisible,
     bindings
   } = useModal()
+  console.log('ArticleEditorMenu', {compareTo})
   return (
     <nav className={styles.menu}>
       <button onClick={toggleExpand}>

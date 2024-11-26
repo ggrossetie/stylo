@@ -1,16 +1,25 @@
-import React, { useMemo, useState } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { ArrowLeft, ArrowUpRight, ChevronRight } from 'react-feather'
 import PropTypes from 'prop-types'
+import { useDispatch, useSelector } from 'react-redux'
 
 import styles from './navigation.module.scss'
 
 export default function Navigation ({ items }) {
-  const [activeKey, setActiveKey] = useState('')
-  const item = useMemo(() => items?.find(i => i.key === activeKey), [activeKey])
+  const activeMenuArticlePreferencesKey = 'activeMenu' 
+  const activeMenuKey = useSelector(state => state.articlePreferences[activeMenuArticlePreferencesKey])
+  const dispatch = useDispatch()
+  const setActiveMenu = useCallback((value) => {
+    console.log('dispatch', value)
+    dispatch({ type: 'ARTICLE_PREFERENCES_TOGGLE', key: activeMenuArticlePreferencesKey, value })
+  }, [])
+
+  const item = useMemo(() => items?.find(i => i.key === activeMenuKey), [activeMenuKey, items])
   return <>
     <header>
       {item !== undefined && <h4 className={styles.title}
-                                 onClick={() => setActiveKey('')}><ArrowLeft/> {item.title}
+                                 onClick={() => setActiveMenu('')}>
+        <ArrowLeft/> {item.title}
       </h4>}
     </header>
     <section>
@@ -21,7 +30,7 @@ export default function Navigation ({ items }) {
           } else if (item.href) {
             window.open(item.href)
           } else {
-            setActiveKey(item.key)
+            setActiveMenu(item.key)
           }
         }}>
           <h4 className={styles.title}>{item.title} {item.href || item.onClick ? <ArrowUpRight/> : <ChevronRight/>}</h4>

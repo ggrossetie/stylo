@@ -48,15 +48,9 @@
 .wrapped-center {
   margin: 0 auto;
   width: 100%;
-  @media screen and (min-width: $tablet-breakpoint) {
-    max-width: $tablet-width;
-  }
-  @media screen and (min-width: $screen-breakpoint) {
-    max-width: $screen-width;
-  }
-  @media screen and (min-width: $large-screen-breakpoint) {
-    max-width: $large-screen-width;
-  }
+  min-width: $tablet-width;
+  max-width: $large-screen-width;
+  padding: 0 0.5rem;
 }
 
 .details {
