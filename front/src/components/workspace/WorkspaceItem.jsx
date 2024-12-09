@@ -54,21 +54,10 @@ export default function WorkspaceItem({ workspace }) {
     setMembersCount(workspace.stats?.membersCount || 0)
   }, [workspace.stats])
 
-  const workspaceTitle = (
-    <>
-      <h5 className={styles.title}>
-        <span
-          className={styles.chip}
-          style={{ backgroundColor: workspace.color }}
-        ></span>
-        <span className={styles.name}>{workspace.name}</span>
-      </h5>
-    </>
-  )
+  return (<div className={styles.container}>
+    <WorkspaceLabel
+          className={styles.workspace} color={workspace.color} name={workspace.name} />
 
-  return (
-    <div className={styles.container}>
-      {workspaceTitle}
       {workspace.personal && (
         <>
           <Field className={styles.field} label="Articles">
