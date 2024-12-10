@@ -30,9 +30,7 @@ export default function UserMenu() {
 
   return (
     <div ref={ref} className={styles.container}>
-      <div
-        className={styles.userMenuLink}
-        onClick={() => setIsComponentVisible(!isComponentVisible)}
+      <div className={styles.userMenuLink} aria-label={t('header.manage')} tabIndex={0} onClick={() => setIsComponentVisible(!isComponentVisible)}
       >
         <UserMenuLink
           username={activeUser.displayName}
@@ -56,38 +54,25 @@ export default function UserMenu() {
                   name={workspace.name}
                 />
               ))}
-              <li className={styles.workspacesLink}>
-                <NavLink
-                  to="/workspaces"
-                  onClick={() => setIsComponentVisible(false)}
-                >
-                  <Layers />
-                  {t('workspace.all')}
-                </NavLink>
-              </li>
-            </ul>
-          </div>
-          <div className={styles.footer}>
-            <div className={styles.userBlock}>
-              <NavLink
-                to="/credentials"
-                onClick={() => setIsComponentVisible(false)}
-                className={styles.userCard}
-              >
-                <div className={styles.persona}>
-                  <User />
-                </div>
-                <div className={styles.userInfo}>
-                  <div className={styles.username}>
-                    {activeUser.displayName}
-                  </div>
-                  <div className={styles.email}>{activeUser.email}</div>
-                </div>
+            <li className={styles.workspacesLink}>
+              <NavLink to="/workspaces" onClick={() => setIsComponentVisible(false)}>
+              <Layers role="presentation" /> {t('workspace.all')}
               </NavLink>
-              <Button className={styles.logoutButton} onClick={logout} link>
-                <LogOut size={22} />
-              </Button>
-            </div>
+            </li>
+          </ul>
+        </div>
+        <div className={styles.footer}>
+          <div className={styles.userBlock}>
+            <NavLink to="/credentials" onClick={() => setIsComponentVisible(false)} className={styles.userCard} aria-label={t("credentials.manage")}>
+              <div className={styles.persona}><User role="presentation" /></div>
+              <div className={styles.userInfo}>
+                <div className={styles.username}>{activeUser.displayName}</div>
+                <div className={styles.email}>{activeUser.email}</div>
+              </div>
+            </NavLink>
+            <Button className={styles.logoutButton} onClick={logout} link>
+              <LogOut size={22} aria-label={t("credentials.logout.confirmButton")} />
+            </Button></div>
           </div>
         </div>
       )}

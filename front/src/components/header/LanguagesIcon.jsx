@@ -1,21 +1,22 @@
 import clsx from 'clsx'
 import PropTypes from 'prop-types'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 export default function LanguagesIcon({ className, height = 24, width = 24 }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={width}
-      height={height}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={clsx('lucide', 'lucide-languages', className)}
-    >
+  const { t } = useTranslation()
+
+  return (<svg xmlns="http://www.w3.org/2000/svg"
+              width={width}
+              height={height}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={clsx('lucide', 'lucide-languages', className)}
+              aria-label={t("header.languages")}>
       <path d="m5 8 6 6" />
       <path d="m4 14 6-6 2-3" />
       <path d="M2 5h12" />
