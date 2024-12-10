@@ -1,11 +1,12 @@
 import clsx from 'clsx'
-import React, { forwardRef } from 'react'
+import React, { forwardRef, useId } from 'react'
 import styles from './field.module.scss'
 
 export default forwardRef(function Field(
   { hasError, className, prefix, children, label, id, type, ...otherProps },
   forwardedRef
 ) {
+  const uid = `field-${id ?? useId()}`
   const classNames = [
     styles.field,
     prefix && styles.withPrefix,
@@ -23,18 +24,15 @@ export default forwardRef(function Field(
 
   return (
     <div className={clsx(classNames)}>
-      {label && <label htmlFor={id}>{label}</label>}
+      {label && <label htmlFor={uid}>{label}</label>}
       <div
         className={clsx('control', otherProps.icon && 'has-icons-left')}
         style={computedStyles}
       >
         {children && { ...children }}
-        {!children && (
-          <>
-            {prefix && <span className={styles.prefix}>{prefix}</span>}
-            <input
-              {...otherProps}
-              className="input"
+        {!children && (<>
+        {prefix && <span className={styles.prefix}>{prefix}</span>}
+        <input {...otherProps} id={uid} className="input"
               type={type || 'text'}
               ref={forwardedRef}
             />
