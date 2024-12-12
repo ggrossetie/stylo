@@ -262,22 +262,14 @@ export default function Articles() {
           </div>
         </div>
 
-        <GeistModal
-          width="40rem"
-          visible={createArticleVisible}
-          {...createArticleModalBinding}
-        >
-          <h2>{t('article.createModal.title')}</h2>
-          <GeistModal.Content>
-            <ArticleCreate onSubmit={handleArticleCreated} />
-          </GeistModal.Content>
-          <GeistModal.Action
-            passive
-            onClick={() => setCreateArticleVisible(false)}
-          >
-            {t('modal.close.text')}
-          </GeistModal.Action>
-        </GeistModal>
+      <GeistModal width="40rem" visible={createArticleVisible} {...createArticleModalBinding}>
+        <h2>{t('article.createModal.title')}</h2>
+        <GeistModal.Content>
+          <ArticleCreate onSubmit={handleArticleCreated} workspaceId={activeWorkspaceId} />
+        </GeistModal.Content>
+        <GeistModal.Action passive
+                           onClick={() => setCreateArticleVisible(false)}>{t('modal.close.text')}</GeistModal.Action>
+      </GeistModal>
 
         {isLoading ? (
           <Loading />
