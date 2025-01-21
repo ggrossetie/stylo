@@ -10,7 +10,6 @@
 
 .bibliographyPreview {
   background-color: $main-background-color;
-  margin-bottom: 1em;
   min-height: 5em;
   padding: 1em;
 
@@ -22,6 +21,13 @@
 }
 
 .actions {
+  margin-top: 2rem;
   display: flex;
   justify-content: flex-end;
+}
+
+.checkbox {
+  display: flex;
+  gap: 0.25em;
+  align-items: center;
 }

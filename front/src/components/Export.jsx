@@ -1,18 +1,28 @@
-import React, { useMemo, useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import clsx from 'clsx'
 import PropTypes from 'prop-types'
+import React, { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import slugify from 'slugify'
-import useStyloExport from '../hooks/stylo-export.js'
 import { applicationConfig } from '../config.js'
+import useStyloExport from '../hooks/stylo-export.js'
+import buttonStyles from './button.module.scss'
+import styles from './export.module.scss'
+import formStyles from './form.module.scss'
+import Loading from './Loading'
 
 import Select from './Select'
 import Combobox from './SelectCombobox.jsx'
-import Loading from './Loading'
-import styles from './export.module.scss'
-import buttonStyles from './button.module.scss'
-import formStyles from './form.module.scss'
 
+/**
+ *
+ * @param {boolean} booleanValue
+ * @return {number}
+ */
+function toNumber(booleanValue) {
+  return booleanValue ? 1 : 0
+}
+
+// https://export.stylo-dev.huma-num.fr/generique/article/stylo-dev.huma-num.fr/5e32d54e4f58270018f9d251/test/?with_toc=0&with_ascii=0&with_link_citations=1&with_nocite=1
 export default function Export({
   bookId,
   articleVersionId,
@@ -24,7 +34,9 @@ export default function Export({
     applicationConfig
   const [format, setFormat] = useState(bookId ? 'html5' : 'html')
   const [csl, setCsl] = useState('chicagomodified')
-  const [toc, setToc] = useState('0')
+  const [withToc, setWithToc] = useState(false)
+  const [withNocite, setWithNocite] = useState(false)
+  const [withLinkCitations, setWithLinkCitations] = useState(false)
   const [unnumbered, setUnnumbered] = useState('false')
   const [tld, setTld] = useState('false')
   const { exportFormats, exportStyles, exportStylesPreview, isLoading } =
@@ -49,10 +61,14 @@ export default function Export({
   }, [exportStyles])
 
   const exportUrl = bookId
-    ? `${processEndpoint}/cgi-bin/exportBook/exec.cgi?id=${exportId}&book=${bookId}&processor=xelatex&source=${exportEndpoint}/&format=${format}&bibstyle=${csl}&toc=${Boolean(
-        toc
-      )}&tld=${tld}&unnumbered=${unnumbered}`
-    : `${pandocExportEndpoint}/generique/article/export/${host}/${articleId}/${exportId}/?with_toc=${toc}&with_ascii=0&bibliography_style=${csl}&formats=originals&formats=${format}&version=${
+    ? `${processEndpoint}/cgi-bin/exportBook/exec.cgi?id=${exportId}&book=${bookId}&processor=xelatex&source=${exportEndpoint}/&format=${format}&bibstyle=${csl}&toc=${withToc}&tld=${tld}&unnumbered=${unnumbered}`
+    : `${pandocExportEndpoint}/generique/article/export/${host}/${articleId}/${exportId}/?with_toc=${toNumber(
+        withToc
+      )}&with_link_citations=${toNumber(
+        withLinkCitations
+      )}&with_nocite=${toNumber(
+        withNocite
+      )}&with_ascii=0&bibliography_style=${csl}&formats=originals&formats=${format}&version=${
         articleVersionId ?? ''
       }`
 
@@ -63,7 +79,7 @@ export default function Export({
         {articleId && exportFormats.length && (
           <Select
             id="export-formats"
-            label="Formats"
+            label={t('export.format.label')}
             value={format}
             onChange={(e) => setFormat(e.target.value)}
           >
@@ -93,14 +109,13 @@ export default function Export({
             <option value="icml">ICML</option>
           </Select>
         )}
-
         {articleId && bib && !exportStyles.length && (
           <Loading inline size="24" />
         )}
         {articleId && bib && exportStyles.length && (
           <Combobox
             id="export-styles"
-            label="Bibliography style"
+            label={t('export.bibliographyStyle.label')}
             items={groupedExportStyles}
             value={csl}
             onChange={setCsl}
@@ -114,38 +129,26 @@ export default function Export({
             )}
           </div>
         )}
-
         {bookId && bib && (
           <Select
             id="export-styles"
-            label="Bibliography style"
+            label={t('export.bibliographyStyle.label')}
             value={csl}
             setCsl={setCsl}
           >
             <option value="chicagomodified">chicagomodified</option>
             <option value="lettres-et-sciences-humaines-fr">
-              {' '}
               lettres-et-sciences-humaines-fr
             </option>
             <option value="chicago-fullnote-bibliography-fr">
-              {' '}
               chicago-fullnote-bibliography-fr
             </option>
           </Select>
         )}
-
-        <Select
-          id="export-toc"
-          label="Additional options"
-          value={toc}
-          onChange={(e) => setToc(parseInt(e.target.value, 10))}
-        >
-          <option value="1">{t('export.additionnalOptions.toc')}</option>
-          <option value="0">{t('export.additionnalOptions.notoc')}</option>
-        </Select>
         {bookId && (
           <Select
             id="export-numbering"
+            label={t('export.sectionChapters.label')}
             value={unnumbered}
             onChange={(e) => setUnnumbered(e.target.value)}
           >
@@ -158,11 +161,55 @@ export default function Export({
           </Select>
         )}
         {bookId && (
-          <Select value={tld} onChange={(e) => setTld(e.target.value)}>
+          <Select
+            id="export-book-division"
+            label={t('export.bookDivision.label')}
+            value={tld}
+            onChange={(e) => setTld(e.target.value)}
+          >
             <option value="part">{t('export.bookDivision.part')}</option>
             <option value="chapter">{t('export.bookDivision.chapter')}</option>
           </Select>
         )}
+        <label className={styles.checkbox} htmlFor="with-toc">
+          <input
+            id="with-toc"
+            name={name}
+            value="1"
+            checked={withToc}
+            type="checkbox"
+            onChange={(e) => {
+              setWithToc(e.target.checked)
+            }}
+          />
+          {t('export.options.withToc')}
+        </label>
+        <label className={styles.checkbox} htmlFor="with-link-citations">
+          <input
+            id="with-link-citations"
+            name={name}
+            value="1"
+            checked={withLinkCitations}
+            type="checkbox"
+            onChange={(e) => {
+              setWithLinkCitations(e.target.checked)
+            }}
+          />
+          {t('export.options.withLinkCitations')}
+        </label>
+        <label className={styles.checkbox} htmlFor="with-nocite">
+          <input
+            id="with-nocite"
+            name={name}
+            value="1"
+            checked={withNocite}
+            type="checkbox"
+            onChange={(e) => {
+              setWithNocite(e.target.checked)
+            }}
+          />
+          {t('export.options.withNocite')}
+        </label>
       </form>
 
       <nav className={styles.actions}>
