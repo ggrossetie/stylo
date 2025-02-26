@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { generatePath } from 'react-router-dom'
 
 import { setAuthToken as setAuthTokenMutation } from '../components/Credentials.graphql'
-import { getTags, createTag } from '../components/Tag.graphql'
+import { getTags, createTag } from '../components/tag/Tag.graphql'
 
 import { useMutateData } from './graphql.js'
 import { useGraphQLClient, executeQuery } from '../helpers/graphQL.js'

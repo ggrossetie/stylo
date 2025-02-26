@@ -1,7 +1,21 @@
 .actions {
   display: flex;
-  justify-content: end;
   margin-top: 0.75em;
+  align-items: center;
+}
+
+.createActions {
+  justify-content: end;
+}
+
+.updateActions {
+  justify-content: space-between;
+}
+
+.deleteButton {
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
 }
 
 .tagName {

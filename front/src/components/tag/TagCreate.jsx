@@ -2,12 +2,12 @@ import { Button, useInput, useToasts } from '@geist-ui/core'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { randomColor } from '../helpers/colors.js'
+import { randomColor } from '../../helpers/colors.js'
 
 import styles from './TagCreate.module.scss'
-import Field from './Field'
-import { useCurrentUser } from '../contexts/CurrentUser'
-import { useUserTagActions } from '../hooks/user.js'
+import Field from '../Field.jsx'
+import { useCurrentUser } from '../../contexts/CurrentUser.js'
+import { useUserTagActions } from '../../hooks/user.js'
 
 export default function TagCreate() {
   const { setToast } = useToasts()

@@ -41,7 +41,7 @@ import {
 import { getArticleTags, getArticleContributors } from './Article.graphql'
 import SoloSessionAction from './solo/SoloSessionAction.jsx'
 
-import { getTags } from './Tag.graphql'
+import { getTags } from './tag/Tag.graphql'
 
 import useFetchData from '../hooks/graphql'
 import TimeAgo from './TimeAgo.jsx'

@@ -1,11 +1,9 @@
 .tag {
-  padding: 0.25em 0.5em;
   cursor: pointer;
   user-select: none;
   border: 1px solid #aaa;
-  display: flex;
-  align-items: center;
   transition: box-shadow 90ms ease-in;
+  display: flex;
 }
 
 .tag:hover {
@@ -22,5 +20,17 @@
   width: 0.65em;
   display: inline-block;
   border-radius: 100%;
+  margin-left: 0.5em;
+}
+
+.content {
+  padding: 0.25em 0.5em;
+  display: flex;
+  align-items: center;
+}
+
+.editButton {
+  height: auto;
+  border-left: 1px solid #e1e1e1;
   margin-left: 0.5em;
 }

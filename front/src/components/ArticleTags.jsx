@@ -1,7 +1,7 @@
 import { Loading } from '@geist-ui/core'
 import React, { useCallback } from 'react'
 
-import ArticleTag from './Tag'
+import ArticleTag from './tag/Tag.jsx'
 
 import { useArticleTagActions } from '../hooks/article.js'
 

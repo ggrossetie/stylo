@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux'
 import { useGraphQLClient } from '../helpers/graphQL'
 import { createArticle } from './Articles.graphql'
 import Field from './Field.jsx'
-import { getTags } from './Tag.graphql'
+import { getTags } from './tag/Tag.graphql'
 import Button from './Button.jsx'
 import Checkbox from './Checkbox.jsx'
 
