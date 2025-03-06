@@ -1,7 +1,7 @@
 import clsx from 'clsx'
+import PropTypes from 'prop-types'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import PropTypes from 'prop-types'
 
 import i18n from '../i18n.js'
 import styles from './TimeAgo.module.css'

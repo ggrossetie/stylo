@@ -34,7 +34,7 @@ export default function ArticleEditorMenu({
         onClick={toggleExpand}
         className={expanded ? styles.close : styles.open}
       >
-        <Sidebar />{' '}
+        <Sidebar />
         {expanded
           ? t('write.sidebar.closeButton')
           : t('write.sidebar.biblioAndCoButton')}
@@ -42,7 +42,7 @@ export default function ArticleEditorMenu({
       {expanded && (
         <div>
           <Versions
-            article={articleInfos}
+            articleId={articleInfos._id}
             selectedVersion={selectedVersion}
             compareTo={compareTo}
             readOnly={readOnly}

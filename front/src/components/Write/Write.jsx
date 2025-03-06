@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Code, Text, useToasts } from '@geist-ui/core'
 import clsx from 'clsx'
-import debounce from 'lodash.debounce'
 import throttle from 'lodash.throttle'
 import { Helmet } from 'react-helmet'
 import { useTranslation } from 'react-i18next'
@@ -9,15 +8,17 @@ import { batch, shallowEqual, useDispatch, useSelector } from 'react-redux'
 import { Route, Switch, useParams, useRouteMatch } from 'react-router-dom'
 
 import { applicationConfig } from '../../config.js'
-import { useGraphQLClient } from '../../helpers/graphQL'
+import { useGraphQLClient } from '../../helpers/graphQL.js'
 import { useModal } from '../../hooks/modal.js'
-import { useActiveUserId } from '../../hooks/user'
 
 import ArticleStats from '../ArticleStats.jsx'
 import ErrorMessageCard from '../ErrorMessageCard.jsx'
 import Modal from '../Modal.jsx'
 import FormActions from '../molecules/FormActions.jsx'
 import Loading from '../molecules/Loading.jsx'
+
+import { useActiveUserId } from '../../hooks/user'
+
 import ArticleEditorMenu from './ArticleEditorMenu.jsx'
 import ArticleEditorMetadata from './ArticleEditorMetadata.jsx'
 
@@ -26,12 +27,10 @@ import PreviewPaged from './PreviewPaged'
 import MonacoEditor from './providers/monaco/Editor'
 import WorkingVersion from './WorkingVersion'
 
-import {
-  getEditableArticle as getEditableArticleQuery,
-  stopSoloSession,
-} from './Write.graphql'
+import { stopSoloSession } from './Write.graphql'
 
 import styles from './write.module.scss'
+import { useArticle } from '../../hooks/article.js'
 
 const MODES_PREVIEW = 'preview'
 const MODES_READONLY = 'readonly'
@@ -61,7 +60,6 @@ export default function Write() {
   )
   const userId = useActiveUserId()
   const dispatch = useDispatch()
-  const { query } = useGraphQLClient()
   const routeMatch = useRouteMatch()
   const [collaborativeSessionActive, setCollaborativeSessionActive] =
     useState(false)
@@ -77,25 +75,28 @@ export default function Write() {
     collaborativeSessionActive,
     soloSessionActive,
   ])
-  const [graphQLError, setGraphQLError] = useState()
-  const [isLoading, setIsLoading] = useState(true)
-  const [live, setLive] = useState({})
   const [soloSessionTakenOverBy, setSoloSessionTakenOverBy] = useState('')
-  const [articleInfos, setArticleInfos] = useState({
-    title: '',
-    owner: '',
-    contributors: [],
-    zoteroLink: '',
-    preview: {},
+
+  const {
+    updateText,
+    content,
+    article,
+    isLoading: isArticleLoading,
+    error,
+  } = useArticle({
+    articleId,
+    version: currentVersion,
   })
+
+  const { query } = useGraphQLClient()
 
   const collaborativeSessionActiveModal = useModal()
   const soloSessionActiveModal = useModal()
   const soloSessionTakeOverModal = useModal()
 
   const PreviewComponent = useMemo(
-    () => (articleInfos.preview.stylesheet ? PreviewPaged : PreviewHtml),
-    [articleInfos.preview.stylesheet, currentVersion]
+    () => (article?.preview?.stylesheet ? PreviewPaged : PreviewHtml),
+    [article?.preview?.stylesheet, currentVersion]
   )
 
   const deriveArticleStructureAndStats = useCallback(
@@ -109,55 +110,10 @@ export default function Write() {
     ),
     []
   )
-  const setWorkingArticleDirty = useCallback(
-    debounce(
-      async () => {
-        dispatch({
-          type: 'SET_WORKING_ARTICLE_STATE',
-          workingArticleState: 'saving',
-        })
-      },
-      1000,
-      { leading: true, trailing: false }
-    ),
-    []
-  )
-  const updateWorkingArticleText = useCallback(
-    debounce(
-      async ({ text }) => {
-        dispatch({ type: 'UPDATE_WORKING_ARTICLE_TEXT', articleId, text })
-      },
-      1000,
-      { leading: false, trailing: true }
-    ),
-    []
-  )
-  const updateWorkingArticleMetadata = useCallback(
-    debounce(
-      ({ metadata }) => {
-        dispatch({
-          type: 'UPDATE_WORKING_ARTICLE_METADATA',
-          articleId,
-          metadata,
-        })
-      },
-      1000,
-      { leading: false, trailing: true }
-    ),
-    []
-  )
-
-  const handleMDCM = (text) => {
+  const handleTextUpdate = async (text) => {
     deriveArticleStructureAndStats({ text })
-    updateWorkingArticleText({ text })
-    setWorkingArticleDirty()
-    return setLive({ ...live, md: text })
-  }
-
-  const handleMetadataChange = (metadata) => {
-    updateWorkingArticleMetadata({ metadata })
-    setWorkingArticleDirty()
-    return setLive({ ...live, metadata })
+    // debounce logic + dirty/saving
+    await updateText(text)
   }
 
   const handleStateUpdated = useCallback(
@@ -177,7 +133,10 @@ export default function Write() {
               setSoloSessionActive(true)
               soloSessionTakeOverModal.show()
             }
-          } else if (articleStateUpdated.collaborativeSession) {
+          } else if (
+            articleStateUpdated.collaborativeSession &&
+            articleStateUpdated.collaborativeSession.id
+          ) {
             collaborativeSessionActiveModal.show()
             setCollaborativeSessionActive(true)
           }
@@ -202,90 +161,38 @@ export default function Write() {
 
   // Reload when version switching
   useEffect(() => {
-    const variables = {
-      user: userId,
-      article: articleId,
-      version: currentVersion || 'latest',
-      hasVersion: typeof currentVersion === 'string',
-      isPreview: mode === MODES_PREVIEW,
-    }
-
-    setIsLoading(true)
-    ;(async () => {
-      const data = await query({
-        query: getEditableArticleQuery,
-        variables,
-      }).catch((error) => {
-        setGraphQLError(error)
-        return {}
-      })
-
-      if (data?.article) {
-        if (data.article.soloSession && data.article.soloSession.id) {
-          if (userId !== data.article.soloSession.creator._id) {
-            setSoloSessionActive(true)
-            soloSessionActiveModal.show()
-          }
+    if (article) {
+      if (article.soloSession && article.soloSession.id) {
+        if (userId !== article.soloSession.creator._id) {
+          setSoloSessionActive(true)
+          soloSessionActiveModal.show()
         }
-        setCollaborativeSessionActive(
-          data.article.collaborativeSession &&
-            data.article.collaborativeSession.id
-        )
-        const collaborativeSessionActiveModalVisible =
-          data.article.collaborativeSession &&
-          data.article.collaborativeSession.id
-        if (collaborativeSessionActiveModalVisible) {
-          collaborativeSessionActiveModal.show()
-        }
-        const article = data.article
-        let currentArticle
-        if (currentVersion) {
-          currentArticle = {
-            bib: data.version.bib,
-            md: data.version.md,
-            metadata: data.version.metadata,
-            bibPreview: data.version.bibPreview,
-            version: {
-              message: data.version.message,
-              major: data.version.version,
-              minor: data.version.revision,
-            },
-          }
-        } else {
-          currentArticle = article.workingVersion
-        }
-        setLive(currentArticle)
-        setArticleInfos({
-          _id: article._id,
-          title: article.title,
-          owner: article.owner,
-          contributors: article.contributors,
-          zoteroLink: article.zoteroLink,
-          preview: article.preview,
+      }
+      setCollaborativeSessionActive(
+        article.collaborativeSession && article.collaborativeSession.id
+      )
+      const collaborativeSessionActiveModalVisible =
+        article.collaborativeSession && article.collaborativeSession.id
+      if (collaborativeSessionActiveModalVisible) {
+        collaborativeSessionActiveModal.show()
+      }
+      const { md, bib, metadata } = content
+      batch(() => {
+        dispatch({ type: 'SET_ARTICLE_VERSIONS', versions: article.versions })
+        dispatch({ type: 'UPDATE_ARTICLE_STATS', md })
+        dispatch({ type: 'UPDATE_ARTICLE_STRUCTURE', md })
+        dispatch({ type: 'SET_WORKING_ARTICLE_TEXT', text: md })
+        dispatch({ type: 'SET_WORKING_ARTICLE_METADATA', metadata })
+        dispatch({
+          type: 'SET_WORKING_ARTICLE_BIBLIOGRAPHY',
+          bibliography: bib,
+        })
+        dispatch({
+          type: 'SET_WORKING_ARTICLE_UPDATED_AT',
           updatedAt: article.updatedAt,
         })
-
-        const { md, bib, metadata } = currentArticle
-
-        batch(() => {
-          dispatch({ type: 'SET_ARTICLE_VERSIONS', versions: article.versions })
-          dispatch({ type: 'UPDATE_ARTICLE_STATS', md })
-          dispatch({ type: 'UPDATE_ARTICLE_STRUCTURE', md })
-          dispatch({ type: 'SET_WORKING_ARTICLE_TEXT', text: md })
-          dispatch({ type: 'SET_WORKING_ARTICLE_METADATA', metadata })
-          dispatch({
-            type: 'SET_WORKING_ARTICLE_BIBLIOGRAPHY',
-            bibliography: bib,
-          })
-          dispatch({
-            type: 'SET_WORKING_ARTICLE_UPDATED_AT',
-            updatedAt: article.updatedAt,
-          })
-        })
-      }
-
-      setIsLoading(false)
-    })()
+      })
+    }
 
     return async () => {
       try {
@@ -307,11 +214,11 @@ export default function Write() {
         }
       }
     }
-  }, [currentVersion, articleId])
+  }, [article, content])
 
   useEffect(() => {
     let events
-    if (!isLoading) {
+    if (!isArticleLoading) {
       events = new EventSource(`${backendEndpoint}/events?userId=${userId}`)
       events.onmessage = (event) => {
         handleStateUpdated(event)
@@ -322,28 +229,28 @@ export default function Write() {
         events.close()
       }
     }
-  }, [isLoading, handleStateUpdated])
+  }, [isArticleLoading, handleStateUpdated])
 
-  if (graphQLError) {
+  if (isArticleLoading) {
+    return <Loading />
+  }
+
+  if (error) {
     return (
       <section className={styles.errorContainer}>
         <ErrorMessageCard title="Error">
           <Text>
-            <Code>{graphQLError?.message || graphQLError.toString()}</Code>
+            <Code>{error?.message || error.toString()}</Code>
           </Text>
         </ErrorMessageCard>
       </section>
     )
   }
 
-  if (isLoading) {
-    return <Loading />
-  }
-
   return (
     <section className={styles.container}>
       <Helmet>
-        <title>{t('article.page.title', { title: articleInfos.title })}</title>
+        <title>{t('article.page.title', { title: article.title })}</title>
       </Helmet>
       <Modal
         {...collaborativeSessionActiveModal.bindings}
@@ -393,15 +300,15 @@ export default function Write() {
       </Modal>
 
       <ArticleEditorMenu
-        articleInfos={articleInfos}
+        articleInfos={article}
         compareTo={compareTo}
         selectedVersion={currentVersion}
         readOnly={mode === MODES_READONLY}
       />
       <article className={clsx({ [styles.article]: mode !== MODES_PREVIEW })}>
         <WorkingVersion
-          articleInfos={articleInfos}
-          live={live}
+          articleInfos={article}
+          live={content}
           selectedVersion={currentVersion}
           mode={mode}
         />
@@ -409,19 +316,19 @@ export default function Write() {
         <Switch>
           <Route path="*/preview" exact>
             <PreviewComponent
-              preview={articleInfos.preview}
-              metadata={live.metadata}
+              preview={article.preview}
+              metadata={content.metadata}
             />
           </Route>
           <Route path="*">
             <MonacoEditor
-              text={live.md}
+              text={content.md}
               readOnly={mode === MODES_READONLY}
-              onTextUpdate={handleMDCM}
-              articleId={articleInfos._id}
+              onTextUpdate={handleTextUpdate}
+              articleId={article._id}
               selectedVersion={currentVersion}
               compareTo={compareTo}
-              currentArticleVersion={live.version}
+              currentArticleVersion={content.version}
             />
 
             <ArticleStats />
@@ -429,8 +336,8 @@ export default function Write() {
         </Switch>
       </article>
       <ArticleEditorMetadata
-        metadata={live.metadata}
-        onChange={handleMetadataChange}
+        articleId={article._id}
+        metadata={content.metadata}
         readOnly={mode === MODES_READONLY}
       />
     </section>

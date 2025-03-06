@@ -72,7 +72,7 @@ export function ArticleSaveState({ state, updatedAt, stateMessage }) {
   const stateUi = stateUiProps[state]
 
   const isoString = useMemo(
-    () => new Date(updatedAt).toISOString(),
+    () => updatedAt && new Date(updatedAt).toISOString(),
     [updatedAt, lastRefreshedAt]
   )
 
@@ -97,7 +97,7 @@ export function ArticleSaveState({ state, updatedAt, stateMessage }) {
         )}
       </span>
 
-      {state === 'saved' && <TimeAgo date={isoString} />}
+      {state === 'saved' && isoString && <TimeAgo date={isoString} />}
     </>
   )
 }

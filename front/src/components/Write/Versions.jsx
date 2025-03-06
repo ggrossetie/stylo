@@ -1,8 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react'
-import PropTypes from 'prop-types'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { shallowEqual, useDispatch, useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { useLocation } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -11,6 +10,7 @@ import {
   ChevronRight,
   Edit3,
 } from 'react-feather'
+import { useArticleVersion } from '../../hooks/article.js'
 import TimeAgo from '../TimeAgo.jsx'
 
 import styles from './versions.module.scss'
@@ -25,6 +25,16 @@ import Field from '../Field'
 import CreateVersion from './CreateVersion'
 import clsx from 'clsx'
 
+/**
+ * @param props
+ * @param {string} props.articleId
+ * @param {string} props.compareTo
+ * @param {boolean} props.readOnly
+ * @param {string} props.selectedVersion
+ * @param {{[key: string]: any}} props.v
+ * @return {Element}
+ * @constructor
+ */
 function Version({ articleId, compareTo, readOnly, selectedVersion, v }) {
   const { t } = useTranslation()
 
@@ -199,21 +209,22 @@ function Version({ articleId, compareTo, readOnly, selectedVersion, v }) {
   )
 }
 
-Version.propTypes = {
-  articleId: PropTypes.string.isRequired,
-  v: PropTypes.object.isRequired,
-  selectedVersion: PropTypes.string,
-  compareTo: PropTypes.string,
-  readOnly: PropTypes.bool,
-}
-
+/**
+ * @param props
+ * @param {string} props.articleId
+ * @param {string|null} props.compareTo
+ * @param {boolean} props.readOnly
+ * @param {string|null} props.selectedVersion
+ * @return {Element}
+ * @constructor
+ */
 export function WorkingVersion({
   articleId,
   selectedVersion = null,
   compareTo = null,
   readOnly,
+  updatedAt,
 }) {
-  const updatedAt = useSelector((state) => state.workingArticle.updatedAt)
   const { t } = useTranslation()
   const { pathname } = useLocation()
 
@@ -268,7 +279,7 @@ export function WorkingVersion({
 
         <p>
           <span className={styles.momentsAgo}>
-            <TimeAgo date={updatedAt} />
+            {updatedAt && <TimeAgo date={updatedAt} />}
           </span>
         </p>
       </Link>
@@ -303,23 +314,23 @@ export function WorkingVersion({
   )
 }
 
-WorkingVersion.propTypes = {
-  articleId: PropTypes.string.isRequired,
-  selectedVersion: PropTypes.string,
-  compareTo: PropTypes.string,
-  readOnly: PropTypes.bool,
-}
-
+/**
+ *
+ * @param articleId
+ * @param selectedVersion
+ * @param compareTo
+ * @param readOnly
+ * @return {Element}
+ * @constructor
+ */
 export default function Versions({
-  article,
+  articleId,
   selectedVersion,
   compareTo,
   readOnly,
 }) {
-  const articleVersions = useSelector(
-    (state) => state.articleVersions,
-    shallowEqual
-  )
+  const { article } = useArticleVersion({ articleId })
+  const articleVersions = article?.versions
   const expand = useSelector((state) => state.articlePreferences.expandVersions)
   const dispatch = useDispatch()
   const [expandCreateForm, setExpandCreateForm] = useState(false)
@@ -367,7 +378,6 @@ export default function Versions({
             )}
             to={`/article/${article._id}`}
           >
-            {' '}
             <ArrowLeft /> Edit Mode
           </Link>
         )}
@@ -413,11 +423,4 @@ export default function Versions({
       )}
     </section>
   )
-}
-
-Versions.propTypes = {
-  article: PropTypes.object.isRequired,
-  selectedVersion: PropTypes.string,
-  compareTo: PropTypes.string,
-  readOnly: PropTypes.bool,
 }

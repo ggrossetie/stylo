@@ -376,5 +376,6 @@
   "corpus.metadata.form.issue.identifier": "Identifiant",
   "header.documentation.link": "Documentation",
   "header.corpus.link": "Corpus",
-  "header.articles.link": "Articles"
+  "header.articles.link": "Articles",
+  "metadata.title": "Métadonnées"
 }

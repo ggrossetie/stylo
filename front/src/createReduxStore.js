@@ -143,35 +143,6 @@ const createNewArticleVersion = (store) => {
         }
         return next(action)
       }
-      if (action.type === 'UPDATE_WORKING_ARTICLE_TEXT') {
-        const { activeUser, sessionToken, userPreferences } = store.getState()
-        const userId = userPreferences.currentUser ?? activeUser._id
-        const { articleId, text } = action
-        try {
-          const { article } = await new ArticleService(
-            userId,
-            articleId,
-            sessionToken
-          ).saveText(text)
-          store.dispatch({
-            type: 'SET_WORKING_ARTICLE_STATE',
-            workingArticleState: 'saved',
-          })
-          store.dispatch({ type: 'SET_WORKING_ARTICLE_TEXT', text })
-          store.dispatch({
-            type: 'SET_WORKING_ARTICLE_UPDATED_AT',
-            updatedAt: article.updateWorkingVersion.updatedAt,
-          })
-        } catch (err) {
-          console.error(err)
-          store.dispatch({
-            type: 'SET_WORKING_ARTICLE_STATE',
-            workingArticleState: 'saveFailure',
-            message: err.message,
-          })
-        }
-        return next(action)
-      }
       if (action.type === 'UPDATE_WORKING_ARTICLE_METADATA') {
         const { activeUser, sessionToken, userPreferences } = store.getState()
         const userId = userPreferences.currentUser ?? activeUser._id
