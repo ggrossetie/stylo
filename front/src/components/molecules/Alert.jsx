@@ -41,17 +41,29 @@ function getStyle(type) {
  * @property {string} message
  * @property {string=} type
  * @property {boolean} showIcon
+ * @property {any} className
+ * @property {Error|undefined} cause
  */
 
 /**
  * @param {AlertProps} props
  * @returns {React.ReactHTMLElement}
  */
-export default function Alert({ message, type = 'error', showIcon = true }) {
+export default function Alert({
+  message,
+  type = 'error',
+  showIcon = true,
+  className,
+  cause,
+}) {
   const icon = showIcon ? getIcon(type) : <></>
   return (
-    <div className={clsx(styles.alert, getStyle(type))}>
-      {icon} <span>{message}</span>
+    <div className={clsx(styles.alert, getStyle(type), className)}>
+      {icon}
+      <div className={styles.content}>
+        <span>{message}</span>
+        {cause && cause instanceof Error && <code>{cause.message}</code>}
+      </div>
     </div>
   )
 }

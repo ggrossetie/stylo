@@ -9,6 +9,7 @@ import Button from '../Button.jsx'
 import TagCreate from '../TagCreate.jsx'
 import { getTags } from '../Tag.graphql'
 import useGraphQL from '../../hooks/graphql'
+import Alert from '../molecules/Alert.jsx'
 
 export default function TagsList() {
   const { t } = useTranslation()
@@ -21,7 +22,7 @@ export default function TagsList() {
     setVisible: setCreateTagVisible,
     bindings: createTagModalBinding,
   } = useModal()
-  const { data, isLoading } = useGraphQL(
+  const { data, error, isLoading } = useGraphQL(
     { query: getTags, variables: {} },
     {
       revalidateOnFocus: false,
@@ -43,6 +44,17 @@ export default function TagsList() {
 
   if (isLoading) {
     return <Loading />
+  }
+
+  if (error) {
+    return (
+      <Alert
+        type="error"
+        message={`Impossible d'afficher la liste des étiquettes.`}
+        className={styles.error}
+        cause={error}
+      ></Alert>
+    )
   }
 
   return (
