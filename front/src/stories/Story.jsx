@@ -6,6 +6,7 @@ import CollaborativeEditorWebSocketStatus from '../components/collaborative/Coll
 import Field from '../components/Field.jsx'
 import Alert from '../components/molecules/Alert.jsx'
 import Loading from '../components/molecules/Loading.jsx'
+import Version from '../components/molecules/Version.jsx'
 import Select from '../components/Select.jsx'
 import ButtonStory from './Button.story.jsx'
 import FormStory from './Form.story.jsx'
@@ -142,6 +143,23 @@ export default function Story() {
             status={'disconnected'}
             state={'started'}
           />
+        </Tabs.Item>
+        <Tabs.Item label="Version" value="7">
+          <div className={styles.list}>
+            <Version
+              version={'1.0'}
+              title={'Version initiale de l’article'}
+              description={
+                'Première esquisse de la structure de l’article : thèse, antithèse, synthèse!'
+              }
+            />
+            <Version
+              version={'2.0'}
+              title={'Version majeure avec le premier paragraphe du chapitre 3'}
+            />
+            <Version version={'2.5'} state={'compare-to'} />
+            <Version version={'45.22'} state={'compare-from'} />
+          </div>
         </Tabs.Item>
       </Tabs>
     </div>
