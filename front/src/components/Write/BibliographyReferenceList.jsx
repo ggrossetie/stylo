@@ -1,20 +1,19 @@
-import React, { useCallback, useState } from 'react'
-import { shallowEqual, useSelector } from 'react-redux'
 import { Search } from 'lucide-react'
+import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import Reference from './Reference'
-import styles from './ReferenceList.module.scss'
-import Field from '../Field'
 import Button from '../Button'
+import Field from '../Field'
+import Reference from './Reference'
 
-export default function ReferenceList() {
-  const bibliographyEntries = useSelector(
-    (state) => state.workingArticle.bibliography.entries,
-    shallowEqual
-  )
+import styles from './ReferenceList.module.scss'
+
+export default function BibliographyReferenceList({ bibliography }) {
+  const { t } = useTranslation()
   const [filter, setFilter] = useState('')
   const [showAll, setShowAll] = useState(false)
+
+  const bibliographyEntries = bibliography.entries
   let bibTeXFound
   if (filter) {
     bibTeXFound = bibliographyEntries.filter(
@@ -28,7 +27,7 @@ export default function ReferenceList() {
     }
   }
   const handleShowAll = useCallback(() => setShowAll(true), [])
-  const { t } = useTranslation()
+
   return (
     <>
       <Field

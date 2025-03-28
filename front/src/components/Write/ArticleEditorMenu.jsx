@@ -1,9 +1,10 @@
 import React, { useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
+import ArticleBibliography from './ArticleBibliography.jsx'
 
 import styles from './articleEditorMenu.module.scss'
-import Biblio from './Biblio'
+import Bibliography from './Bibliography.jsx'
 import Sommaire from './Sommaire'
 import Versions from './Versions'
 import { Sidebar } from 'lucide-react'
@@ -48,7 +49,11 @@ export default function ArticleEditorMenu({
             readOnly={readOnly}
           />
           <Sommaire />
-          <Biblio readOnly={readOnly} article={articleInfos} />
+          <ArticleBibliography
+            readOnly={readOnly}
+            article={articleInfos}
+            versionId={selectedVersion}
+          />
         </div>
       )}
     </nav>

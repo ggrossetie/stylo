@@ -7,9 +7,14 @@ import {
   removeTags,
   renameArticle,
 } from '../components/Article.graphql'
-import { getArticleWorkingCopy } from '../components/Write/Write.graphql'
+import {
+  getArticleWorkingCopy,
+  getEditableArticle,
+} from '../components/Write/Write.graphql'
+import { toEntries } from '../helpers/bibtex.js'
 import { executeQuery } from '../helpers/graphQL.js'
-import useFetchData from './graphql.js'
+import { updateWorkingVersion } from '../services/ArticleService.graphql'
+import useFetchData, { useMutateData } from './graphql.js'
 
 export function useArticleTagActions({ articleId }) {
   const sessionToken = useSelector((state) => state.sessionToken)
@@ -133,6 +138,82 @@ export function useArticleWorkingCopy({ articleId }) {
 
   return {
     article: data?.article,
+    isLoading,
+    error,
+  }
+}
+
+export function useEditableArticle({ articleId, versionId }) {
+  const sessionToken = useSelector((state) => state.sessionToken)
+  const activeUser = useSelector((state) => state.activeUser)
+  const hasVersion = typeof versionId === 'string'
+  const { data, mutate, error, isLoading } = useFetchData(
+    {
+      query: getEditableArticle,
+      variables: {
+        article: articleId,
+        hasVersion,
+        version: versionId ?? '',
+      },
+    },
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+    }
+  )
+
+  const updateBibliography = async (bib) => {
+    await executeQuery({
+      sessionToken,
+      query: updateWorkingVersion,
+      variables: {
+        userId: activeUser._id,
+        articleId: articleId,
+        content: { bib },
+      },
+      type: 'mutate',
+    })
+    await mutate(
+      async (data) => {
+        if (hasVersion) {
+          return {
+            article: {
+              ...data,
+              version: {
+                ...data.version,
+                bib: bib,
+              },
+            },
+          }
+        } else {
+          return {
+            article: {
+              ...data,
+              workingVersion: {
+                ...data.workingVersion,
+                bib: bib,
+              },
+            },
+          }
+        }
+      },
+      { revalidate: false }
+    )
+  }
+
+  const bibtext = hasVersion
+    ? (data?.article?.version?.bib ?? '')
+    : (data?.article?.workingVersion?.bib ?? '')
+
+  const entries = toEntries(bibtext)
+
+  return {
+    article: data?.article,
+    updateBibliography,
+    bibliography: {
+      bibtext,
+      entries,
+    },
     isLoading,
     error,
   }

@@ -1,33 +1,27 @@
 import React, { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { shallowEqual, useSelector } from 'react-redux'
 import debounce from 'lodash.debounce'
-import { getValidationResults } from '../../../helpers/bibtex.js'
-
 import { Check } from 'lucide-react'
+
+import { getValidationResults } from '../../../helpers/bibtex.js'
 
 import MonacoBibtexEditor from '../providers/monaco/BibtexEditor'
 import Button from '../../Button'
 
 import styles from './bibliographe.module.scss'
 
-export default function RawBibtexPanel({ onChange }) {
-  const workingArticleBibliography = useSelector(
-    (state) => state.workingArticle.bibliography,
-    shallowEqual
-  )
-  const [bib, setBib] = useState(workingArticleBibliography.text)
+export default function RawBibtexPanel({ initialValue, onChange }) {
   const [citationValidationResult, setCitationValidationResult] = useState({
     valid: false,
   })
-
+  const [text, setText] = useState(initialValue)
   const isValid = useMemo(
     () => citationValidationResult.valid,
     [citationValidationResult.valid]
   )
   const handleTextUpdate = useCallback(
     debounce((bibtex) => {
-      setBib(bibtex)
+      setText(bibtex)
       getValidationResults(bibtex).then(setCitationValidationResult)
     }, 700),
     []
@@ -36,16 +30,16 @@ export default function RawBibtexPanel({ onChange }) {
   const handleFormSubmit = useCallback(
     (event) => {
       event.preventDefault()
-      onChange(bib)
+      onChange(text)
     },
-    [bib]
+    [text]
   )
   const { t } = useTranslation()
 
   return (
     <form onSubmit={handleFormSubmit}>
       <div className={styles.raw}>
-        <MonacoBibtexEditor text={bib} onTextUpdate={handleTextUpdate} />
+        <MonacoBibtexEditor text={text} onTextUpdate={handleTextUpdate} />
       </div>
 
       {citationValidationResult.messages && (

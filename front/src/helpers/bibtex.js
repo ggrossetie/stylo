@@ -91,6 +91,9 @@ export function deriveAuthorNameAndDate(entry) {
  * @returns {Array.<{ title: string, key: string, type: string }}
  */
 export function toEntries(input) {
+  if (input === '') {
+    return []
+  }
   const { entries } = new BibLatexParser(input, {
     processUnexpected: true,
     processUnknown: true,

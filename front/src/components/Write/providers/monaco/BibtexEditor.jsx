@@ -17,7 +17,8 @@ export default React.forwardRef(function MonacoBibtexEditor(
     () => ({
       ...defaultEditorOptions,
       hideCursorInOverviewRuler: true,
-      fontSize: 16,
+      lineNumbers: false,
+      fontSize: 14,
       wordWrap: 'off',
       wrappingIndent: 'same',
     }),
