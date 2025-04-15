@@ -10,6 +10,7 @@ import { useCollaboration } from '../../hooks/collaboration.js'
 import Alert from '../molecules/Alert.jsx'
 
 import Loading from '../molecules/Loading.jsx'
+import HtmlPreview from '../Write/PreviewHtml.jsx'
 import defaultEditorOptions from '../Write/providers/monaco/options.js'
 import CollaborativeEditorStatus from './CollaborativeEditorStatus.jsx'
 import CollaborativeEditorWebSocketStatus from './CollaborativeEditorWebSocketStatus.jsx'
@@ -20,9 +21,14 @@ import styles from './CollaborativeTextEditor.module.scss'
  * @param {object} props
  * @param {string} props.articleId
  * @param {string|undefined} props.versionId
+ * @param {boolean} props.preview
  * @returns {Element}
  */
-export default function CollaborativeTextEditor({ articleId, versionId }) {
+export default function CollaborativeTextEditor({
+  articleId,
+  versionId,
+  preview = false,
+}) {
   const { yText, awareness, websocketStatus, dynamicStyles } = useCollaboration(
     { articleId, versionId }
   )
@@ -39,9 +45,7 @@ export default function CollaborativeTextEditor({ articleId, versionId }) {
     (state) => state.editorCursorPosition,
     shallowEqual
   )
-
   const hasVersion = useMemo(() => !!versionId, [versionId])
-
   const options = useMemo(
     () => ({
       ...defaultEditorOptions,
@@ -145,6 +149,9 @@ export default function CollaborativeTextEditor({ articleId, versionId }) {
       <div className={styles.inlineStatus}>
         <CollaborativeEditorWebSocketStatus status={websocketStatus} />
       </div>
+      {preview && (
+        <HtmlPreview text={yText.toString()} bibliography={''} metadata={``} />
+      )}
       {version && (
         <Editor
           width={'100%'}
@@ -157,7 +164,10 @@ export default function CollaborativeTextEditor({ articleId, versionId }) {
         />
       )}
       <div
-        className={clsx(styles.collaborativeEditor, versionId && styles.hidden)}
+        className={clsx(
+          styles.collaborativeEditor,
+          (versionId || preview) && styles.hidden
+        )}
       >
         <Editor
           width={'100%'}

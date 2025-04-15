@@ -15,6 +15,14 @@
   flex: 1;
 }
 
+.actions {
+  display: flex;
+}
+
+.action {
+  font-size: 0.8rem;
+}
+
 .tocTooltip.empty {
   cursor: not-allowed;
 }
