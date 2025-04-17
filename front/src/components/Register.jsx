@@ -1,107 +1,138 @@
-import React, { useState } from 'react'
+import React, { useCallback, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useHistory } from 'react-router-dom'
-
-import etv from '../helpers/eventTargetValue'
-import validateEmail from '../helpers/validationEmail'
-
-import { useGraphQL } from '../helpers/graphQL'
+import { useToasts } from '@geist-ui/core'
+import { useGraphQLClient } from '../helpers/graphQL'
 import * as queries from './Credentials.graphql'
+import { useActiveUserId } from '../hooks/user.js'
 
 import styles from './login.module.scss'
+import formStyles from './form.module.scss'
 import Field from './Field'
 import Button from './Button'
-import { ArrowLeftCircle, Check } from 'react-feather'
+import { ArrowLeftCircle, Check } from 'lucide-react'
+import { fromFormData, validateSameFieldValue } from '../helpers/forms.js'
+import { Helmet } from 'react-helmet'
 
-function Register () {
+export default function Register() {
+  const { t } = useTranslation()
+  const { setToast } = useToasts()
+  const userId = useActiveUserId()
+  const passwordRef = useRef()
+  const passwordConfirmationRef = useRef()
   const history = useHistory()
-  const [email, setEmail] = useState('')
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [passwordC, setPasswordC] = useState('')
-  const [displayName, setDisplayName] = useState('')
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [institution, setInstitution] = useState('')
-  const runQuery = useGraphQL()
+  const { query } = useGraphQLClient()
 
-  const details = {
-    email,
-    username,
-    password,
-    passwordC,
-    displayName,
-    firstName,
-    lastName,
-    institution,
-  }
+  useEffect(() => {
+    if (userId) {
+      history.replace('/articles')
+    }
+  }, [userId])
 
-  const createUser = async (details) => {
-    if (details.password !== details.passwordC) {
-      alert('Password and Password confirm mismatch')
-      return false
-    }
-    if (details.password === '') {
-      alert('password is empty')
-      return false
-    }
-    if (details.username === '') {
-      alert('Username is empty')
-      return false
-    }
-    if (details.email === '') {
-      alert('Email is empty')
-      return false
-    }
-    if (!validateEmail(details.email)) {
-      alert('Email appears to be malformed')
-      return false
-    }
+  const handleFormSubmit = useCallback(async (event) => {
+    event.preventDefault()
+    const details = fromFormData(event.target)
 
     try {
-      await runQuery({ query: queries.createUser, variables: { details } })
+      await query({ query: queries.createUser, variables: { details } })
       // if no error thrown, we can navigate to /
-      history.push('/')
+      setToast({
+        type: 'default',
+        text: t('credentials.register.successToast'),
+      })
+      history.push('/articles')
     } catch (err) {
-      console.log('Unable to create a user', err)
+      setToast({
+        type: 'error',
+        text: t('credentials.register.errorToast', { message: err.message }),
+      })
     }
-  }
+  }, [])
 
   return (
     <section className={styles.box}>
+      <Helmet>
+        <title>{t('credentials.login.registerLink')}</title>
+      </Helmet>
+
       <form
-        onSubmit={(event) => {
-          event.preventDefault()
-          createUser(details)
-        }}
+        onSubmit={handleFormSubmit}
+        id="form-register"
+        className={formStyles.form}
       >
+        <h1>{t('credentials.register.title')}</h1>
 
-        <h1>Create a Stylo account</h1>
+        <fieldset className={styles.section}>
+          <legend>
+            <h2>{t('credentials.register.requiredFields')}</h2>
+          </legend>
 
-        <fieldset>
-          <legend>Required informations</legend>
-
-          <Field id="email" type="email" label="Email*" autoComplete="email" required={true} onChange={(e) => setEmail(etv(e))} />
-          <Field id="username" label="Username*" autoComplete="username" required={true} onChange={(e) => setUsername(etv(e))} />
-          <Field id="password" type="password" label="Password*" autoComplete="new-password" required={true} onChange={(e) => setPassword(etv(e))} />
-          <Field id="passwordc" type="password" label="Confirm Password*" autoComplete="new-password" required={true} onChange={(e) => setPasswordC(etv(e))} className={password === passwordC ? null : styles.beware} />
+          <Field
+            name="email"
+            type="email"
+            label={t('user.account.email')}
+            autoComplete="email"
+            autoFocus={true}
+            required={true}
+          />
+          <Field
+            name="username"
+            label={t('user.account.username')}
+            autoComplete="username"
+            required={true}
+          />
+          <Field
+            ref={passwordRef}
+            name="password"
+            type="password"
+            label={t('credentials.password.placeholder')}
+            minLength={6}
+            autoComplete="new-password"
+            onChange={validateSameFieldValue(
+              passwordConfirmationRef,
+              passwordRef,
+              t('credentials.password.mismatch')
+            )}
+            required={true}
+          />
+          <Field
+            ref={passwordConfirmationRef}
+            name="passwordC"
+            type="password"
+            minLength={6}
+            label={t('credentials.confirmNewPassword.placeholder')}
+            autoComplete="new-password"
+            onChange={validateSameFieldValue(
+              passwordConfirmationRef,
+              passwordRef,
+              t('credentials.password.mismatch')
+            )}
+            required={true}
+          />
         </fieldset>
 
-        <fieldset>
-          <legend>Optional details</legend>
+        <fieldset className={styles.section}>
+          <legend>
+            <h2>{t('credentials.register.optionalFields')}</h2>
+          </legend>
 
-          <Field id="display-name" label="Display Name" onChange={(e) => setDisplayName(etv(e))} />
-          <Field id="first-name" label="First Name" onChange={(e) => setFirstName(etv(e))} />
-          <Field id="last-name" label="Last Name" onChange={(e) => setLastName(etv(e))} />
-          <Field id="institution" label="Organization" onChange={(e) => setInstitution(etv(e))} />
+          <Field name="displayName" label={t('user.account.displayName')} />
+          <Field name="firstName" label={t('user.account.firstName')} />
+          <Field name="lastName" label={t('user.account.lastName')} />
+          <Field name="institution" label={t('user.account.institution')} />
         </fieldset>
 
         <ul className={styles.actions}>
           <li>
-            <Link to="/"><ArrowLeftCircle className={styles.inlineIcon} size={20} />Go back to Login</Link>
+            <Link to="/">
+              <ArrowLeftCircle className={styles.inlineIcon} size={20} />
+              {t('credentials.login.goBackLink')}
+            </Link>
           </li>
           <li className={styles.actionsSubmit}>
             <Button primary={true} type="submit">
-              <Check /> Create
+              <Check role="presentation" />
+              {t('credentials.login.registerLink')}
             </Button>
           </li>
         </ul>
@@ -109,5 +140,3 @@ function Register () {
     </section>
   )
 }
-
-export default Register

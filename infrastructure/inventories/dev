@@ -19,10 +19,7 @@ openid_connect_client_secret='{{ openid_connect_client_secret }}'
 allow_cors_frontend='https://stylo-dev.huma-num.fr https://export.stylo-dev.huma-num.fr/ https://deploy-preview-\\d+--stylo-dev\\.netlify\\.app https://stylo-dev.netlify.app https://master--stylo-dev.netlify.app'
 stylo_backend_endpoint={{ lookup('env', 'SNOWPACK_PUBLIC_BACKEND_ENDPOINT') or 'https://stylo-dev.huma-num.fr' }}
 graphql_endpoint={{ lookup('env', 'SNOWPACK_PUBLIC_GRAPHQL_ENDPOINT') or 'https://stylo-dev.huma-num.fr/graphql' }}
-export_endpoint={{ lookup('env', 'SNOWPACK_PUBLIC_EXPORT_ENDPOINT') or 'https://stylo-dev.huma-num.fr' }}
-process_endpoint={{ lookup('env', 'SNOWPACK_PUBLIC_PROCESS_ENDPOINT') or 'https://stylo-export.ecrituresnumeriques.ca' }}
 pandoc_export_endpoint={{ lookup('env', 'SNOWPACK_PUBLIC_PANDOC_EXPORT_ENDPOINT') or 'https://export.stylo-dev.huma-num.fr' }}
-human_id_register_endpoint={{ lookup('env', 'SNOWPACK_PUBLIC_HUMAN_ID_REGISTER_ENDPOINT') or 'https://auth-test.huma-num.fr/register?service=https://stylo-dev.huma-num.fr/authorization-code/callback' }}
 export_canonical_base_url='https://stylo-dev.huma-num.fr'
 export_allowed_instance_base_urls='https://stylo-dev.huma-num.fr'
 zotero_auth_callback_url='http://stylo-dev.huma-num.fr/authorization-code/zotero/callback'
@@ -30,6 +27,10 @@ matomo_url={{ lookup('env', 'SNOWPACK_MATOMO_URL') or 'https://analyseweb.huma-n
 matomo_site_id={{ lookup('env', 'SNOWPACK_MATOMO_SITE_ID') or 286 }}
 se_graphql_token=
 assets_path='./front/build'
+mongo_backup_path='/home/stylo/stylo/backup'
+
+# Flags dispo sur https://www.ssllabs.com/ssltest/analyze.html?d=humanid.huma-num.fr
+node_options_flag='--tls-cipher-list="ECDHE-RSA-CHACHA20-POLY1305:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!SRP:!CAMELLIA" --tls-min-v1.2 --tls-max-v1.2'
 
 [stylo]
 node01 ansible_user=stylo ansible_host=cchum-kvm-stylo-dev.in2p3.fr

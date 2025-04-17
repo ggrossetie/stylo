@@ -12,7 +12,7 @@
   height: 2.5em;
   justify-content: flex-start;
   line-height: 1.5;
-  padding: calc(.5em - 1px) calc(.8em - 1px);
+  padding: calc(0.5em - 1px) calc(0.8em - 1px);
   position: relative;
   vertical-align: top;
   text-decoration: none;
@@ -50,20 +50,20 @@
     border-radius: 2px;
     border-right: 0;
     border-top: 0;
-    content: " ";
+    content: ' ';
     display: block;
-    height: .625em;
+    height: 0.625em;
     margin-top: -0.55em;
     pointer-events: none;
     position: absolute;
     top: 50%;
     transform: rotate(-45deg);
     transform-origin: center;
-    width: .625em;
+    width: 0.625em;
   }
 }
 
-.select {
+select.select {
   @include actionField;
   @include selectField;
 }
@@ -80,8 +80,17 @@
   }
 }
 
-a.button:not(.primary), a.icon:not(.primary) {
+.button:disabled {
+  cursor: default;
+}
+
+a.button:not(.primary),
+a.icon:not(.primary) {
   color: currentColor;
+}
+
+a.icon:after {
+  display: none;
 }
 
 .link {
@@ -92,14 +101,24 @@ a.button:not(.primary), a.icon:not(.primary) {
   font-size: inherit;
   text-decoration: underline;
 
-  &:hover, &:focus {
+  &:hover,
+  &:focus {
     text-decoration: none;
   }
 }
 
-.small {
-  font-size: .8rem;
+.linkPrimary {
+  @extend .link;
+  @extend .primary;
+  text-decoration: none;
 }
+
+.linkSecondary {
+  @extend .link;
+  @extend .secondary;
+  text-decoration: none;
+}
+
 
 .primary {
   @extend .button;
@@ -113,12 +132,12 @@ a.button:not(.primary), a.icon:not(.primary) {
     background-color: rgba(239, 239, 239, 0.3);
     border-color: rgba(118, 118, 118, 0.3);
   }
-}
 
-.primary:hover:not([disabled]),
-.primary:focus-visible:not([disabled]) {
-  background-color: rgba(0, 0, 0, 0.75);
-  color: #fff;
+  &:hover:not([disabled]),
+  &:focus-visible:not([disabled]) {
+    background-color: rgba(0, 0, 0, 0.75);
+    color: #fff;
+  }
 }
 
 .secondary {
@@ -133,11 +152,22 @@ a.button:not(.primary), a.icon:not(.primary) {
     background-color: rgba(239, 239, 239, 0.3);
     border-color: rgba(118, 118, 118, 0.3);
   }
+
+  &:hover:not([disabled]),
+  &:focus-visible:not([disabled]) {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
 }
 
-.secondary:hover:not([disabled]),
-.secondary:focus-visible:not([disabled]) {
-  background-color: rgba(0, 0, 0, 0.2);
+details.secondary {
+  height: auto;
+  cursor: default;
+  user-select: text;
+
+  summary {
+    cursor: pointer;
+    user-select: none
+  }
 }
 
 .tertiary {
@@ -193,6 +223,12 @@ a.button:not(.primary), a.icon:not(.primary) {
   > svg {
     margin: 0;
   }
+}
+
+.icon.small {
+  margin-left: .5rem;
+  padding: .2rem;
+  height: auto;
 }
 
 .toggle {

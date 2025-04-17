@@ -5,18 +5,22 @@ import { useCombobox } from 'downshift'
 import Field from '../../Field'
 
 import styles from '../../form.module.scss'
-import { Search } from 'react-feather'
+import { Search } from 'lucide-react'
 
 function toValueFn(el) {
-  const firstname = el.option.find(opt => opt['@key'] === 'firstname')?.['@value']
-  const lastname = el.option.find(opt => opt['@key'] === 'lastname')?.['@value']
-  const orcid = el.option.find(opt => opt['@key'] === 'orcid')?.['@value']
-  const isni = el.option.find(opt => opt['@key'] === 'isni')?.['@value']
+  const firstname = el.option.find((opt) => opt['@key'] === 'firstname')?.[
+    '@value'
+  ]
+  const lastname = el.option.find((opt) => opt['@key'] === 'lastname')?.[
+    '@value'
+  ]
+  const orcid = el.option.find((opt) => opt['@key'] === 'orcid')?.['@value']
+  const isni = el.option.find((opt) => opt['@key'] === 'isni')?.['@value']
   return {
     forname: firstname,
     surname: lastname,
     orcid,
-    isni
+    isni,
   }
 }
 
@@ -32,7 +36,7 @@ export default function IsidoreAuthorAPIAutocompleteField(props) {
     reset,
   } = useCombobox({
     items: inputItems,
-    itemToString: () => "",
+    itemToString: () => '',
     onSelectedItemChange: ({ selectedItem }) => {
       if (selectedItem) {
         const { $id: id } = props.idSchema
@@ -57,20 +61,30 @@ export default function IsidoreAuthorAPIAutocompleteField(props) {
 
   return (
     <div {...getComboboxProps()}>
-      <Field {...getInputProps({ className: styles.autocompleteField, autoComplete: "disabled", icon: Search}, { suppressRefError: true })}/>
+      <Field
+        {...getInputProps(
+          {
+            className: styles.autocompleteField,
+            autoComplete: 'disabled',
+            icon: Search,
+            readOnly: props.readonly,
+          },
+          { suppressRefError: true }
+        )}
+      />
       <ul {...getMenuProps()}>
         {isOpen &&
-        inputItems.map((item, index) => (
-          <li
-            style={
-              highlightedIndex === index ? { backgroundColor: '#bde4ff' } : {}
-            }
-            key={`${item.option['@value']}${index}`}
-            {...getItemProps({ item, index })}
-          >
-            {item['@label']}
-          </li>
-        ))}
+          inputItems.map((item, index) => (
+            <li
+              style={
+                highlightedIndex === index ? { backgroundColor: '#bde4ff' } : {}
+              }
+              key={`${item.option['@value']}${index}`}
+              {...getItemProps({ item, index })}
+            >
+              {item['@label']}
+            </li>
+          ))}
       </ul>
     </div>
   )

@@ -1,0 +1,30 @@
+@use '../../styles/defaults' as *;
+@use '../../styles/variables' as *;
+
+.icon {
+  width: 1em;
+  height: 1em;
+}
+
+.loading {
+  color: $main-lighter-color;
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+
+  svg {
+    display: block;
+    animation: rotation 2.5s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+  }
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
+}

@@ -1,47 +1,57 @@
-import React, { useEffect, useRef } from 'react'
-import PropTypes from 'prop-types'
-import { X } from 'react-feather'
+import React, { forwardRef } from 'react'
+import { X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import Button from './Button'
 
 import styles from './modal.module.scss'
 
 const noop = () => {}
 
-export default function Modal ({ title, children, cancel = noop}) {
-  const ref = useRef()
-
-  useEffect(() => {
-    ref.current.showModal()
-    document.body.setAttribute('data-scrolling', false)
-
-    return function cleanup () {
-      document.body.removeAttribute('data-scrolling')
-    }
-  }, [])
+/**
+ * @param props
+ * @param {string} props.title
+ * @param {RefObject} props.ref
+ * @param {boolean=} props.visible
+ * @param {string} props.subtitle
+ * @param {Element} props.children
+ * @param {() => void} props.cancel
+ */
+export default forwardRef(function Modal(
+  { title, subtitle = '', children, cancel = noop, visible = true },
+  forwardedRef
+) {
+  const { t } = useTranslation()
 
   return (
-    <dialog open={false} className={styles.modal} ref={ref} onClose={cancel} aria-labelledby="modal-title">
-      <Button
-        aria-label="Close modal"
-        icon={true}
-        className={[styles.secondary, styles.closeButton].join(' ')}
-        onClick={cancel}
-      >
-        <X aria-hidden />
-      </Button>
+    <dialog
+      open={false}
+      className={styles.modal}
+      ref={forwardedRef}
+      onClose={cancel}
+      aria-labelledby="modal-title"
+    >
+      {visible && (
+        <div className={styles.content}>
+          <header className={styles.modalHeader}>
+            <Button
+              aria-label={t('modal.close.label')}
+              icon={true}
+              link={true}
+              className={styles.closeButton}
+              onClick={cancel}
+            >
+              {t('modal.close.text')} <X aria-hidden />
+            </Button>
 
-      <h1 id="modal-title" className={styles.title}>{title}</h1>
+            <h1 id="modal-title" className={styles.title}>
+              {title}
+            </h1>
+            {subtitle && <div className={styles.subtitle}>{subtitle}</div>}
+          </header>
 
-      <div className={styles.modalBody}>{children}</div>
+          <div>{children}</div>
+        </div>
+      )}
     </dialog>
   )
-}
-
-Modal.propTypes = {
-  title: PropTypes.string.isRequired,
-  cancel: PropTypes.func,
-  children: PropTypes.oneOfType([
-    PropTypes.arrayOf(PropTypes.node),
-    PropTypes.node
-  ]).isRequired,
-}
+})

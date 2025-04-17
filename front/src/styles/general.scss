@@ -12,29 +12,28 @@
   box-sizing: border-box;
 }
 
-[hidden]:not([hidden="false"]) {
+[hidden]:not([hidden='false']) {
   display: none;
 }
 
 @media screen {
   html {
     background-color: $main-background-color;
-    font-family: 'Inter', serif;
-    color: $main-color;
   }
 
-  button, textarea {
+  button,
+  textarea {
     font-family: 'Inter', serif;
   }
-
 
   textarea {
     display: block;
     max-width: 100%;
-    padding: calc(.75em - 1px);
+    padding: calc(0.75em - 1px);
     resize: vertical;
-    font-size: .9em;
-    font-family: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+    font-size: 0.9em;
+    font-family: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono,
+    DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
   }
 
   textarea:not([rows]) {
@@ -47,6 +46,12 @@
     height: 100%;
   }
 
+  body {
+    color: $main-color;
+    font-family: 'Inter', serif;
+    font-size: 100%;
+  }
+
   a {
     color: $main-color-links;
     text-decoration: underline;
@@ -54,6 +59,18 @@
     &:hover,
     &:focus {
       text-decoration: none;
+    }
+
+    &[target="_blank"]::after {
+      display: inline-block;
+      content: "";
+      background-color: currentColor;
+      mask: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPgogIDxwYXRoIGQ9Ik0xNSAzaDZ2NiIvPgogIDxwYXRoIGQ9Ik0xMCAxNCAyMSAzIi8+CiAgPHBhdGggZD0iTTE4IDEzdjZhMiAyIDAgMCAxLTIgMkg1YTIgMiAwIDAgMS0yLTJWOGEyIDIgMCAwIDEgMi0yaDYiLz4KPC9zdmc+) no-repeat;
+      mask-size: cover;
+      line-height: 1rem;
+      margin-left: .4em;
+      width: 1rem;
+      height: 1rem;
     }
   }
 
@@ -70,19 +87,54 @@
     padding: 0;
   }
 
-  li {
+  ul, ol {
     list-style: none;
   }
 }
 
 /* clears the ‘X’ from Internet Explorer */
-input[type=search]::-ms-clear { display: none; width : 0; height: 0; }
-input[type=search]::-ms-reveal { display: none; width : 0; height: 0; }
+input[type='search']::-ms-clear {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+input[type='search']::-ms-reveal {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 /* clears the ‘X’ from Chrome */
-input[type="search"]::-webkit-search-decoration,
-input[type="search"]::-webkit-search-cancel-button,
-input[type="search"]::-webkit-search-results-button,
-input[type="search"]::-webkit-search-results-decoration { display: none; }
+input[type='search']::-webkit-search-decoration,
+input[type='search']::-webkit-search-cancel-button,
+input[type='search']::-webkit-search-results-button,
+input[type='search']::-webkit-search-results-decoration {
+  display: none;
+}
+
+.toggle {
+  background-color: #5b5b5b !important;
+}
+
+.toggle.checked {
+  background-color: #0070f3  !important;;
+}
+
+.icon {
+  margin-right: .25em;
+  height: 1em;
+  width: 1em;
+}
+
+input:read-only,
+textarea:read-only,
+select:disabled {
+  border: 0;
+  box-shadow: none;
+  color: $main-color;
+  background-color: $muted-background-color;
+}
 
 .yRemoteSelectionHead {
   position: absolute;

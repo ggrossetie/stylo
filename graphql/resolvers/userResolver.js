@@ -8,7 +8,7 @@ const { ApiError } = require('../helpers/errors')
 
 module.exports = {
   Mutation: {
-    async createUser (_, { details: userInput }) {
+    async createUser(_, { details: userInput }) {
       // check for user uniqueness
       const existingUser = await User.findOne({ email: userInput.email })
       if (existingUser) {
@@ -29,7 +29,22 @@ module.exports = {
       return newUser
     },
 
-    async addAcquintance (_, args, context) {
+    async setAuthToken(_, args, { token, user }) {
+      const { service, token: serviceToken } = args
+
+      isUser(args, { token, user })
+
+      if (service === 'zotero') {
+        user.zoteroToken = serviceToken
+        await user.save()
+      } else {
+        throw new Error(`Service unknown (${service})`)
+      }
+
+      return user
+    },
+
+    async addAcquintance(_, args, context) {
       const { userId } = isUser(args, context)
 
       let thisAcquintance = await User.findOne({ email: args.email })
@@ -61,7 +76,7 @@ module.exports = {
       return thisUser.populate('acquintances').execPopulate()
     },
 
-    async updateUser (_, args, context) {
+    async updateUser(_, args, context) {
       const { userId } = isUser(args, context)
       const { details } = args
 
@@ -70,7 +85,14 @@ module.exports = {
         throw new Error('Unable to find user')
       }
 
-      ['displayName', 'firstName', 'lastName', 'institution', 'yaml', 'zoteroToken'].forEach(field => {
+      ;[
+        'displayName',
+        'firstName',
+        'lastName',
+        'institution',
+        'yaml',
+        'zoteroToken',
+      ].forEach((field) => {
         if (Object.hasOwn(details, field)) {
           /* eslint-disable security/detect-object-injection */
           thisUser.set(field, details[field])
@@ -82,64 +104,58 @@ module.exports = {
   },
 
   Query: {
-    // only available for admins
-    async users (_root, args, context) {
-      if (context.token.admin) {
-        return User.find()
+    async user(_root, args, context) {
+      if (!context.userId) {
+        throw new ApiError(
+          'UNAUTHENTICATED',
+          `Unable to find an authentication context: ${JSON.stringify(context)}`
+        )
       }
-      throw new ApiError('FORBIDDEN', 'Token must have administrative rights to execute this query!')
-
+      return User.findById(context.userId)
     },
 
-    async user (_root, args, context) {
-      let userId
-      if (context.token.admin) {
-        userId = args.user
-        if (!userId) {
-          throw new ApiError('UNAUTHENTICATED', `Unable to find an authentication context: ${context}`)
-        }
-      } else {
-        userId = context.userId
-      }
-      return User.findById(userId)
-    },
-
-    async getUser (_, { filter }, context) {
+    async getUser(_, { filter }, context) {
       isUser({}, context)
       return User.findOne({ email: filter.email })
     },
   },
 
   User: {
-    async articles (user, { limit }) {
-      await user.populate({
-        path: 'articles',
-        options: { limit },
-        populate: { path: 'owner tags' }
-      }).execPopulate()
+    async articles(user, { limit }) {
+      await user
+        .populate({
+          path: 'articles',
+          options: { limit },
+          populate: { path: 'owner tags' },
+        })
+        .execPopulate()
       return user.articles
     },
 
-    async acquintances (user, args, context) {
-      return Promise.all(user.acquintances.map((contactId) => context.loaders.users.load(contactId)))
+    async acquintances(user, args, context) {
+      return Promise.all(
+        user.acquintances.map((contactId) =>
+          context.loaders.users.load(contactId)
+        )
+      )
     },
 
     /**
      * @param user
      * @returns {Promise<void>}
      */
-    async tags (user) {
+    async tags(user) {
       return Tag.find({ owner: user._id }).lean()
     },
 
-    async workspaces (user) {
-      if (user?.admin === true) {
+    async workspaces(user, args, { token }) {
+      if (token?.admin) {
         return Workspace.find()
       }
       return Workspace.find({ 'members.user': user?._id })
     },
 
-    async addContact (user, { userId }) {
+    async addContact(user, { userId }) {
       if (user._id === userId) {
         throw new Error('You cannot add yourself as a contact!')
       }
@@ -154,7 +170,7 @@ module.exports = {
       )
     },
 
-    async removeContact (user, { userId }) {
+    async removeContact(user, { userId }) {
       const contact = await User.findById(userId)
       if (!contact) {
         throw new Error(`No user found with this id: ${userId}`)
@@ -166,12 +182,14 @@ module.exports = {
       )
     },
 
-    async stats (user) {
-      const contributedArticlesCount = (await Article.find({ contributors: { $elemMatch: { user: user._id } } })).length
+    async stats(user) {
+      const contributedArticlesCount = (
+        await Article.find({ contributors: { $elemMatch: { user: user._id } } })
+      ).length
       return {
         myArticlesCount: user.articles.length,
-        contributedArticlesCount
+        contributedArticlesCount,
       }
-    }
+    },
   },
 }

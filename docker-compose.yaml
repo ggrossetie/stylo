@@ -1,7 +1,8 @@
 services:
   mongodb-stylo:
-    image: mongo:4.4
-    container_name: "mongodb-stylo"
+    # to keep in sync with ./graphql/jest-mongodb-config.js / README.md
+    image: mongo:5
+    container_name: 'mongodb-stylo'
     environment:
       - MONGO_DATA_DIR=/data/db
       - MONGO_LOG_DIR=/dev/null
@@ -9,7 +10,7 @@ services:
       - ./data/db:/data/db
     command: mongod --logpath=/dev/null
     healthcheck:
-      test: ["CMD", "mongo", "--eval", "\"db.adminCommand('ping')\""]
+      test: ['CMD', 'mongo', '--eval', '"db.adminCommand(''ping'')"']
       interval: 30s
       timeout: 5s
     ports:
@@ -20,36 +21,17 @@ services:
       context: ./graphql/
       labels:
         - org.opencontainers.image.source=https://github.com/EcrituresNumeriques/stylo
-    image: "ghcr.io/ecrituresnumeriques/stylo-graphql:${TAG:-latest}"
-    container_name: "graphql-stylo"
+    image: 'ghcr.io/ecrituresnumeriques/stylo-graphql:${TAG:-latest}'
+    container_name: 'graphql-stylo'
     depends_on:
       mongodb-stylo:
         condition: service_healthy
     env_file:
       - .env
     environment:
-      - MONGO_SERVER=mongodb-stylo
-      - MONGO_SERVER_PORT=27017
+      - DATABASE_URL=mongodb://mongodb-stylo:27017/stylo-dev
     ports:
       - 127.0.0.1:3030:3030
-
-  export-stylo:
-    build:
-      context: ./export/
-      labels:
-        - org.opencontainers.image.source=https://github.com/EcrituresNumeriques/stylo
-    container_name: "export-stylo"  # export-stylo-legacy
-    image: "ghcr.io/ecrituresnumeriques/stylo-export:${TAG:-latest}"
-    depends_on:
-      mongodb-stylo:
-        condition: service_healthy
-    env_file:
-      - .env
-    environment:
-      - MONGO_SERVER=mongodb-stylo
-      - MONGO_SERVER_PORT=27017
-    ports:
-      - 127.0.0.1:3060:3060
 
   front-stylo:
     build:
@@ -60,8 +42,8 @@ services:
       args:
         - SNOWPACK_MATOMO_URL
         - SNOWPACK_MATOMO_SITE_ID
-    image: "ghcr.io/ecrituresnumeriques/stylo-front:${TAG:-latest}"
-    container_name: "front-stylo"
+    image: 'ghcr.io/ecrituresnumeriques/stylo-front:${TAG:-latest}'
+    container_name: 'front-stylo'
     volumes:
       - ./front/build:/usr/share/nginx/html
     env_file:
@@ -71,22 +53,22 @@ services:
     depends_on:
       - graphql-stylo
 
-  export-gateway:
-    image: "davidbgk/stylo-export:1.1.0"
-    container_name: "export-gateway" # export-stylo-modern
+  export-stylo:
+    image: 'davidbgk/stylo-export:3.0.1'
+    container_name: 'export-stylo'
     env_file:
       - .env
     environment:
+      - SE_IMAGES_TIMEOUT=10
       - SE_PANDOC_API_BASE_URL=${SE_PANDOC_API_BASE_URL:-http://pandoc-api:8000/latest/}
       - SE_ALLOWED_INSTANCE_BASE_URLS=${SE_ALLOWED_INSTANCE_BASE_URLS:-http://localhost:3000 http://localhost:3030 http://host.docker.internal:3030}
     ports:
       - 127.0.0.1:3080:8001
     extra_hosts:
-    - "host.docker.internal:host-gateway"
+      - 'host.docker.internal:host-gateway'
 
   pandoc-api:
-    image: "davidbgk/pandoc-api:0.0.17"
-    container_name: "pandoc-api"
+    image: 'davidbgk/pandoc-api:3.0.3'
+    container_name: 'pandoc-api'
     ports:
       - 127.0.0.1:3090:8000
-

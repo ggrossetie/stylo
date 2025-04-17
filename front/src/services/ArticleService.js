@@ -1,65 +1,72 @@
-import { runQuery } from '../helpers/graphQL.js'
+import { executeQuery } from '../helpers/graphQL.js'
 
 import { updateWorkingVersion, createVersion } from './ArticleService.graphql'
 
 export default class ArticleService {
-  constructor (userId, articleId, sessionToken, applicationConfig) {
+  constructor(userId, articleId, sessionToken) {
     this.userId = userId
     this.articleId = articleId
     this.sessionToken = sessionToken
-    this.graphqlEndpoint = applicationConfig.graphqlEndpoint
   }
 
-  async saveText (md) {
-    const { sessionToken, graphqlEndpoint } = this
+  async saveText(md) {
+    const { sessionToken } = this
 
-    return runQuery({ sessionToken, graphqlEndpoint }, {
+    return executeQuery({
+      sessionToken,
       query: updateWorkingVersion,
       variables: {
         userId: this.userId,
         articleId: this.articleId,
-        content: { md }
-      }
+        content: { md },
+      },
+      type: 'mutate',
     })
   }
 
-  async saveBibliography (bib) {
-    const { sessionToken, graphqlEndpoint } = this
+  async saveBibliography(bib) {
+    const { sessionToken } = this
 
-    return runQuery({ sessionToken, graphqlEndpoint }, {
+    return executeQuery({
+      sessionToken,
       query: updateWorkingVersion,
       variables: {
         userId: this.userId,
         articleId: this.articleId,
-        content: { bib }
-      }
+        content: { bib },
+      },
+      type: 'mutate',
     })
   }
 
-  async saveMetadata (yaml) {
-    const { sessionToken, graphqlEndpoint } = this
+  async saveMetadata(metadata) {
+    const { sessionToken } = this
 
-    return runQuery({ sessionToken, graphqlEndpoint }, {
+    return executeQuery({
+      sessionToken,
       query: updateWorkingVersion,
       variables: {
         userId: this.userId,
         articleId: this.articleId,
-        content: { yaml }
-      }
+        content: { metadata },
+      },
+      type: 'mutate',
     })
   }
 
-  async createNewVersion (major = false, message = '') {
-    const { sessionToken, graphqlEndpoint } = this
+  async createNewVersion(major = false, message = '') {
+    const { sessionToken } = this
 
-    return await runQuery({ sessionToken, graphqlEndpoint }, {
+    return await executeQuery({
+      sessionToken,
       query: createVersion,
       variables: {
         userId: this.userId,
         articleId: this.articleId,
         major,
-        message
-      }
+        message,
+      },
+      type: 'mutate',
     })
   }
 }

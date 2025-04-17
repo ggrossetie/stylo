@@ -18,6 +18,10 @@ enum AuthType {
   local
 }
 
+enum AuthTokenService {
+  zotero
+}
+
 type UserSearch {
   _id: ID
   displayName: String
@@ -50,8 +54,6 @@ type User {
   acquintances(limit: Int, page: Int): [User]
   articles(limit: Int, page: Int): [Article]
   workspaces: [Workspace!]
-  admin: Boolean
-  yaml: String
   zoteroToken: String
   createdAt: DateTime
   updatedAt: DateTime
@@ -84,6 +86,7 @@ type WorkingVersion {
   bib: String
   bibPreview: String
   md: String
+  metadata: JSON
   yaml (options: YamlFormattingInput): String
 }
 
@@ -95,6 +98,7 @@ type Version {
   md: String
   sommaire: String
   type: String
+  metadata: JSON
   yaml (options: YamlFormattingInput): String
   bib: String
   bibPreview: String
@@ -113,17 +117,10 @@ input ArticleVersionInput {
   message: String
 }
 
-type CollaborativeSession {
-  id: ID
-  creator: User
-  createdAt: DateTime
-}
-
-type SoloSession {
-  id: ID
-  creator: User
-  creatorUsername: String
-  createdAt: DateTime
+input CreateArticleInput {
+  title: String!
+  tags: [ID]
+  workspaces: [ID]
 }
 
 type Article {
@@ -136,8 +133,6 @@ type Article {
   versions(limit: Int, page: Int): [Version!]
   tags(limit: Int, page: Int): [Tag!]!
   preview: ArticlePreviewSettings
-  collaborativeSession: CollaborativeSession
-  soloSession: SoloSession
   createdAt: DateTime
   updatedAt: DateTime
 
@@ -153,11 +148,6 @@ type Article {
   addContributor(userId: ID!): Article
   removeContributor(userId: ID!): Article
   createVersion(articleVersionInput: ArticleVersionInput!): Article
-  startCollaborativeSession: CollaborativeSession!
-  startSoloSession: SoloSession!
-  takeOverSoloSession: SoloSession!
-  stopCollaborativeSession: Article
-  stopSoloSession: Article
 }
 
 type ArticlePreviewSettings {
@@ -210,7 +200,7 @@ type InstanceArticleStats implements InstanceObjectUsageStats {
 input WorkingVersionInput {
   bib: String,
   md: String,
-  yaml: String,
+  metadata: JSON,
 }
 
 input YamlFormattingInput {
@@ -233,7 +223,6 @@ input UserProfileInput {
   firstName: String
   lastName: String
   institution: String
-  yaml: String
   zoteroToken: String
 }
 
@@ -248,7 +237,6 @@ type WorkspaceArticle {
 type WorkspaceMember {
   workspace: Workspace!
   user: User
-  role: String
 
   # mutation
   remove: Workspace!
@@ -279,7 +267,7 @@ type Workspace {
 
   # mutations
   leave: Workspace
-  inviteMember(userId: ID!, role: String): Workspace
+  inviteMember(userId: ID!): Workspace
   addArticle(articleId: ID!): Workspace
 }
 
@@ -346,9 +334,6 @@ input FilterCorpusInput {
 }
 
 type Query {
-  "Fetch all users [Reserved for admins]"
-  users: [User]
-
   """
   Get authenticated user info.
   """
@@ -390,6 +375,9 @@ type Mutation {
   "Create user + password + default article"
   createUser(details: NewUserInput!): User!
 
+  "Sets a user authentication token (to something, or nothing if unlinking services"
+  setAuthToken (service: AuthTokenService!, token: String): User
+
   "Add an email to your acquintances [need to be authentificated as user]"
   addAcquintance(email: EmailAddress!, user: ID): User
 
@@ -407,13 +395,12 @@ type Mutation {
   removeCredential(email: EmailAddress!, user: ID): User
 
   "Create article for specified user [need to be authenticated as specified user]"
-  createArticle(title: String!, user: ID, tags: [ID]): Article
+  createArticle(createArticleInput: CreateArticleInput!): Article
 
   "Create tag [need to be authenticated as specified user]"
   createTag(
     name: String!
     description: String
-    user: ID
     color: HexColorCode!
   ): Tag
 
@@ -423,7 +410,6 @@ type Mutation {
     description: String
     color: HexColorCode
     tag: ID!
-    user: ID
   ): Tag
 
   "Delete tag, and remove it from all related articles"

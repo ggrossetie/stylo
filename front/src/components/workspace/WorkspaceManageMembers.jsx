@@ -1,76 +1,59 @@
-import React, { useCallback } from 'react'
 import { useToasts } from '@geist-ui/core'
-import useGraphQL, { useMutation } from '../../hooks/graphql.js'
-
-import { getWorkspaceMembers, inviteMember, removeMember } from './Workspaces.graphql'
+import React, { useCallback } from 'react'
+import { useWorkspaceMembersActions } from '../../hooks/workspace.js'
 import ContactSearch from '../ContactSearch.jsx'
+import Loading from '../molecules/Loading.jsx'
 
-
-export default function WorkspaceManageMembers ({ workspace }) {
+export default function WorkspaceManageMembers({ workspace }) {
   const workspaceId = workspace._id
-  const mutation = useMutation()
   const { setToast } = useToasts()
-  const { data, mutate } = useGraphQL({ query: getWorkspaceMembers, variables: { workspaceId } }, {
-    revalidateOnFocus: false,
-    revalidateOnReconnect: false
-  })
-  const members = data?.workspace?.members?.map((member) => ({
-    ...member,
-    selected: true
-  })) || []
+  const { members, error, isLoading, inviteMember, removeMember } =
+    useWorkspaceMembersActions(workspaceId)
 
-  const handleUserUpdated = useCallback(async ({ user, action }) => {
-    const { _id: userId } = user
-    if (action === 'select') {
-      try {
-       const response =  await mutation({
-          query: inviteMember,
-          variables: { workspaceId, userId, role: '' }
-        })
-        await mutate({
-          workspace: {
-            members: response.workspace.inviteMember.members.map((member) => ({
-              ...member,
-              selected: true
-            }))
-          }
-        }, { revalidate: false })
-        setToast({
-          text: `Utilisateur ${user.displayName || user.username} invité en tant que membre.`,
-          type: 'default',
-        })
-      } catch (err) {
-        setToast({
-          text: String(err),
-          type: 'error'
-        })
+  const handleUserUpdated = useCallback(
+    async ({ user, action }) => {
+      if (action === 'select') {
+        try {
+          await inviteMember(user)
+          setToast({
+            text: `Utilisateur ${
+              user.displayName || user.username
+            } invité en tant que membre.`,
+            type: 'default',
+          })
+        } catch (err) {
+          setToast({
+            text: String(err),
+            type: 'error',
+          })
+        }
+      } else if (action === 'unselect') {
+        try {
+          await removeMember(user)
+          setToast({
+            text: `Utilisateur ${
+              user.displayName || user.username
+            } supprimé des membres.`,
+            type: 'warning',
+          })
+        } catch (err) {
+          setToast({
+            text: String(err),
+            type: 'error',
+          })
+        }
       }
-    } else if (action === 'unselect') {
-      try {
-        const response = await mutation({
-          query: removeMember,
-          variables: { workspaceId, userId }
-        })
-        await mutate({
-          workspace: {
-            members: response.workspace.member.remove.members.map((member) => ({
-              ...member,
-              selected: true
-            }))
-          }
-        }, { revalidate: false })
-        setToast({
-          text: `Utilisateur ${user.displayName || user.username} supprimé des membres.`,
-          type: 'warning',
-        })
-      } catch (err) {
-        setToast({
-          text: String(err),
-          type: 'error'
-        })
-      }
-    }
-  }, [workspaceId])
+    },
+    [workspaceId]
+  )
+
+  if (error) {
+    return <div>Unable to load workspace members</div>
+  }
+
+  if (isLoading) {
+    return <Loading />
+  }
 
   return (
     <section>

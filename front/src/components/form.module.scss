@@ -5,7 +5,7 @@
 
 @mixin legend {
   font-size: 1.75rem;
-  font-weight: bold;
+  font-weight: 500;
   margin: 0;
   padding: 0.5rem;
   text-align: left;
@@ -19,12 +19,19 @@
     @include actionField;
     @include selectField;
   }
+
+  select:disabled {
+    border: 0;
+    box-shadow: none;
+    color: $main-color;
+    background-color: $muted-background-color;
+  }
 }
 
 .form {
   :global {
     label {
-      font-weight: bold;
+      font-weight: 500;
       padding-bottom: 0.15rem;
       font-size: 0.875rem;
     }
@@ -52,7 +59,6 @@
       display: flex;
       flex-direction: column;
       align-items: start;
-      padding: 0.5rem 0.5rem;
 
       &.field-array {
         border-bottom: none;
@@ -61,7 +67,7 @@
 
         > label {
           padding-bottom: 0.25rem;
-          font-weight: bold;
+          font-weight: 500;
         }
 
         > * {
@@ -74,8 +80,7 @@
 
         > fieldset {
           > button {
-            font-weight: bold;
-            margin: 0.5rem 0;
+            font-weight: 500;
           }
         }
       }
@@ -104,16 +109,21 @@
       &.field-object {
         flex-direction: column;
         flex: 1;
+        gap: 0.5rem;
 
         > * {
           width: 100%;
+        }
+
+        &.person {
+          margin-top: 1rem;
         }
       }
 
       &.field-string,
       &.field-boolean {
         label {
-         padding-bottom: 0.15rem;
+          padding-bottom: 0.15rem;
         }
       }
 
@@ -127,11 +137,22 @@
         width: 100%;
       }
 
+      select:disabled {
+        @include inputFieldDisabled;
+      }
+
       input[type='email'],
       input[type='date'],
       input[type='text'],
       input[type='url'] {
-        @include inputField
+        @include inputField;
+      }
+
+      input[type='email']:read-only,
+      input[type='date']:read-only,
+      input[type='text']:read-only,
+      input[type='url']:read-only {
+        @include inputFieldDisabled;
       }
 
       input[type='date'] {
@@ -142,6 +163,12 @@
       /** Checkbox field */
       .checkboxes {
         padding-left: 10%;
+
+        .checkbox.disabled {
+          label {
+            cursor: default;
+          }
+        }
 
         .checkbox {
           padding: 0.5rem 0;
@@ -161,20 +188,36 @@
         }
       }
 
+      .array-item.keywords {
+        display: flex;
+        align-items: center;
+
+        > .field-string {
+          flex: 1;
+        }
+      }
+
       /** Array of objects field */
       .array-item.can-add-remove {
-        /*padding: 0 0.5rem;*/
-
         > div {
           padding-right: 0;
         }
 
         > button {
-          border: 1px solid black;
+          border: 1px solid $main-color;
+        }
+
+        > button:disabled {
+          border: none;
+          background-color: $muted-background-color;
         }
 
         > .field-string {
           display: unset;
+        }
+        
+        > .field-string + button {
+          border-left: none;
         }
       }
     }
@@ -204,31 +247,41 @@
 }
 
 .fieldset {
+  display: flex;
+  flex-direction: column;
   border: none;
-  margin: 0 0 0.75rem;
-  padding: 0;
+  gap: 0.5rem;
+  padding: 0 0 1.5rem;
+  margin: 0;
+  font-size: 1em;
 
   legend {
     @include legend;
-    font-size: 1.25rem;
+    padding: 0 0 0.5rem;
+    font-size: 1.15em;
+  }
+
+  fieldset {
+    font-size: 0.8em;
   }
 }
 
 .comboboxReadonlyField {
-  margin-right: .5em;
+  margin-right: 0.5em;
 }
 
 .autocompleteField {
-  margin-right: .5em;
 }
 
 .addButton,
 .removeButton {
-  font-size: .7em;
+  font-size: 1em;
+  margin-top: 0.25rem;
 }
 
 .inlineRemoveButton {
-  font-size: 1em;
+  font-size: 1rem;
+  margin-top: 0;
 }
 
 .output {
@@ -236,7 +289,7 @@
 }
 
 .fieldHasNoElementError {
-  border: 1px solid red;
-  margin: .5em;
-  padding: .5rem;
+  border: 1px solid $error-color;
+  margin: 0.5em;
+  padding: 0.5rem;
 }

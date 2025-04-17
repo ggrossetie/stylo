@@ -1,3 +1,4 @@
+import clsx from 'clsx'
 import PropTypes from 'prop-types'
 import React, { Fragment, useCallback, useMemo, useState } from 'react'
 import Form, { getDefaultRegistry } from '@rjsf/core'
@@ -13,150 +14,197 @@ import isidoreAuthorSearch from './Write/metadata/isidoreAuthor'
 
 import styles from './form.module.scss'
 import Button from './Button'
-import { Plus, Trash } from 'react-feather'
+import { Plus, Trash } from 'lucide-react'
 import IsidoreAuthorAPIAutocompleteField from './Write/metadata/isidoreAuthor'
 
 const {
   templates: { BaseInputTemplate: DefaultBaseInputTemplate },
-  widgets: { CheckboxesWidget}
+  widgets: { CheckboxesWidget },
 } = getDefaultRegistry()
 
 /**
  * @param {BaseInputTemplate} properties
+ * @returns {Element}
  */
-function BaseInputTemplate (properties) {
+function BaseInputTemplate(properties) {
   const { placeholder } = properties
-  return (<Translation>
-    {
-      (t) => <DefaultBaseInputTemplate {...properties} placeholder={t(placeholder)}/>
-    }
-  </Translation>)
+  return (
+    <Translation>
+      {(t) => (
+        <DefaultBaseInputTemplate
+          {...properties}
+          placeholder={t(placeholder)}
+        />
+      )}
+    </Translation>
+  )
 }
 
 /**
  * @param {SelectWidget} properties
+ * @returns {Element}
  */
-function CustomSelectWidget (properties) {
+function CustomSelectWidget(properties) {
   const { options, title, placeholder } = properties
-  return (<div className={styles.selectContainer}>
-    <Translation>
-      {
-        (t) => <SelectWidget {...{
-          ...properties, placeholder: t(placeholder), options: {
-            enumOptions: options?.enumOptions?.map((opt) => {
-              if (title && opt.label in title) {
-                return {
-                  label: t(title[opt.label]),
-                  value: opt.value
-                }
-              }
-              return {
-                label: t(opt.label),
-                value: opt.value
-              }
-            })
-          }
-        }}/>
-      }
-    </Translation>
-  </div>)
+  return (
+    <div className={styles.selectContainer}>
+      <Translation>
+        {(t) => (
+          <SelectWidget
+            {...{
+              ...properties,
+              placeholder: t(placeholder),
+              options: {
+                enumOptions: options?.enumOptions?.map((opt) => {
+                  if (title && opt.label in title) {
+                    return {
+                      label: t(title[opt.label]),
+                      value: opt.value,
+                    }
+                  }
+                  return {
+                    label: t(opt.label),
+                    value: opt.value,
+                  }
+                }),
+              },
+            }}
+          />
+        )}
+      </Translation>
+    </div>
+  )
 }
 
 /**
  * @param {WidgetProps} properties
+ * @returns {Element}
  */
-function CustomCheckboxesWidget (properties) {
+function CustomCheckboxesWidget(properties) {
   const { options, title } = properties
-  return (<Translation>
-    {
-      (t) => <CheckboxesWidget {...{
-        ...properties, options: {
-          enumOptions: options?.enumOptions?.map((opt) => {
-            if (title && opt.label in title) {
-              return {
-                label: t(title[opt.label]),
-                value: opt.value
-              }
-            }
-            return {
-              label: t(opt.label),
-              value: opt.value
-            }
-          })
-        }
-      }}/>
-    }
-  </Translation>)
+  return (
+    <Translation>
+      {(t) => (
+        <CheckboxesWidget
+          {...{
+            ...properties,
+            options: {
+              enumOptions: options?.enumOptions?.map((opt) => {
+                if (title && opt.label in title) {
+                  return {
+                    label: t(title[opt.label]),
+                    value: opt.value,
+                  }
+                }
+                return {
+                  label: t(opt.label),
+                  value: opt.value,
+                }
+              }),
+            },
+          }}
+        />
+      )}
+    </Translation>
+  )
 }
 
 /**
  * @param {ArrayFieldTemplateProps} properties
+ * @returns {Element}
  */
-function ArrayFieldTemplate (properties) {
-  const addItemTitle = properties.uiSchema['ui:add-item-title'] ?? 'form.addItem.title'
-  const removeItemTitle = properties.uiSchema['ui:remove-item-title'] ?? 'form.removeItem.title'
+function ArrayFieldTemplate(properties) {
+  const addItemTitle =
+    properties.uiSchema['ui:add-item-title'] ?? 'form.addItem.title'
+  const removeItemTitle =
+    properties.uiSchema['ui:remove-item-title'] ?? 'form.removeItem.title'
   const title = properties.uiSchema['ui:title']
-
-  const inlineRemoveButton = properties.schema?.items?.type === 'string' || !removeItemTitle
+  const inlineRemoveButton =
+    properties.schema?.items?.type === 'string' || !removeItemTitle
+  const items = [...properties.items].reverse()
   return (
-    <fieldset className={styles.fieldset} key={properties.key}>
-      {title && <Translation>{(t) => <legend id={properties.id}>{t(title)}</legend>}</Translation>}
-      {properties.items &&
-        properties.items.map((element) => (
-          <div
-            id={element.key}
-            key={element.key}
-            className={`${element.className} can-add-remove`}
-          >
-            {element.children}
-            {element.hasRemove && (
-              <Button
-                icon={inlineRemoveButton}
-                type="button"
-                className={[styles.removeButton, inlineRemoveButton ? styles.inlineRemoveButton : ''].join(' ')}
-                tabIndex={-1}
-                disabled={element.disabled || element.readonly}
-                onClick={element.onDropIndexClick(element.index)}
-              >
-                <Trash/>
-                {inlineRemoveButton ? '' : <Translation>
-                  {(t) => t(removeItemTitle)}
-                </Translation>}
-              </Button>
-            )}
-          </div>
-        ))}
+    <fieldset
+      className={clsx(styles.fieldset, styles.array)}
+      key={properties.key}
+    >
+      {title && (
+        <Translation>
+          {(t) => <legend id={properties.id}>{t(title)}</legend>}
+        </Translation>
+      )}
       {properties.canAdd && (
         <Button
+          disabled={properties.disabled || properties.readonly}
           type="button"
           className={styles.addButton}
           tabIndex={-1}
           onClick={properties.onAddClick}
         >
-          <Plus/>
-          <Translation>
-            {(t) => t(addItemTitle)}
-          </Translation>
+          <Plus />
+          <Translation>{(t) => t(addItemTitle)}</Translation>
         </Button>
       )}
+      {items &&
+        items.map((element) => {
+          return (
+            <div
+              id={element.key}
+              key={element.key}
+              className={clsx(
+                element.className,
+                'can-add-remove',
+                element?.uiSchema?.['ui:className']
+              )}
+            >
+              {element.children}
+              {element.hasRemove && (
+                <Button
+                  icon={inlineRemoveButton}
+                  type="button"
+                  className={[
+                    styles.removeButton,
+                    inlineRemoveButton ? styles.inlineRemoveButton : '',
+                  ].join(' ')}
+                  tabIndex={-1}
+                  disabled={element.disabled || element.readonly}
+                  onClick={element.onDropIndexClick(element.index)}
+                >
+                  <Trash />
+                  {inlineRemoveButton ? (
+                    ''
+                  ) : (
+                    <Translation>{(t) => t(removeItemTitle)}</Translation>
+                  )}
+                </Button>
+              )}
+            </div>
+          )
+        })}
     </fieldset>
   )
 }
 
-function FieldTemplate (properties) {
-  const { id, classNames, style, help, description, errors, children, displayLabel } = properties
+function FieldTemplate(properties) {
+  const {
+    id,
+    classNames,
+    style,
+    help,
+    description,
+    errors,
+    children,
+    displayLabel,
+  } = properties
   const label = properties.schema.$id
     ? properties.label[properties.schema.$id]
     : properties.label
   return (
     <div className={classNames} style={style}>
-      {displayLabel && <label htmlFor={id}>
-        <Translation>
-          {
-            (t) => <>{t(label)}</>
-          }
-        </Translation>
-      </label>}
+      {displayLabel && (
+        <label htmlFor={id}>
+          <Translation>{(t) => <>{t(label)}</>}</Translation>
+        </label>
+      )}
       {description}
       {children}
       {errors}
@@ -167,20 +215,29 @@ function FieldTemplate (properties) {
 
 /**
  * @param {ObjectFieldTemplateProps} properties
+ * @returns {Element}
  */
-function ObjectFieldTemplate (properties) {
+function ObjectFieldTemplate(properties) {
   if (properties.uiSchema['ui:groups']) {
     const groups = properties.uiSchema['ui:groups']
     const groupedElements = groups.map(({ fields, title }) => {
       const elements = fields
         .filter(
-          (field) => (properties.uiSchema[field] || {})['ui:widget'] !== 'hidden'
+          (field) =>
+            (properties.uiSchema[field] || {})['ui:widget'] !== 'hidden'
         )
         .map((field) => {
-          const element = properties.properties.find((element) => element.name === field)
+          const element = properties.properties.find(
+            (element) => element.name === field
+          )
 
           if (!element) {
-            console.error('Field configuration not found for "%s" in \'ui:groups\' "%s" — part of %o', field, title || '', fields)
+            console.error(
+              'Field configuration not found for "%s" in \'ui:groups\' "%s" — part of %o',
+              field,
+              title || '',
+              fields
+            )
           }
 
           return [field, element]
@@ -189,21 +246,22 @@ function ObjectFieldTemplate (properties) {
       if (elements && elements.length > 0) {
         return (
           <fieldset className={styles.fieldset} key={fields.join('-')}>
-            {title && <legend>
-              <Translation>
-                {
-                  (t) => <>{t(title)}</>
-                }
-              </Translation>
-            </legend>}
-            {elements.map(([field, element]) => (
-              element
-                ? <Fragment key={field}>{element.content}</Fragment>
-                : <p key={field} className={styles.fieldHasNoElementError}>
-                  Field <code>{field}</code> defined in <code>ui:groups</code> is not an
-                  entry of <code>data-schema.json[properties]</code> object.
+            {title && (
+              <legend>
+                <Translation>{(t) => <>{t(title)}</>}</Translation>
+              </legend>
+            )}
+            {elements.map(([field, element]) => {
+              return element ? (
+                <Fragment key={field}>{element.content}</Fragment>
+              ) : (
+                <p key={field} className={styles.fieldHasNoElementError}>
+                  Field <code>{field}</code> defined in <code>ui:groups</code>{' '}
+                  is not an entry of <code>data-schema.json[properties]</code>{' '}
+                  object.
                 </p>
-            ))}
+              )
+            })}
           </fieldset>
         )
       }
@@ -217,7 +275,9 @@ function ObjectFieldTemplate (properties) {
     return (
       <Fragment key={properties.key}>
         {properties.description}
-        {autocomplete === 'IsidoreAuthorSearch' && <IsidoreAuthorAPIAutocompleteField {...properties}/>}
+        {autocomplete === 'IsidoreAuthorSearch' && (
+          <IsidoreAuthorAPIAutocompleteField {...properties} />
+        )}
         {properties.properties.map((element) => (
           <Fragment key={element.name}>{element.content}</Fragment>
         ))}
@@ -232,34 +292,36 @@ const customFields = {
 }
 
 /**
- *
- * @param initialFormData
- * @param schema
- * @param uiSchema
- * @param {(any) => void} onChange
- * @return {Element}
- * @constructor
+ * @param {object} props properties
+ * @param {any} props.formData
+ * @param {boolean} props.readOnly
+ * @param {any} props.schema
+ * @param {any} props.uiSchema
+ * @param {(any) => void} props.onChange
+ * @returns {Element}
  */
-export default function SchemaForm ({
+export default function SchemaForm({
   formData: initialFormData,
+  readOnly,
   schema,
   uiSchema,
-  onChange = () => {
-  },
+  onChange = () => {},
 }) {
   const [formData, setFormData] = useState(initialFormData)
   const [, setErrors] = useState({})
-  const formContext = useMemo(() => ({
-    partialUpdate: ({ id, value }) => {
-      const path = id.replace('root_', '').replace('_', '.')
-      setFormData((state) => {
-        const newFormData = set(state, path, value)
-        onChange(newFormData)
-        return newFormData
-      })
-    },
-  }), [onChange, setFormData])
-
+  const formContext = useMemo(
+    () => ({
+      partialUpdate: ({ id, value }) => {
+        const path = id.replace('root_', '').replace('_', '.')
+        setFormData((state) => {
+          const newFormData = set(state, path, value)
+          onChange(newFormData)
+          return newFormData
+        })
+      },
+    }),
+    [onChange, setFormData]
+  )
 
   const customWidgets = {
     SelectWidget: CustomSelectWidget,
@@ -270,18 +332,22 @@ export default function SchemaForm ({
     ObjectFieldTemplate,
     FieldTemplate,
     BaseInputTemplate,
-    ArrayFieldTemplate
+    ArrayFieldTemplate,
   }
 
-  const handleUpdate = useCallback((event) => {
-    const formData = event.formData
-    setFormData(formData)
-    onChange(formData)
-  }, [setFormData, onChange])
+  const handleUpdate = useCallback(
+    (event) => {
+      const formData = event.formData
+      setFormData(formData)
+      onChange(formData)
+    },
+    [setFormData, onChange]
+  )
 
   // noinspection JSValidateTypes
   return (
     <Form
+      readonly={readOnly}
       className={styles.form}
       formContext={formContext}
       schema={schema}
@@ -295,7 +361,7 @@ export default function SchemaForm ({
       onError={setErrors}
       validator={validator}
     >
-      <hr hidden={true}/>
+      <hr hidden={true} />
     </Form>
   )
 }
@@ -305,5 +371,5 @@ SchemaForm.propTypes = {
   schema: PropTypes.object,
   uiSchema: PropTypes.object,
   basicMode: PropTypes.bool,
-  onChange: PropTypes.func
+  onChange: PropTypes.func,
 }

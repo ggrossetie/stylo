@@ -1,23 +1,38 @@
-const mongoose = require('mongoose')
-const { ObjectId } = mongoose.Types
+const YAML = require('js-yaml')
 const { getYDoc } = require('y-websocket/bin/utils')
-const defaultsData = require('../data/defaultsData')
 
-const Article = require('../models/article')
-const User = require('../models/user')
-const Workspace = require('../models/workspace')
-const Version = require('../models/version')
+const Article = require('../models/article.js')
+const User = require('../models/user.js')
+const Corpus = require('../models/corpus.js')
+const Workspace = require('../models/workspace.js')
+const Version = require('../models/version.js')
 
-const isUser = require('../policies/isUser')
-const { ApiError } = require('../helpers/errors')
+const isUser = require('../policies/isUser.js')
+const { ApiError } = require('../helpers/errors.js')
 const { reformat } = require('../helpers/metadata.js')
-const { computeMajorVersion, computeMinorVersion } = require('../helpers/versions')
-const { previewEntries } = require('../helpers/bibliography')
-const { notifyArticleStatusChange } = require('../events')
-const { logger } = require('../logger')
+const {
+  computeMajorVersion,
+  computeMinorVersion,
+} = require('../helpers/versions.js')
+const { previewEntries } = require('../helpers/bibliography.js')
+const { logger } = require('../logger.js')
+const { toLegacyFormat } = require('../helpers/metadata.js')
+const Y = require('yjs')
+const { mongo } = require('mongoose')
+const Sentry = require('@sentry/node')
 
+function getTextFromYjsDoc(yjsdocBase64) {
+  const documentState = Buffer.from(yjsdocBase64, 'base64')
+  const yjsdoc = getYDoc(`ws/${new mongo.ObjectID().toString()}`)
+  try {
+    Y.applyUpdate(yjsdoc, documentState)
+    return yjsdoc.getText('main').toString()
+  } finally {
+    yjsdoc.destroy()
+  }
+}
 
-async function getUser (userId) {
+async function getUser(userId) {
   const user = await User.findById(userId)
   if (!user) {
     throw new ApiError('NOT_FOUND', `Unable to find user with id ${userId}`)
@@ -25,118 +40,105 @@ async function getUser (userId) {
   return user
 }
 
-async function getArticleByContext (articleId, context) {
+async function getArticleByContext(articleId, context) {
   if (context.token.admin === true) {
     return await getArticle(articleId)
   }
+
   const userId = context.userId
   if (!userId) {
-    throw new ApiError('UNAUTHENTICATED', `Unable to find an authentication context: ${context}`)
+    throw new ApiError(
+      'UNAUTHENTICATED',
+      `Unable to find an authentication context: ${context}`
+    )
   }
   return await getArticleByUser(articleId, userId)
 }
 
-async function getArticle (articleId) {
-  const article = await Article
-    .findById(articleId)
+async function getArticle(articleId) {
+  const article = await Article.findById(articleId)
     .populate('owner tags')
     .populate({ path: 'contributors', populate: { path: 'user' } })
 
   if (!article) {
-    throw new ApiError('NOT_FOUND', `Unable to find article with id ${articleId}`)
+    throw new ApiError(
+      'NOT_FOUND',
+      `Unable to find article with id ${articleId}`
+    )
   }
   return article
 }
 
-async function getArticleByUser (articleId, userId) {
+async function getArticleByUser(articleId, userId) {
   const userWorkspace = await Workspace.findOne({
     'members.user': userId,
-    'articles': articleId
+    articles: articleId,
   })
 
   if (userWorkspace) {
     // article found in one of user's workspaces
-    const article = await Article
-      .findById(articleId)
+    const article = await Article.findById(articleId)
       .populate('owner tags')
       .populate({ path: 'contributors', populate: { path: 'user' } })
 
     if (!article) {
-      throw new ApiError('NOT_FOUND', `Unable to find article with id ${articleId}`)
+      throw new ApiError(
+        'NOT_FOUND',
+        `Unable to find article with id ${articleId}`
+      )
     }
     return article
   }
 
   // find article by owner or contributors
-  const article = await Article
-    .findOne(
-      {
-        _id: articleId,
-        $or: [
-          { owner: userId },
-          { contributors: { $elemMatch: { user: userId } } }
-        ]
-      }
-    )
+  const article = await Article.findOne({
+    _id: articleId,
+    $or: [
+      { owner: userId },
+      { contributors: { $elemMatch: { user: userId } } },
+    ],
+  })
     .populate('owner tags')
     .populate({ path: 'contributors', populate: { path: 'user' } })
 
   if (!article) {
-    throw new ApiError('NOT_FOUND', `Unable to find article with id ${articleId}`)
+    throw new ApiError(
+      'NOT_FOUND',
+      `Unable to find article with id ${articleId}`
+    )
   }
   return article
 }
 
-async function createSoloSession (article, user, force = false) {
-  if (article.soloSession && article.soloSession.id) {
-    if (article.soloSession.creator._id.equals(user._id)) {
-      return article.soloSession
-    }
-    if (force) {
-      await createVersion(article, {
-          major: false,
-          message: '',
-          userId: article.soloSession.creator._id,
-          type: 'editingSessionEnded'
-        }
-      )
-    } else {
-      throw new ApiError('UNAUTHORIZED_SOLO_SESSION_ACTIVE', `A solo session is already active!`)
-    }
-  }
-  const soloSessionId = new ObjectId()
-  const soloSession = {
-    id: soloSessionId,
-    creator: user._id,
-    creatorUsername: user.displayName || user.username || user.email,
-    createdAt: new Date()
-  }
-  article.soloSession = soloSession
-  await article.save()
-  notifyArticleStatusChange(article)
-  return soloSession
-}
+async function createVersion(article, { major, message, userId, type }) {
+  const { bib, metadata, ydoc } = article.workingVersion
 
-async function createVersion (article, { major, message, userId, type }) {
-  const { bib, yaml, md } = article.workingVersion
+  const md = getTextFromYjsDoc(ydoc)
 
   /** @type {Query<Array<Article>>|Array<Article>} */
-  const latestVersions = await Version.find({ _id: { $in: article.versions.map((a) => a._id) } })
-    .sort({ createdAt: -1 })
+  const latestVersions = await Version.find({
+    _id: { $in: article.versions.map((a) => a._id) },
+  }).sort({ createdAt: -1 })
 
   if (latestVersions?.length > 0) {
     const latestVersion = latestVersions[0]
-    if (bib === latestVersion.bib && yaml === latestVersion.yaml && md === latestVersion.md) {
-      logger.info('Won\'t create a new version since there\'s no change', {
+    if (
+      bib === latestVersion.bib &&
+      metadata === latestVersion.metadata &&
+      md === latestVersion.md
+    ) {
+      logger.info("Won't create a new version since there's no change", {
         action: 'createVersion',
-        articleId: article._id
+        articleId: article._id,
       })
       return false
     }
   }
 
   let mostRecentVersion = { version: 0, revision: 0 }
-  const latestUserVersions = latestVersions?.filter(v => !v.type || v.type === 'userAction')
+  const latestUserVersions = latestVersions?.filter(
+    (v) => !v.type || v.type === 'userAction'
+  )
   if (latestUserVersions?.length > 0) {
     const latestUserVersion = latestUserVersions[0]
     mostRecentVersion = {
@@ -150,13 +152,13 @@ async function createVersion (article, { major, message, userId, type }) {
 
   const createdVersion = await Version.create({
     md,
-    yaml,
+    metadata,
     bib,
     version,
     revision,
     message: message,
     owner: userId,
-    type: type || 'userAction'
+    type: type || 'userAction',
   })
   await createdVersion.populate('owner').execPopulate()
   article.versions.unshift(createdVersion._id)
@@ -171,25 +173,39 @@ module.exports = {
      * @param {*} args
      * @param {{ userId, token }} context
      */
-    async createArticle (_root, args, context) {
+    async createArticle(_root, args, context) {
       const user = await getUser(context.userId)
+      const { title, tags, workspaces } = args.createArticleInput
+
       //Add default article + default version
       const newArticle = await Article.create({
-        title: args.title || defaultsData.title,
+        title,
         owner: user,
         workingVersion: {
-          md: defaultsData.md,
-          bib: defaultsData.bib,
-          yaml: defaultsData.yaml,
-        }
+          md: '',
+          bib: '',
+          metadata: {},
+        },
       })
+
+      if (Array.isArray(tags) && tags.length) {
+        await newArticle.addTags(...tags)
+      }
+
+      if (Array.isArray(workspaces) && workspaces.length) {
+        for await (const id of workspaces) {
+          const workspace = await Workspace.getWorkspaceById(id, user)
+          workspace.articles.push(newArticle)
+          await workspace.save()
+        }
+      }
 
       user.articles.push(newArticle)
       await user.save()
       return newArticle
     },
 
-    async article (_root, { articleId }, context) {
+    async article(_root, { articleId }, context) {
       return getArticleByContext(articleId, context)
     },
 
@@ -201,7 +217,7 @@ module.exports = {
      * @param {{ userId, token }} context
      * @returns
      */
-    async shareArticle (_root, args, context) {
+    async shareArticle(_root, args, context) {
       const withUser = await getUser(args.to)
       const article = await getArticleByContext(args.article, context)
       await article.shareWith(withUser)
@@ -216,7 +232,7 @@ module.exports = {
      * @param {{ userId, token }} context
      * @returns
      */
-    async unshareArticle (_root, args, context) {
+    async unshareArticle(_root, args, context) {
       const withUser = await getUser(args.to)
       const article = await getArticleByContext(args.article, context)
       await article.unshareWith(withUser)
@@ -231,7 +247,7 @@ module.exports = {
      * @param {{ userId, token }} context
      * @returns
      */
-    async duplicateArticle (_root, args, context) {
+    async duplicateArticle(_root, args, context) {
       const withUser = await getUser(args.to)
       const article = await getArticleByContext(args.article, context)
       const userId = context.userId
@@ -246,18 +262,23 @@ module.exports = {
         createdAt: null,
         updatedAt: null,
         title: prefix + article.title,
-        collaborativeSession: undefined,
-        soloSession: undefined
       })
 
       newArticle.isNew = true
       withUser.articles.push(newArticle)
 
-      //Save the three objects
-      await Promise.all([
-        newArticle.save(),
-        withUser.save()
-      ])
+      await Promise.all([newArticle.save(), withUser.save()])
+
+      // Maintain links
+      await Corpus.updateMany(
+        { 'articles.article': article._id },
+        { $push: { articles: { article: newArticle._id } } }
+      )
+
+      await Workspace.updateMany(
+        { articles: article },
+        { $push: { articles: [newArticle._id] } }
+      )
 
       return newArticle
     },
@@ -268,12 +289,12 @@ module.exports = {
      * Fetch an article as the current user
      *
      * @param {null} _root
-     * @param {*} args
+     * @param {{ article: string }} args
      * @param {{ loaders: { article }, userId, token }} context
      * @returns
      */
-    async article (_root, args, context) {
-      return await getArticleByContext(args.article, context)
+    async article(_root, args) {
+      return await getArticle(args.article)
     },
 
     /**
@@ -291,36 +312,37 @@ module.exports = {
      * @param {{ user: User, token: Object, userId: String, loaders: { tags, users } }} context
      * @returns {Promise<Article[]>}
      */
-    async articles (_root, args, context) {
+    async articles(_root, args, context) {
       const { userId } = isUser(args, context)
       return Article.getArticles({
-          filter: { $or: [{ owner: userId }, { contributors: { $elemMatch: { user: userId } } }] },
-          loaders: context.loaders
-        }
-      )
+        filter: {
+          $or: [
+            { owner: userId },
+            { contributors: { $elemMatch: { user: userId } } },
+          ],
+        },
+        loaders: context.loaders,
+      })
     },
   },
 
   Article: {
-    async workspaces (article, _, { user }) {
-      if (user.admin) {
+    async workspaces(article, _, { user, token }) {
+      if (token.admin) {
         return Workspace.find({ articles: article._id })
       }
       return Workspace.find({
-        $and: [
-          { articles: article._id },
-          { 'members.user': user._id }
-        ]
+        $and: [{ articles: article._id }, { 'members.user': user._id }],
       })
     },
 
-    async removeContributor (article, { userId }) {
+    async removeContributor(article, { userId }) {
       const contributorUser = await getUser(userId)
       await article.unshareWith(contributorUser)
       return article
     },
 
-    async addContributor (article, { userId }) {
+    async addContributor(article, { userId }) {
       const contributorUser = await User.findById(userId)
       if (!contributorUser) {
         throw new Error(`Unable to find user with id: ${userId}`)
@@ -329,9 +351,12 @@ module.exports = {
       return article
     },
 
-    async versions (article, _args, context) {
-      const versions = (await Promise.all(
-          article.versions.map(async (versionId) => await context.loaders.versions.load(versionId))
+    async versions(article, _args, context) {
+      const versions = (
+        await Promise.all(
+          article.versions.map(
+            async (versionId) => await context.loaders.versions.load(versionId)
+          )
         )
       ).filter((v) => v) // ignore unresolved versions
       versions.sort((a, b) => b.createdAt - a.createdAt)
@@ -344,59 +369,55 @@ module.exports = {
      * @param {import('mongoose').Document} article
      * @returns
      */
-    async delete (article) {
-      await Workspace.updateMany({}, {
-        $pull: {
-          articles: article._id
+    async delete(article) {
+      await Workspace.updateMany(
+        {},
+        {
+          $pull: {
+            articles: article._id,
+          },
         }
-      })
+      )
       await article.remove()
       // TODO: remove versions associated with this article!
       return article.$isDeleted()
     },
 
-    async rename (article, { title }) {
+    async rename(article, { title }) {
       article.set('title', title)
       const result = await article.save({ timestamps: false })
       return result === article
     },
 
-    async setZoteroLink (article, { zotero }) {
+    async setZoteroLink(article, { zotero }) {
       article.set('zoteroLink', zotero)
       const result = await article.save({ timestamps: false })
       return result === article
     },
 
-    async addTags (article, { tags }) {
+    async addTags(article, { tags }) {
       await article.addTags(...tags)
       return article.tags
     },
 
-    async removeTags (article, { tags }) {
+    async removeTags(article, { tags }) {
       await article.removeTags(...tags)
       return article.tags
     },
 
-    async setPreviewSettings (article, { settings }) {
+    async setPreviewSettings(article, { settings }) {
       await article.set('preview', settings, { merge: true }).save()
       return article
     },
 
-    async updateWorkingVersion (article, { content }, { user }) {
-      if (article.collaborativeSession && article.collaborativeSession.id) {
-        throw new ApiError('COLLABORATIVE_SESSION_CONFLICT', `Active collaborative session, cannot update the working copy.`)
-      }
-      if (article.soloSession && article.soloSession.id) {
-        if (!article.soloSession.creator._id.equals(user._id)) {
-          throw new ApiError('SOLO_SESSION_CONFLICT', `Active solo session by ${article.soloSession.creator}, cannot update the working copy.`)
-        }
-      }
-      Object.entries(content)
-        .forEach(([key, value]) => article.set({
+    async updateWorkingVersion(article, { content }) {
+      Object.entries(content).forEach(([key, value]) =>
+        article.set({
           workingVersion: {
-            [key]: value
-          }
-        }))
+            [key]: value,
+          },
+        })
+      )
 
       return article.save()
     },
@@ -407,102 +428,44 @@ module.exports = {
      * @param context
      * @return {Promise<Article>}
      */
-    async createVersion (article, { articleVersionInput }) {
+    async createVersion(article, { articleVersionInput }) {
       const result = await createVersion(article, {
         ...articleVersionInput,
-        type: 'userAction'
+        type: 'userAction',
       })
       if (result === false) {
-        throw new ApiError('ILLEGAL_STATE', 'Unable to create a new version since there\'s no change')
-      }
-      await article.save()
-      return article
-    },
-
-    async startCollaborativeSession (article, _, { user }) {
-      if (article.collaborativeSession && article.collaborativeSession.id) {
-        return article.collaborativeSession
-      }
-      const collaborativeSessionId = new ObjectId()
-      const collaborativeSession = {
-        id: collaborativeSessionId,
-        creator: user._id,
-        createdAt: new Date()
-      }
-      article.collaborativeSession = collaborativeSession
-      const yDoc = getYDoc(`ws/${collaborativeSessionId.toString()}`)
-      const yText = yDoc.getText('main')
-      yText.insert(0, article.workingVersion.md)
-
-      const yState = yDoc.getText('state')
-      yState.delete(0, yState.length)
-      yState.insert(0, 'started')
-
-      await article.save()
-      notifyArticleStatusChange(article)
-      return collaborativeSession
-    },
-
-    async stopCollaborativeSession (article, _, { user }) {
-      if (article.collaborativeSession && article.collaborativeSession.id) {
-        const yDoc = getYDoc(`ws/${article.collaborativeSession.id.toString()}`)
-        const yState = yDoc.getText('state')
-        yState.delete(0, yState.length)
-        yState.insert(0, 'ended')
-
-        const yText = yDoc.getText('main')
-        article.workingVersion.md = yText.toString()
-        article.collaborativeSession = null
-        await createVersion(article, {
-          major: false,
-          message: '',
-          userId: user._id,
-          type: 'collaborativeSessionEnded'
-        })
-        await article.save()
-        notifyArticleStatusChange(article)
-        return article
-      }
-      return article
-    },
-
-    async startSoloSession (article, _, { user }) {
-      return createSoloSession(article, user, false)
-    },
-
-    async takeOverSoloSession (article, _, { user }) {
-      return createSoloSession(article, user, true)
-    },
-
-    async stopSoloSession (article, _, { user }) {
-      if (article.soloSession && article.soloSession.id) {
-        if (!article.soloSession.creator._id.equals(user._id)) {
-          throw new ApiError('UNAUTHORIZED', `Solo session ${article.soloSession.id} can only be ended by its creator ${article.soloSession.creator}.`)
-        }
-        article.soloSession = null
-        await createVersion(article, {
-            major: false,
-            message: '',
-            userId: user._id,
-            type: 'editingSessionEnded'
-          }
+        throw new ApiError(
+          'ILLEGAL_STATE',
+          "Unable to create a new version since there's no change"
         )
-        await article.save()
-        notifyArticleStatusChange(article)
       }
-      //  no solo session to stop (ignore)
+      await article.save()
       return article
     },
   },
 
   WorkingVersion: {
-    bibPreview ({ bib }) {
+    md({ ydoc = '' }) {
+      try {
+        return getTextFromYjsDoc(ydoc)
+      } catch (err) {
+        Sentry.captureException(err)
+        console.error(
+          'Unable to load text content (Markdown) from the Y.js document on article',
+          err
+        )
+        return ''
+      }
+    },
+    bibPreview({ bib }) {
       return previewEntries(bib)
     },
-    yaml ({ yaml }, { options }) {
+    yaml({ metadata = {} }, { options }) {
+      const legacyMetadata = toLegacyFormat(metadata)
+      const yaml = YAML.dump(legacyMetadata)
       return options?.strip_markdown
         ? reformat(yaml, { replaceBibliography: false })
         : yaml
-    }
+    },
   },
 }

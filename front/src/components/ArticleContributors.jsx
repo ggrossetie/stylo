@@ -1,59 +1,57 @@
 import React, { useCallback } from 'react'
-import { useMutate, useMutation } from '../hooks/graphql.js'
+import { useArticleContributorActions } from '../hooks/contributor.js'
 
 import styles from './articleContributors.module.scss'
 import ContactSearch from './ContactSearch.jsx'
-import { addContributor, removeContributor } from './ArticleContributors.graphql'
-import { getArticleContributors } from './Article.graphql'
+
 import { useToasts } from '@geist-ui/core'
+import { useTranslation } from 'react-i18next'
 
-export default function ArticleContributors ({ article, contributors }) {
-  const mutation = useMutation()
+export default function ArticleContributors({ article, contributors }) {
   const { setToast } = useToasts()
+  const { t } = useTranslation()
   const articleId = article._id
-  const { mutate } = useMutate({ query: getArticleContributors, variables: { articleId } })
-
-  const handleUserUpdated = useCallback(async ({ user, action }) => {
-    const { _id: userId } = user
-    if (action === 'select') {
-      // add contributor
-      try {
-        const response = await mutation({ query: addContributor, variables: { userId, articleId } })
-        setToast({
-          text: `Contributeur ${user.displayName || user.username} ajouté à l'article.`,
-          type: 'default',
-        })
-        await mutate({
-          article: {
-            contributors: response.article.addContributor.contributors
-          }
-        }, { revalidate: false })
-      } catch (err) {
-        setToast({
-          text: String(err),
-          type: 'error'
-        })
+  const { addContributor, removeContributor } = useArticleContributorActions({
+    articleId,
+  })
+  const handleUserUpdated = useCallback(
+    async ({ user, action }) => {
+      const { _id: userId } = user
+      if (action === 'select') {
+        // add contributor
+        try {
+          await addContributor(userId)
+          setToast({
+            text: t('article.contributors.added', {
+              name: user.displayName || user.username,
+            }),
+            type: 'default',
+          })
+        } catch (err) {
+          setToast({
+            text: String(err),
+            type: 'error',
+          })
+        }
+      } else if (action === 'unselect') {
+        try {
+          await removeContributor(userId)
+          setToast({
+            text: t('article.contributors.removed', {
+              name: user.displayName || user.username,
+            }),
+            type: 'default',
+          })
+        } catch (err) {
+          setToast({
+            text: String(err),
+            type: 'error',
+          })
+        }
       }
-    } else if (action === 'unselect') {
-      try {
-        const response = await mutation({ query: removeContributor, variables: { userId, articleId } })
-        setToast({
-          text: `Contributeur ${user.displayName || user.username} supprimé de l'article.`,
-          type: 'warning',
-        })
-        await mutate({
-          article: {
-            contributors: response.article.removeContributor.contributors
-          }
-        }, { revalidate: false })
-      } catch (err) {
-        setToast({
-          text: String(err),
-          type: 'error'
-        })
-      }
-    }
-  }, [articleId])
+    },
+    [articleId]
+  )
 
   return (
     <section className={styles.acquintances}>

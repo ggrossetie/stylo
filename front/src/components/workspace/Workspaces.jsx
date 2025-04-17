@@ -1,40 +1,41 @@
-import { Button, Modal as GeistModal } from '@geist-ui/core'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { Search } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { shallowEqual, useSelector } from 'react-redux'
-import { Search } from 'react-feather'
+import { Helmet } from 'react-helmet'
 
-import { CurrentUserContext } from '../../contexts/CurrentUser'
-
-import styles from './workspaces.module.scss'
 import Field from '../../components/Field.jsx'
 
 import WorkspaceItem from '../../components/workspace/WorkspaceItem.jsx'
-import { useGraphQL } from '../../helpers/graphQL.js'
-import { getWorkspaces, getUserStats } from './Workspaces.graphql'
-import CreateWorkspace from '../../components/workspace/CreateWorkspace.jsx'
 
-export default function Workspaces () {
+import { useGraphQLClient } from '../../helpers/graphQL.js'
+import { useModal } from '../../hooks/modal.js'
+import { useWorkspaces } from '../../hooks/workspace.js'
+import Button from '../Button.jsx'
+import Loading from '../molecules/Loading.jsx'
+import CreateWorkspaceModal from './CreateWorkspaceModal.jsx'
+import { getUserStats } from './Workspaces.graphql'
+
+import styles from './workspaces.module.scss'
+
+export default function Workspaces() {
   const { t } = useTranslation()
-  const activeUser = useSelector(state => state.activeUser, shallowEqual)
+  const activeUser = useSelector((state) => state.activeUser, shallowEqual)
   const [filter, setFilter] = useState('')
-  const [creating, setCreating] = useState(false)
-  const [workspaces, setWorkspaces] = useState([])
+  const { workspaces, error, isLoading } = useWorkspaces()
+  const workspaceCreateModal = useModal()
+
   const [personalWorkspace, setPersonalWorkspace] = useState({
     _id: activeUser._id,
     personal: true,
     members: [],
   })
-  const currentWorkspaces = activeUser.workspaces
-  const handleCloseCreate = useCallback(() => {
-    setCreating(false)
-  }, [])
-  const runQuery = useGraphQL()
+  const { query } = useGraphQLClient()
 
   useEffect(() => {
-    (async () => {
+    ;(async () => {
       try {
-        const getUserStatsResponse = await runQuery({ query: getUserStats })
+        const getUserStatsResponse = await query({ query: getUserStats })
         const userStats = getUserStatsResponse.user.stats
         setPersonalWorkspace({
           _id: activeUser._id,
@@ -45,7 +46,8 @@ export default function Workspaces () {
           createdAt: activeUser.createdAt,
           updatedAt: activeUser.updatedAt,
           members: [],
-          articlesCount: userStats.myArticlesCount + userStats.contributedArticlesCount
+          articlesCount:
+            userStats.myArticlesCount + userStats.contributedArticlesCount,
         })
       } catch (err) {
         alert(err)
@@ -53,46 +55,43 @@ export default function Workspaces () {
     })()
   }, [activeUser._id, t])
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const getWorkspacesResponse = await runQuery({ query: getWorkspaces })
-        const workspaces = getWorkspacesResponse.workspaces
-        setWorkspaces(workspaces)
-        setCreating(false)
-      } catch (err) {
-        alert(err)
-      }
-    })()
-  }, [currentWorkspaces])
+  if (error) {
+    return <div>Unable to load the workspaces</div>
+  }
+  if (isLoading) {
+    return <Loading />
+  }
 
-  return (<CurrentUserContext.Provider value={activeUser}>
+  return (
     <section className={styles.section}>
+      <Helmet>
+        <title>{t('workspace.title')}</title>
+      </Helmet>
+
       <h1>{t('workspace.title')}</h1>
       <div>
-        <Field className={styles.searchField} type="text"
-               icon={Search}
-               value={filter}
-               placeholder={t('search.placeholder')}
-               onChange={(e) => setFilter(e.target.value)}/>
+        <Field
+          className={styles.searchField}
+          type="text"
+          icon={Search}
+          value={filter}
+          placeholder={t('search.placeholder')}
+          onChange={(e) => setFilter(e.target.value)}
+        />
       </div>
-      <Button type="secondary" className={styles.button} onClick={() => setCreating(true)}>{t('workspace.createNew.button')}</Button>
+      <Button primary onClick={() => workspaceCreateModal.show()}>
+        {t('workspace.createNew.button')}
+      </Button>
 
-      <GeistModal width="45rem" visible={creating} onClose={handleCloseCreate}>
-        <h2>{t('workspace.createModal.title')}</h2>
-        <GeistModal.Content>
-          <CreateWorkspace/>
-        </GeistModal.Content>
-        <GeistModal.Action passive onClick={handleCloseCreate}>{t('modal.close.text')}</GeistModal.Action>
-      </GeistModal>
+      <CreateWorkspaceModal {...workspaceCreateModal} />
 
       <ul className={styles.workspacesList}>
         {[personalWorkspace, ...workspaces].map((workspace) => (
           <li key={`workspace-${workspace._id}`}>
-            <WorkspaceItem workspace={workspace}/>
+            <WorkspaceItem workspace={workspace} />
           </li>
         ))}
       </ul>
     </section>
-  </CurrentUserContext.Provider>)
+  )
 }

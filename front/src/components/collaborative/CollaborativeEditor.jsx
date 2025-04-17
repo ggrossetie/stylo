@@ -1,54 +1,50 @@
-import { Loading } from '@geist-ui/core'
-import React, { useCallback } from 'react'
+import React from 'react'
+import { DiffEditor } from '@monaco-editor/react'
 import { useParams } from 'react-router-dom'
-import useGraphQL from '../../hooks/graphql.js'
+
 import ArticleStats from '../ArticleStats.jsx'
-
-import { getCollaborativeSession } from './CollaborativeSession.graphql'
-
 import CollaborativeEditorArticleHeader from './CollaborativeEditorArticleHeader.jsx'
-import CollaborativeSessionError from './CollaborativeSessionError.jsx'
 import CollaborativeTextEditor from './CollaborativeTextEditor.jsx'
+import CollaborativeEditorMenu from './CollaborativeEditorMenu.jsx'
+
+import defaultEditorOptions from '../Write/providers/monaco/options.js'
 
 import styles from './CollaborativeEditor.module.scss'
 
+export default function CollaborativeEditor() {
+  const { articleId, compareTo, versionId } = useParams()
 
-export default function CollaborativeEditor () {
-  const { sessionId: collaborativeSessionId, articleId } = useParams()
-
-  const {
-    data: collaborativeSessionData,
-    isLoading: collaborativeSessionLoading,
-    mutate: mutateCollaborativeSession,
-  } = useGraphQL({ query: getCollaborativeSession, variables: { articleId } })
-
-  const handleCollaborativeSessionStateUpdated = useCallback(({ state }) => {
-    if (state === 'ended') {
-      mutateCollaborativeSession()
-    }
-  }, [])
-
-  if (collaborativeSessionLoading) {
-    return <Loading/>
+  if (compareTo) {
+    return (
+      <section className={styles.container}>
+        <div className={styles.main} role="main">
+          <DiffEditor
+            className={styles.diffEditor}
+            width={'100%'}
+            height={'auto'}
+            modified={'aa'}
+            original={'bb'}
+            language="markdown"
+            theme="dark"
+            options={defaultEditorOptions}
+          />
+        </div>
+      </section>
+    )
   }
-
-  if (collaborativeSessionData?.article?.collaborativeSession?.id !== collaborativeSessionId) {
-    return <div className={styles.errorContainer}>
-      <CollaborativeSessionError error="notFound"/>
-    </div>
-  }
-
-  const collaborativeSessionCreatorId = collaborativeSessionData?.article?.collaborativeSession?.creator?._id
 
   return (
-    <div className={styles.container}>
-      <CollaborativeEditorArticleHeader articleId={articleId}/>
-      <CollaborativeTextEditor
+    <section className={styles.container}>
+      <div className={styles.main} role="main">
+        <CollaborativeEditorArticleHeader articleId={articleId} />
+        <CollaborativeTextEditor articleId={articleId} versionId={versionId} />
+        <ArticleStats />
+      </div>
+      <CollaborativeEditorMenu
         articleId={articleId}
-        collaborativeSessionCreatorId={collaborativeSessionCreatorId}
-        collaborativeSessionId={collaborativeSessionId}
-        onCollaborativeSessionStateUpdated={handleCollaborativeSessionStateUpdated}
+        versionId={versionId}
+        compareTo={compareTo}
       />
-      <ArticleStats/>
-    </div>)
+    </section>
+  )
 }

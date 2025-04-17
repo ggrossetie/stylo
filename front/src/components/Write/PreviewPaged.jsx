@@ -5,21 +5,25 @@ import styles from './PreviewPaged.module.scss'
 import { Previewer } from 'pagedjs'
 import { compileTemplate } from '../../helpers/preview.js'
 import clsx from 'clsx'
-import YAML from 'js-yaml'
-import Loading from '../Loading.jsx'
+import Loading from '../molecules/Loading.jsx'
 
-export default function Preview ({ preview, yaml }) {
+export default function Preview({ preview, metadata }) {
   const renderRef = useRef()
   const [isLoading, setIsLoading] = useState(true)
   const { template, stylesheet } = preview
-  const md_content = useSelector(state => state.workingArticle.text)
-  const yaml_content = useSelector(state => state.workingArticle.metadata)
-  const bib_content = useSelector(state => state.workingArticle.bibliography.text)
-  const { html } = useStyloExportPreview({ md_content, yaml_content, bib_content })
+  const md_content = useSelector((state) => state.workingArticle.text)
+  const yaml_content = useSelector((state) => state.workingArticle.metadata)
+  const bib_content = useSelector(
+    (state) => state.workingArticle.bibliography.text
+  )
+  const { html } = useStyloExportPreview({
+    md_content,
+    yaml_content,
+    bib_content,
+  })
 
   useEffect(() => {
     if (html && isLoading) {
-      const [metadata = {}] = YAML.loadAll(yaml)
       const render = compileTemplate(template)
 
       const base64Stylesheet = `data:text/css;base64,${btoa(stylesheet)}`
@@ -31,12 +35,17 @@ export default function Preview ({ preview, yaml }) {
         )
         .then(() => setIsLoading(false))
     }
-  }, [html, yaml])
+  }, [html, metadata])
 
-  return <>
-    <Loading label="Processing paginated preview…" hidden={!isLoading} />
-    <section className={clsx(styles.pagedContainer, 'stylo-pagedjs-container')} ref={renderRef}>
-      <template data-ref="pagedjs-content" />
-    </section>
-  </>
+  return (
+    <>
+      <Loading label="Processing paginated preview…" hidden={!isLoading} />
+      <section
+        className={clsx(styles.pagedContainer, 'stylo-pagedjs-container')}
+        ref={renderRef}
+      >
+        <template data-ref="pagedjs-content" />
+      </section>
+    </>
+  )
 }

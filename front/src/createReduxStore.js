@@ -1,26 +1,21 @@
+import * as Sentry from '@sentry/react'
 import { applyMiddleware, compose, createStore } from 'redux'
+import { applicationConfig } from './config.js'
 import { toEntries } from './helpers/bibtex'
 import ArticleService from './services/ArticleService'
-import WorkspaceService from './services/WorkspaceService.js'
-const { SNOWPACK_SESSION_STORAGE_ID: sessionTokenName = 'sessionToken' } = import.meta.env
 
-function createReducer (initialState, handlers) {
-  return function reducer (state = initialState, action) {
+const sentryReduxEnhancer = Sentry.createReduxEnhancer()
+
+const sessionTokenName = 'sessionToken'
+
+function createReducer(initialState, handlers) {
+  return function reducer(state = initialState, action) {
     if (Object.prototype.hasOwnProperty.call(handlers, action.type)) {
       return handlers[action.type](state, action)
     } else {
       return state
     }
   }
-}
-
-function toWebsocketEndpoint (endpoint) {
-  if (endpoint) {
-    const endpointUrl = new URL(endpoint)
-    const protocol = endpointUrl.protocol
-    return `${protocol === 'https:' ? 'wss' : 'ws'}://${endpointUrl.hostname}:${endpointUrl.port}/ws`
-  }
-  return `ws://127.0.0.1:3030/ws`
 }
 
 // Définition du store Redux et de l'ensemble des actions
@@ -31,29 +26,24 @@ export const initialState = {
     state: 'saved',
     bibliography: {
       text: '',
-      entries: []
-    }
+      entries: [],
+    },
   },
-  // they are defined statically via vite.config.js
-  applicationConfig: {
-    backendEndpoint: __BACKEND_ENDPOINT__,
-    graphqlEndpoint: __GRAPHQL_ENDPOINT__,
-    exportEndpoint: __EXPORT_ENDPOINT__,
-    processEndpoint: __PROCESS_ENDPOINT__,
-    pandocExportEndpoint: __PANDOC_EXPORT_ENDPOINT__,
-    humanIdRegisterEndpoint: __HUMANID_REGISTER_ENDPOINT__,
-    websocketEndpoint: toWebsocketEndpoint(__BACKEND_ENDPOINT__)
+  articleWorkingCopy: {
+    status: 'synced',
   },
   articleStructure: [],
   articleVersions: [],
   createArticleVersionError: null,
   articleWriters: [],
-  articlePreferences: localStorage.getItem('articlePreferences') ? JSON.parse(localStorage.getItem('articlePreferences')) : {
-    expandSidebarLeft: true,
-    expandSidebarRight: false,
-    metadataFormMode: 'basic',
-    expandVersions: false,
-  },
+  articlePreferences: localStorage.getItem('articlePreferences')
+    ? JSON.parse(localStorage.getItem('articlePreferences'))
+    : {
+        expandSidebarLeft: true,
+        expandSidebarRight: false,
+        metadataFormMode: 'basic',
+        expandVersions: false,
+      },
   articleFilters: {
     tagIds: [],
     text: '',
@@ -71,26 +61,36 @@ export const initialState = {
     zoteroToken: null,
     selectedTagIds: [],
     workspaces: [],
-    activeWorkspaceId: null
+    activeWorkspaceId: null,
   },
-  latestTagCreated: null,
-  latestCorpusCreated: null,
-  latestCorpusDeleted: null,
-  userPreferences: localStorage.getItem('userPreferences') ? JSON.parse(localStorage.getItem('userPreferences')) : {
-    // The user we impersonate
-    currentUser: null,
-    trackingConsent: true /* default value should be false */
-  },
+  userPreferences: localStorage.getItem('userPreferences')
+    ? JSON.parse(localStorage.getItem('userPreferences'))
+    : {
+        // The user we impersonate
+        currentUser: null,
+        trackingConsent: true /* default value should be false */,
+      },
+  exportPreferences: localStorage.getItem('exportPreferences')
+    ? JSON.parse(localStorage.getItem('exportPreferences'))
+    : {
+        bibliography_style: 'chicagomodified',
+        with_toc: 0,
+        link_citations: 0,
+        with_nocite: 0,
+        formats: 'html',
+        unnumbered: 0,
+        book_division: 'part',
+      },
   editorCursorPosition: {
     lineNumber: 0,
-    column: 0
-  }
+    column: 0,
+  },
 }
 
-function createRootReducer (state) {
+function createRootReducer(state) {
   return createReducer(state, {
     PROFILE: setProfile,
-    CLEAR_ZOTERO_TOKEN: clearZoteroToken,
+    SET_AUTH_TOKEN: setAuthToken,
     LOGIN: loginUser,
     UPDATE_SESSION_TOKEN: setSessionToken,
     UPDATE_ACTIVE_USER_DETAILS: updateActiveUserDetails,
@@ -100,9 +100,11 @@ function createRootReducer (state) {
     UPDATE_ARTICLE_STATS: updateArticleStats,
     UPDATE_ARTICLE_STRUCTURE: updateArticleStructure,
     UPDATE_ARTICLE_WRITERS: updateArticleWriters,
+    UPDATE_ARTICLE_WORKING_COPY_STATUS: updateArticleWorkingCopyStatus,
 
     // user preferences reducers
     USER_PREFERENCES_TOGGLE: toggleUserPreferences,
+    SET_EXPORT_PREFERENCES: setExportPreferences,
 
     SET_ARTICLE_VERSIONS: setArticleVersions,
     SET_WORKING_ARTICLE_UPDATED_AT: setWorkingArticleUpdatedAt,
@@ -116,97 +118,120 @@ function createRootReducer (state) {
 
     UPDATE_EDITOR_CURSOR_POSITION: updateEditorCursorPosition,
 
-    SET_WORKSPACES: setWorkspaces,
     SET_ACTIVE_WORKSPACE: setActiveWorkspace,
 
     UPDATE_SELECTED_TAG: updateSelectedTag,
-    TAG_CREATED: tagCreated,
-
-    SET_LATEST_CORPUS_DELETED: setLatestCorpusDeleted,
-    SET_LATEST_CORPUS_CREATED: setLatestCorpusCreated,
-    SET_LATEST_CORPUS_UPDATED: setLatestCorpusUpdated,
   })
 }
 
-const createNewArticleVersion = store => {
-  return next => {
+const createNewArticleVersion = (store) => {
+  return (next) => {
     return async (action) => {
-      if (action.type === 'CREATE_WORKSPACE') {
-        const { activeUser, sessionToken, applicationConfig } = store.getState()
-        const workspaces = activeUser.workspaces
-        const workspaceService = new WorkspaceService(sessionToken, applicationConfig)
-        const response = await workspaceService.create(action.data)
-        store.dispatch({ type: 'SET_WORKSPACES', workspaces: [response.createWorkspace, ...workspaces] })
-        return next(action)
-      }
-      if (action.type === 'LEAVE_WORKSPACE') {
-        const { activeUser, sessionToken, applicationConfig } = store.getState()
-        const workspaces = activeUser.workspaces
-        const workspaceService = new WorkspaceService(sessionToken, applicationConfig)
-        const workspaceId = action.data.workspaceId
-        await workspaceService.leave(workspaceId)
-        store.dispatch({ type: 'SET_WORKSPACES', workspaces: workspaces.filter((w) => w._id !== workspaceId) })
-        return next(action)
-      }
       if (action.type === 'CREATE_NEW_ARTICLE_VERSION') {
-        const { activeUser, sessionToken, applicationConfig, userPreferences } = store.getState()
+        const { activeUser, sessionToken, userPreferences } = store.getState()
         const userId = userPreferences.currentUser ?? activeUser._id
         const { articleId, major, message } = action
-        const articleService = new ArticleService(userId, articleId, sessionToken, applicationConfig)
+        const articleService = new ArticleService(
+          userId,
+          articleId,
+          sessionToken
+        )
         try {
           const response = await articleService.createNewVersion(major, message)
-          store.dispatch({ type: 'SET_ARTICLE_VERSIONS', versions: response.article.createVersion.versions })
+          store.dispatch({
+            type: 'SET_ARTICLE_VERSIONS',
+            versions: response.article.createVersion.versions,
+          })
         } catch (err) {
           store.dispatch({ type: 'SET_CREATE_ARTICLE_VERSION_ERROR', err: err })
         }
         return next(action)
       }
       if (action.type === 'UPDATE_WORKING_ARTICLE_TEXT') {
-        const { activeUser, sessionToken, applicationConfig, userPreferences } = store.getState()
+        const { activeUser, sessionToken, userPreferences } = store.getState()
         const userId = userPreferences.currentUser ?? activeUser._id
         const { articleId, text } = action
         try {
-          const { article } = await new ArticleService(userId, articleId, sessionToken, applicationConfig).saveText(text)
-          store.dispatch({ type: 'SET_WORKING_ARTICLE_STATE', workingArticleState: 'saved' })
+          const { article } = await new ArticleService(
+            userId,
+            articleId,
+            sessionToken
+          ).saveText(text)
+          store.dispatch({
+            type: 'SET_WORKING_ARTICLE_STATE',
+            workingArticleState: 'saved',
+          })
           store.dispatch({ type: 'SET_WORKING_ARTICLE_TEXT', text })
-          store.dispatch({ type: 'SET_WORKING_ARTICLE_UPDATED_AT', updatedAt: article.updateWorkingVersion.updatedAt })
+          store.dispatch({
+            type: 'SET_WORKING_ARTICLE_UPDATED_AT',
+            updatedAt: article.updateWorkingVersion.updatedAt,
+          })
         } catch (err) {
           console.error(err)
           store.dispatch({
             type: 'SET_WORKING_ARTICLE_STATE',
             workingArticleState: 'saveFailure',
-            message: err.message
+            message: err.message,
           })
         }
         return next(action)
       }
       if (action.type === 'UPDATE_WORKING_ARTICLE_METADATA') {
-        const { activeUser, sessionToken, applicationConfig, userPreferences } = store.getState()
+        const { activeUser, sessionToken, userPreferences } = store.getState()
         const userId = userPreferences.currentUser ?? activeUser._id
         const { articleId, metadata } = action
         try {
-          const { article } = await new ArticleService(userId, articleId, sessionToken, applicationConfig).saveMetadata(metadata)
-          store.dispatch({ type: 'SET_WORKING_ARTICLE_STATE', workingArticleState: 'saved' })
+          const { article } = await new ArticleService(
+            userId,
+            articleId,
+            sessionToken
+          ).saveMetadata(metadata)
+          store.dispatch({
+            type: 'SET_WORKING_ARTICLE_STATE',
+            workingArticleState: 'saved',
+          })
           store.dispatch({ type: 'SET_WORKING_ARTICLE_METADATA', metadata })
-          store.dispatch({ type: 'SET_WORKING_ARTICLE_UPDATED_AT', updatedAt: article.updateWorkingVersion.updatedAt })
+          store.dispatch({
+            type: 'SET_WORKING_ARTICLE_UPDATED_AT',
+            updatedAt: article.updateWorkingVersion.updatedAt,
+          })
         } catch (err) {
           console.error(err)
-          store.dispatch({ type: 'SET_WORKING_ARTICLE_STATE', workingArticleState: 'saveFailure' })
+          store.dispatch({
+            type: 'SET_WORKING_ARTICLE_STATE',
+            workingArticleState: 'saveFailure',
+          })
         }
         return next(action)
       }
       if (action.type === 'UPDATE_WORKING_ARTICLE_BIBLIOGRAPHY') {
-        const { activeUser, sessionToken, applicationConfig, userPreferences } = store.getState()
+        const { activeUser, sessionToken, userPreferences } = store.getState()
         const userId = userPreferences.currentUser ?? activeUser._id
         const { articleId, bibliography } = action
         try {
-          const { article } = await new ArticleService(userId, articleId, sessionToken, applicationConfig).saveBibliography(bibliography)
-          store.dispatch({ type: 'SET_WORKING_ARTICLE_STATE', workingArticleState: 'saved' })
-          store.dispatch({ type: 'SET_WORKING_ARTICLE_BIBLIOGRAPHY', bibliography })
-          store.dispatch({ type: 'SET_WORKING_ARTICLE_UPDATED_AT', updatedAt: article.updateWorkingVersion.updatedAt })
+          const { article } = await new ArticleService(
+            userId,
+            articleId,
+            sessionToken
+          ).saveBibliography(bibliography)
+          store.dispatch({
+            type: 'SET_WORKING_ARTICLE_STATE',
+            workingArticleState: 'saved',
+          })
+          store.dispatch({
+            type: 'SET_WORKING_ARTICLE_BIBLIOGRAPHY',
+            bibliography,
+          })
+          store.dispatch({
+            type: 'SET_WORKING_ARTICLE_UPDATED_AT',
+            updatedAt: article.updateWorkingVersion.updatedAt,
+          })
         } catch (err) {
           console.error(err)
-          store.dispatch({ type: 'SET_WORKING_ARTICLE_STATE', workingArticleState: 'saveFailure' })
+          store.dispatch({
+            type: 'SET_WORKING_ARTICLE_STATE',
+            workingArticleState: 'saveFailure',
+          })
         }
         return next(action)
       }
@@ -215,32 +240,31 @@ const createNewArticleVersion = store => {
   }
 }
 
-function persistStateIntoLocalStorage ({ getState }) {
+function persistStateIntoLocalStorage({ getState }) {
+  const actionStateMap = new Map([
+    ['ARTICLE_PREFERENCES_TOGGLE', 'articlePreferences'],
+    ['USER_PREFERENCES_TOGGLE', 'userPreferences'],
+    ['SET_EXPORT_PREFERENCES', 'exportPreferences'],
+  ])
+
   return (next) => {
     return (action) => {
-      if (action.type === 'ARTICLE_PREFERENCES_TOGGLE') {
+      if (actionStateMap.has(action.type)) {
+        const key = actionStateMap.get(action.type)
         // we run the reducer first
         next(action)
         // we fetch the updated state
-        const { articlePreferences } = getState()
-        // we persist it for a later page reload
-        localStorage.setItem('articlePreferences', JSON.stringify(articlePreferences))
+        const state = getState()[key]
 
-        return
-      } else if (action.type === 'USER_PREFERENCES_TOGGLE') {
-        // we run the reducer first
-        next(action)
-        // we fetch the updated state
-        const { userPreferences } = getState()
         // we persist it for a later page reload
-        localStorage.setItem('userPreferences', JSON.stringify(userPreferences))
+        localStorage.setItem(key, JSON.stringify(state))
 
         return
       } else if (action.type === 'LOGOUT') {
-        const { applicationConfig } = getState()
+        const { backendEndpoint } = applicationConfig
         localStorage.removeItem('articlePreferences')
         localStorage.removeItem('userPreferences')
-        document.location.replace(applicationConfig.backendEndpoint + '/logout')
+        document.location.replace(backendEndpoint + '/logout')
       }
 
       if (action.type === 'LOGIN' || action.type === 'UPDATE_SESSION_TOKEN') {
@@ -260,7 +284,7 @@ function persistStateIntoLocalStorage ({ getState }) {
   }
 }
 
-function setProfile (state, action) {
+function setProfile(state, action) {
   const { user } = action
   if (!user) {
     return { ...state, activeUser: undefined, hasBooted: true }
@@ -272,30 +296,33 @@ function setProfile (state, action) {
     activeUser: {
       ...state.activeUser,
       activeWorkspaceId: action.activeWorkspaceId,
-      ...user
+      ...user,
+    },
+  }
+}
+
+function setAuthToken(state, { service, token = null }) {
+  if (service === 'zotero') {
+    return {
+      ...state,
+      activeUser: {
+        ...state.activeUser,
+        zoteroToken: token,
+      },
     }
   }
 }
 
-function clearZoteroToken (state) {
+function setSessionToken(state, { token: sessionToken }) {
   return {
     ...state,
-    activeUser: {
-      ...state.activeUser,
-      zoteroToken: null
-    }
+    sessionToken,
   }
 }
 
-function setSessionToken (state, { token: sessionToken }) {
-  return {
-    ...state,
-    sessionToken
-  }
-}
-
-function loginUser (state, { user, token: sessionToken }) {
+function loginUser(state, { user, token: sessionToken }) {
   if (sessionToken) {
+    Sentry.setUser({ id: user._id })
     return {
       ...state,
       sessionToken,
@@ -312,45 +339,44 @@ function loginUser (state, { user, token: sessionToken }) {
   return state
 }
 
-function updateActiveUserDetails (state, action) {
+function updateActiveUserDetails(state, action) {
   return {
     ...state,
     activeUser: { ...state.activeUser, ...action.payload },
   }
 }
 
-function logoutUser (state) {
+function logoutUser(state) {
+  Sentry.setUser(null)
   return { ...state, ...initialState }
 }
-
 
 const SPACE_RE = /\s+/gi
 const CITATION_RE = /(\[@[\w-]+)/gi
 const REMOVE_MARKDOWN_RE = /[#_*]+\s?/gi
 
-function updateArticleStats (state, { md }) {
+function updateArticleStats(state, { md }) {
   const text = (md || '').trim()
 
   const textWithoutMarkdown = text.replace(REMOVE_MARKDOWN_RE, '')
-  const wordCount = textWithoutMarkdown
-    .replace(SPACE_RE, ' ')
-    .split(' ').length
+  const wordCount = textWithoutMarkdown.replace(SPACE_RE, ' ').split(' ').length
 
   const charCountNoSpace = textWithoutMarkdown.replace(SPACE_RE, '').length
   const charCountPlusSpace = textWithoutMarkdown.length
   const citationNb = text.match(CITATION_RE)?.length || 0
 
   return {
-    ...state, articleStats: {
+    ...state,
+    articleStats: {
       wordCount,
       charCountNoSpace,
       charCountPlusSpace,
-      citationNb
-    }
+      citationNb,
+    },
   }
 }
 
-function updateArticleStructure (state, { md }) {
+function updateArticleStructure(state, { md }) {
   const text = (md || '').trim()
   const articleStructure = text
     .split('\n')
@@ -369,146 +395,137 @@ function updateArticleStructure (state, { md }) {
   return { ...state, articleStructure }
 }
 
-function updateArticleWriters (state, { articleWriters }) {
+function updateArticleWriters(state, { articleWriters }) {
   return { ...state, articleWriters }
 }
 
-function setArticleVersions (state, { versions }) {
+function updateArticleWorkingCopyStatus(state, { status }) {
+  return {
+    ...state,
+    articleWorkingCopy: { ...state.articleWorkingCopy, status },
+  }
+}
+
+function setArticleVersions(state, { versions }) {
   return { ...state, articleVersions: versions }
 }
 
-function setCreateArticleVersionError (state, { err }) {
-  return  { ...state, createArticleVersionError: err }
+function setCreateArticleVersionError(state, { err }) {
+  return { ...state, createArticleVersionError: err }
 }
 
-function setWorkingArticleUpdatedAt (state, { updatedAt }) {
+function setWorkingArticleUpdatedAt(state, { updatedAt }) {
   const { workingArticle } = state
   return { ...state, workingArticle: { ...workingArticle, updatedAt } }
 }
 
-function setWorkingArticleText (state, { text }) {
+function setWorkingArticleText(state, { text }) {
   const { workingArticle } = state
   return { ...state, workingArticle: { ...workingArticle, text } }
 }
 
-function setWorkingArticleMetadata (state, { metadata }) {
+function setWorkingArticleMetadata(state, { metadata }) {
   const { workingArticle } = state
   return { ...state, workingArticle: { ...workingArticle, metadata } }
 }
 
-function setWorkingArticleBibliography (state, { bibliography }) {
+function setWorkingArticleBibliography(state, { bibliography }) {
   const bibTeXEntries = toEntries(bibliography)
   const { workingArticle } = state
   return {
     ...state,
-    workingArticle: { ...workingArticle, bibliography: { text: bibliography, entries: bibTeXEntries } }
+    workingArticle: {
+      ...workingArticle,
+      bibliography: { text: bibliography, entries: bibTeXEntries },
+    },
   }
 }
 
-function setWorkingArticleState (state, { workingArticleState, message }) {
+function setWorkingArticleState(state, { workingArticleState, message }) {
   const { workingArticle } = state
-  return { ...state, workingArticle: { ...workingArticle, state: workingArticleState, stateMessage: message } }
-}
-
-function toggleArticlePreferences (state, { key, value }) {
-  const { articlePreferences } = state
-
   return {
     ...state,
-    articlePreferences: {
-      ...articlePreferences,
-      [key]: value === undefined ? !articlePreferences[key] : value,
+    workingArticle: {
+      ...workingArticle,
+      state: workingArticleState,
+      stateMessage: message,
+    },
+  }
+}
+
+function togglePreferences(storeKey) {
+  return function togglePreferencesReducer(state, { key, value }) {
+    const preferences = state[storeKey]
+
+    return {
+      ...state,
+      [storeKey]: {
+        ...preferences,
+        [key]: value === undefined ? !preferences[key] : value,
+      },
     }
   }
 }
 
-function toggleUserPreferences (state, { key, value }) {
-  const { userPreferences } = state
+function setPreferences(storeKey) {
+  return function setPreferencesReducer(state, { key, value }) {
+    const preferences = state[storeKey]
 
-  return {
-    ...state,
-    userPreferences: {
-      ...userPreferences,
-      [key]: value === undefined ? !userPreferences[key] : value,
+    return {
+      ...state,
+      [storeKey]: {
+        ...preferences,
+        [key]: value,
+      },
     }
   }
 }
 
-function updateEditorCursorPosition (state, { lineNumber, column }) {
+const toggleArticlePreferences = togglePreferences('articlePreferences')
+const toggleUserPreferences = togglePreferences('userPreferences')
+const setExportPreferences = setPreferences('exportPreferences')
+
+function updateEditorCursorPosition(state, { lineNumber, column }) {
   return {
     ...state,
     editorCursorPosition: {
       lineNumber,
-      column
-    }
+      column,
+    },
   }
 }
 
-function setWorkspaces (state, { workspaces }) {
+function setActiveWorkspace(state, { workspaceId }) {
   return {
     ...state,
     activeUser: {
       ...state.activeUser,
-      workspaces
-    }
+      activeWorkspaceId: workspaceId,
+    },
   }
 }
 
-function setActiveWorkspace (state, { workspaceId }) {
-  return {
-    ...state,
-    activeUser: {
-      ...state.activeUser,
-      activeWorkspaceId: workspaceId
-    }
-  }
-}
-
-function updateSelectedTag (state, { tagId }) {
+function updateSelectedTag(state, { tagId }) {
   const { selectedTagIds } = state.activeUser
   return {
     ...state,
     activeUser: {
       ...state.activeUser,
       selectedTagIds: selectedTagIds.includes(tagId)
-        ? selectedTagIds.filter(selectedTagId => selectedTagId !== tagId)
-        : [...selectedTagIds, tagId]
-    }
-  }
-}
-
-function tagCreated (state, { tag }) {
-  return {
-    ...state,
-    latestTagCreated: tag
-  }
-}
-
-function setLatestCorpusDeleted(state, { data }) {
-  return {
-    ...state,
-    latestCorpusDeleted: data
-  }
-}
-
-function setLatestCorpusCreated(state, { data }) {
-  return {
-    ...state,
-    latestCorpusCreated: data
-  }
-}
-
-function setLatestCorpusUpdated (state, { data }) {
-  return {
-    ...state,
-    latestCorpusUpdated: data
+        ? selectedTagIds.filter((selectedTagId) => selectedTagId !== tagId)
+        : [...selectedTagIds, tagId],
+    },
   }
 }
 
 const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose
 
-export default function createReduxStore (state = initialState) {
-  return createStore(createRootReducer(state), composeEnhancers(
-    applyMiddleware(createNewArticleVersion, persistStateIntoLocalStorage)
-  ))
+export default function createReduxStore(state = initialState) {
+  return createStore(
+    createRootReducer(state),
+    composeEnhancers(
+      applyMiddleware(createNewArticleVersion, persistStateIntoLocalStorage),
+      sentryReduxEnhancer
+    )
+  )
 }

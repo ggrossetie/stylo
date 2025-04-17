@@ -1,98 +1,110 @@
-import useSWR, { preload } from 'swr'
-import { shallowEqual, useSelector } from 'react-redux'
 import { print } from 'graphql/language/printer'
+import { useSelector } from 'react-redux'
+import useSWR, { useSWRConfig } from 'swr'
+import { executeQuery } from '../helpers/graphQL.js'
 
-async function fetcher ({ query, variables, sessionToken, graphqlEndpoint }) {
-  return request({ query, variables, sessionToken, graphqlEndpoint })
-}
+/**
+ * @typedef {import('graphql/language/ast').ASTNode} ASTNode
+ * @typedef {import('swr/_internal').SWRConfiguration} SWRConfiguration
+ * @typedef {import('swr/_internal').SWRResponse} SWRResponse
+ */
 
-async function request ({ query, variables, sessionToken, graphqlEndpoint, type = 'fetch' }) {
-  const errorMessage = type === 'fetch'
-    ? 'Something wrong happened while fetching data.'
-    : 'Something wrong happened while mutating data.'
-  const response = await fetch(graphqlEndpoint, {
-    method: 'POST',
-    mode: 'cors',
-    credentials: 'omit',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      // Authorization header is provided only when we have a token
-      ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {})
-    },
-    body: JSON.stringify({ query, variables })
-  })
-
-  if (response.ok) {
-    const body = await response.json()
-    if (body.errors) {
-      const error = new Error(errorMessage)
-      error.messages = body.errors
-      throw error
-    }
-    return body.data
-  }
-
-  const error = new Error(errorMessage)
-  error.info = await response.json().errors
-  error.status = response.status
-  throw error
+/**
+ * Fetch data using SWR.
+ * @param {object} config config
+ * @param {string|ASTNode} config.query GraphQL query
+ * @param {{[key : string]: any}} config.variables query arguments
+ * @param {SWRConfiguration} [options] - SWR options (optional)
+ * @returns {SWRResponse}
+ */
+export default function useFetchData(
+  { query: queryOrAST, variables },
+  options
+) {
+  const sessionToken = useSelector((state) => state.sessionToken)
+  const query = resolveQuery(queryOrAST)
+  return useSWR({ query, variables, sessionToken }, fetch, options)
 }
 
 /**
- * @param queryOrAST GraphQL query
- * @param variables query arguments
- * @param {SWRConfiguration} [options] - optional SWR options
+ * Fetch data conditionally using SWR.
+ * @param {object|function} param config
+ * @param {SWRConfiguration} [options] - SWR options (optional)
  * @returns {SWRResponse}
  */
-export default function useGraphQL ({ query: queryOrAST, variables }, options) {
-  const sessionToken = useSelector(state => state.sessionToken)
-  const graphqlEndpoint = useSelector(state => state.applicationConfig.graphqlEndpoint, shallowEqual)
-  const query = typeof queryOrAST === 'string' ? queryOrAST : print(queryOrAST)
-
-  return useSWR({ query, variables, sessionToken, graphqlEndpoint }, fetcher, options)
+export function useConditionalFetchData(param, options) {
+  const sessionToken = useSelector((state) => state.sessionToken)
+  const resolvedKey = resolveKey(param, sessionToken)
+  return useSWR(resolvedKey, fetch, options)
 }
 
-export function useMutation () {
-  const sessionToken = useSelector(state => state.sessionToken)
-  const graphqlEndpoint = useSelector(state => state.applicationConfig.graphqlEndpoint, shallowEqual)
-
-  return runMutation.bind(null, { sessionToken, graphqlEndpoint })
+function resolveKey(param, sessionToken) {
+  return typeof param === 'function'
+    ? resolveKeyFunction(param, sessionToken)
+    : resolveKeyParam(param, sessionToken)
 }
 
-export function runMutation ({ sessionToken, graphqlEndpoint }, { query: queryOrAST, variables }) {
-  const query = typeof queryOrAST === 'string' ? queryOrAST : print(queryOrAST)
-
-  return request({ query, variables, sessionToken, graphqlEndpoint, type: 'mutation' })
+function resolveKeyParam(param, sessionToken) {
+  if (param) {
+    return {
+      query: resolveQuery(param.query),
+      variables: param.variables,
+      sessionToken,
+    }
+  }
+  return null
 }
 
-
-export function useMutate ({ query: queryOrAST, variables }) {
-  const sessionToken = useSelector(state => state.sessionToken)
-  const graphqlEndpoint = useSelector(state => state.applicationConfig.graphqlEndpoint, shallowEqual)
-  const query = typeof queryOrAST === 'string' ? queryOrAST : print(queryOrAST)
-
-  return useSWR({ query, variables, sessionToken, graphqlEndpoint })
+function resolveKeyFunction(fn, sessionToken) {
+  const value = fn()
+  if (value) {
+    return {
+      query: resolveQuery(value.query),
+      variables: value.variables,
+      sessionToken,
+    }
+  }
+  return null
 }
 
-export function useSWRKey () {
-  const sessionToken = useSelector(state => state.sessionToken)
-  const graphqlEndpoint = useSelector(state => state.applicationConfig.graphqlEndpoint, shallowEqual)
+function resolveQuery(queryOrAST) {
+  return typeof queryOrAST === 'string' ? queryOrAST : print(queryOrAST)
+}
 
-  return ({ query: queryOrAST, variables }) => {
-    const query = typeof queryOrAST === 'string' ? queryOrAST : print(queryOrAST)
-    return { query, variables, sessionToken, graphqlEndpoint }
+/**
+ * Return a mutate function that mutates data associated to a given query + variables.
+ * This function relies on https://swr.vercel.app/docs/mutation#mutate.
+ * @param {object} config config
+ * @param {string|ASTNode} config.query GraphQL query
+ * @param {{[key : string]: any}|undefined} config.variables query arguments
+ * @returns {{mutate: (function(function(any): Promise, any?): Promise<any>)}}
+ */
+export function useMutateData({ query, variables }) {
+  const { mutate } = useSWRConfig()
+  const key = useSWRKey({ query, variables })
+  return {
+    mutate: async (mutationCallback, options) =>
+      await mutate(key, mutationCallback, options),
   }
 }
 
-export function usePreload () {
-  const sessionToken = useSelector(state => state.sessionToken)
-  const graphqlEndpoint = useSelector(state => state.applicationConfig.graphqlEndpoint, shallowEqual)
-
-  return ({ query: queryOrAST, variables }) => {
-    const query = typeof queryOrAST === 'string' ? queryOrAST : print(queryOrAST)
-    return preload({ query, variables, sessionToken, graphqlEndpoint }, fetcher)
-  }
+/**
+ * @param {object} config config
+ * @param {string|ASTNode} config.query GraphQL query
+ * @param {{[key : string]: any}} config.variables query arguments
+ * @returns {{query: string, variables: {[key : string]: any}, sessionToken: string}} an SWR key
+ */
+function useSWRKey({ query: queryOrAST, variables }) {
+  const sessionToken = useSelector((state) => state.sessionToken)
+  const query = resolveQuery(queryOrAST)
+  return { query, variables, sessionToken }
 }
 
-
+async function fetch({ query, variables, sessionToken }) {
+  return executeQuery({
+    query,
+    variables,
+    sessionToken,
+    type: 'fetch',
+  })
+}

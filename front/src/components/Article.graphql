@@ -1,11 +1,11 @@
-query renameArticle($article: ID!, $title: String!) {
-  article(article: $article) {
+query renameArticle($articleId: ID!, $title: String!) {
+  article(article: $articleId) {
     rename(title: $title)
   }
 }
 
-query linkToZotero($article: ID!, $zotero: String!) {
-  article(article: $article) {
+query linkToZotero($articleId: ID!, $zotero: String!) {
+  article(article: $articleId) {
     setZoteroLink(zotero: $zotero)
   }
 }
@@ -46,14 +46,14 @@ query getArticleContributors($articleId: ID!) {
   }
 }
 
-query deleteArticle ($article: ID!) {
-  article (article: $article) {
-    delete (dryRun: false)
+query deleteArticle($articleId: ID!) {
+  article(article: $articleId) {
+    delete(dryRun: false)
   }
 }
 
-mutation duplicateArticle($user: ID, $article: ID!, $to: ID!) {
-  duplicateArticle(article: $article, to: $to, user: $user) {
+mutation duplicateArticle($user: ID, $articleId: ID!, $to: ID!) {
+  duplicateArticle(article: $articleId, to: $to, user: $user) {
     _id
     title
     createdAt
@@ -61,9 +61,9 @@ mutation duplicateArticle($user: ID, $article: ID!, $to: ID!) {
   }
 }
 
-query addTags ($article: ID!, $tags: [ID]!) {
-  article (article: $article) {
-    addTags (tags: $tags) {
+query addTags($articleId: ID!, $tags: [ID]!) {
+  article(article: $articleId) {
+    addTags(tags: $tags) {
       _id
       name
       color
@@ -71,9 +71,9 @@ query addTags ($article: ID!, $tags: [ID]!) {
   }
 }
 
-query removeTags ($article: ID!, $tags: [ID]!) {
-  article (article: $article) {
-    removeTags (tags: $tags) {
+query removeTags($articleId: ID!, $tags: [ID]!) {
+  article(article: $articleId) {
+    removeTags(tags: $tags) {
       _id
       name
       color
@@ -82,7 +82,7 @@ query removeTags ($article: ID!, $tags: [ID]!) {
 }
 
 query getArticleInfo($articleId: ID!) {
-  article (article: $articleId) {
+  article(article: $articleId) {
     title
 
     workingVersion {
@@ -92,19 +92,11 @@ query getArticleInfo($articleId: ID!) {
 }
 
 query getArticleTags($articleId: ID!) {
-  article (article: $articleId) {
+  article(article: $articleId) {
     tags {
       _id
       name
       color
-    }
-  }
-}
-
-mutation startCollaborativeSession($articleId: ID!) {
-  article (articleId: $articleId) {
-    startCollaborativeSession {
-      id
     }
   }
 }

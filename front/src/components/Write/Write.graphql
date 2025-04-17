@@ -1,17 +1,58 @@
-query compareVersion ($to: ID!) {
-  version(version: $to) {
+query compareVersion($to: ID!, $article: ID!, $hasVersion: Boolean!) {
+  version(version: $to) @include(if: $hasVersion) {
     _id
     md
   }
+
+  article(article: $article) {
+    workingVersion @skip(if: $hasVersion) {
+      md
+    }
+  }
 }
 
-query renameVersion ($version: ID!, $name: String) {
+query renameVersion($version: ID!, $name: String) {
   version(version: $version) {
     rename(name: $name)
   }
 }
 
-query getEditableArticle ($article: ID!, $hasVersion: Boolean!, $version: ID!) {
+query getArticleVersions($article: ID!) {
+  article(article: $article) {
+    _id
+    updatedAt
+    versions {
+      _id
+      version
+      revision
+      message
+      updatedAt
+      owner {
+        displayName
+        username
+      }
+      type
+    }
+  }
+}
+
+query getArticleWorkingCopy($articleId: ID!) {
+  article(article: $articleId) {
+    _id
+    title
+    zoteroLink
+    updatedAt
+
+    workingVersion {
+      md
+      bib
+      bibPreview
+      metadata
+    }
+  }
+}
+
+query getEditableArticle($article: ID!, $hasVersion: Boolean!, $version: ID!) {
   article(article: $article) {
     _id
     title
@@ -55,23 +96,7 @@ query getEditableArticle ($article: ID!, $hasVersion: Boolean!, $version: ID!) {
       md
       bib
       bibPreview
-      yaml
-    }
-
-    collaborativeSession {
-      id
-      creator {
-        _id
-      }
-      createdAt
-    }
-
-    soloSession {
-      id
-      creator {
-        _id
-      }
-      createdAt
+      metadata
     }
   }
 
@@ -80,7 +105,7 @@ query getEditableArticle ($article: ID!, $hasVersion: Boolean!, $version: ID!) {
     md
     bib
     bibPreview
-    yaml
+    metadata
     message
     revision
     version
@@ -91,10 +116,19 @@ query getEditableArticle ($article: ID!, $hasVersion: Boolean!, $version: ID!) {
   }
 }
 
-mutation stopSoloSession($articleId: ID!) {
-  article(articleId: $articleId) {
-    stopSoloSession {
-      _id
+query getArticleVersion($versionId: ID!) {
+  version(version: $versionId) {
+    _id
+    md
+    bib
+    bibPreview
+    metadata
+    message
+    revision
+    version
+    owner {
+      displayName
+      username
     }
   }
 }

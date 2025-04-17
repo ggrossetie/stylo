@@ -14,14 +14,16 @@
   min-height: 5em;
   padding: 1em;
 
-  [role="doc-bibliography"] {
+  [role='doc-bibliography'] {
     display: flex;
     flex-direction: column;
-    gap: .5em;
+    gap: 0.5em;
   }
 }
 
 .actions {
+  margin-top: 1.5rem;
   display: flex;
   justify-content: flex-end;
+  gap: 0.75rem;
 }

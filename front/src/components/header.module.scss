@@ -4,14 +4,12 @@
 .headerContainer {
   background-color: $main-color;
   color: $main-background-color;
-  margin-bottom: 1rem;
 
   @media print {
     & {
       display: none;
     }
   }
-
 
   a {
     color: $main-background-color;
@@ -50,8 +48,13 @@
   text-decoration: none;
 }
 
-.documentationLink::after {
-  content: "\2197";
+.languagesMenu {
+  display: flex;
+  font-weight: normal;
+  gap: 0.35em;
+  align-items: center;
+  font-size: 0.9rem;
+  text-decoration: none;
 }
 
 .secondaryNav {
@@ -73,17 +76,24 @@
   }
 }
 
+.logoAsImg {
+  background-color: #000;
+  height: 1em;
+  padding: .5em;
+  box-sizing: content-box;
+}
+
 .registerAction {
   margin-right: 1.25em;
 }
 
-.logoutAction{
+.logoutAction {
   margin: 0 1.25em;
   cursor: pointer;
 }
 
 .linkIcon {
-  margin: 0 .2em;
+  margin: 0 0.2em;
   vertical-align: middle;
 }
 
@@ -105,14 +115,14 @@
     display: inline;
 
     &:not(:last-child):after {
-      content: "•";
-      margin: 0 .5em;
+      content: '•';
+      margin: 0 0.5em;
     }
   }
 }
 
 .consentLabel {
   cursor: pointer;
-  font-size: .8em;
+  font-size: 0.8em;
   vertical-align: middle;
 }

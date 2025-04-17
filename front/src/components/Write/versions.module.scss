@@ -6,7 +6,7 @@
   font-size: 0.9em;
   padding-bottom: 1em;
   > li {
-    padding: .5rem;
+    padding: 0.5rem;
   }
   > li.selected {
     background-color: hsl(120deg 68% 90%);
@@ -24,12 +24,7 @@
 .editTitleButton {
   @include article.inlineTextButton;
   height: auto;
-  padding: 0 .25em;
-}
-
-.momentAgo {
-  opacity: .5;
-  margin-left: .5em;
+  padding: 0 0.25em;
 }
 
 .version {
@@ -38,15 +33,17 @@
   margin-bottom: 0.25em;
   margin-left: 0.5rem;
   margin-right: 0.25em;
-  cursor: pointer;
   display: flex;
 }
 
 .versionLink {
   color: inherit;
+  cursor: pointer;
   text-decoration: none;
   flex-grow: 1;
   background-color: transparent;
+  margin: -0.5rem; /* counter act the 0.5rem padding of its container */
+  padding: 0.5rem; /* ^^^^^^ */
 
   > header {
     max-width: 265px;
@@ -111,10 +108,17 @@
 }
 
 .headingAction {
-  margin-left: auto;
+  margin: 0.5rem 0 0.75rem 0.5rem;
 }
 
 .editMode {
   font-size: 0.8rem;
   margin-left: auto;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }

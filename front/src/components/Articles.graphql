@@ -52,27 +52,10 @@ query getUserArticles($user: ID!) {
       color
       _id
     }
-
-    collaborativeSession {
-      id
-      creator {
-        _id
-      }
-      createdAt
-    }
-
-    soloSession {
-      id
-      creator {
-        _id
-      }
-      creatorUsername
-      createdAt
-    }
   }
 }
 
-query getWorkspaceArticles ($workspaceId: ID!) {
+query getWorkspaceArticles($workspaceId: ID!) {
   tags {
     _id
     owner
@@ -116,23 +99,6 @@ query getWorkspaceArticles ($workspaceId: ID!) {
         }
       }
 
-      collaborativeSession {
-        id
-        creator {
-          _id
-        }
-        createdAt
-      }
-
-      soloSession {
-        id
-        creator {
-          _id
-        }
-        creatorUsername
-        createdAt
-      }
-
       tags {
         name
         owner
@@ -143,8 +109,8 @@ query getWorkspaceArticles ($workspaceId: ID!) {
   }
 }
 
-mutation createArticle ($title: String!, $user: ID!, $tags: [ID]!) {
-  createArticle(title: $title, user:$user) {
+mutation createArticle($createArticleInput: CreateArticleInput!) {
+  createArticle(createArticleInput: $createArticleInput) {
     _id
     title
     updatedAt
@@ -160,12 +126,6 @@ mutation createArticle ($title: String!, $user: ID!, $tags: [ID]!) {
       owner
       color
       _id
-    }
-
-    addTags (tags: $tags) {
-      _id
-      name
-      color
     }
   }
 }

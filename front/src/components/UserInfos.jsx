@@ -1,149 +1,190 @@
 import React, { useState, useCallback } from 'react'
-import { Check, Clipboard, Loader } from 'react-feather'
+import { Check, Loader } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useSelector, useDispatch, shallowEqual } from 'react-redux'
-import { CopyToClipboard } from 'react-copy-to-clipboard'
+import { Helmet } from 'react-helmet'
 
-import { useGraphQL } from '../helpers/graphQL'
+import { useGraphQLClient } from '../helpers/graphQL'
 import { updateUser } from './Credentials.graphql'
+
+import { useSetAuthToken } from '../hooks/user.js'
+
 import etv from '../helpers/eventTargetValue'
 import styles from './credentials.module.scss'
 import formStyles from './field.module.scss'
 import Button from './Button'
 import Field from './Field'
 import TimeAgo from './TimeAgo.jsx'
-import MonacoYamlEditor from './Write/providers/monaco/YamlEditor'
 
-export default function UserInfos () {
+export default function UserInfos() {
   const dispatch = useDispatch()
-  const runQuery = useGraphQL()
-  const activeUser = useSelector(state => state.activeUser, shallowEqual)
-  const zoteroToken = useSelector(state => state.activeUser.zoteroToken)
-  const sessionToken = useSelector(state => state.sessionToken)
+  const { t } = useTranslation()
+  const { query } = useGraphQLClient()
+  const activeUser = useSelector((state) => state.activeUser, shallowEqual)
+  const zoteroToken = useSelector((state) => state.activeUser.zoteroToken)
+  const sessionToken = useSelector((state) => state.sessionToken)
   const [displayName, setDisplayName] = useState(activeUser.displayName)
   const [firstName, setFirstName] = useState(activeUser.firstName || '')
   const [lastName, setLastName] = useState(activeUser.lastName || '')
   const [institution, setInstitution] = useState(activeUser.institution || '')
-  const [yaml, setYaml] = useState(activeUser.yaml)
   const [isSaving, setIsSaving] = useState(false)
 
-  const updateActiveUserDetails = useCallback((payload) => dispatch({ type: `UPDATE_ACTIVE_USER_DETAILS`, payload }), [])
-  const clearZoteroToken = useCallback(() => dispatch({ type: 'CLEAR_ZOTERO_TOKEN' }), [])
-  const handleYamlUpdate = useCallback((yaml) => setYaml(yaml), [])
+  const updateActiveUserDetails = useCallback(
+    (payload) =>
+      dispatch({
+        type: `UPDATE_ACTIVE_USER_DETAILS`,
+        payload,
+      }),
+    []
+  )
 
-  const unlinkZoteroAccount = useCallback(async (event) => {
-    event.preventDefault()
+  const { link: linkZoteroAccount, unlink: unlinkZoteroAccount } =
+    useSetAuthToken('zotero')
 
-    const variables = { user: activeUser._id, details: { zoteroToken: null } }
-    await runQuery({ query: updateUser, variables })
-    clearZoteroToken()
-    setIsSaving(false)
-  }, [])
+  const updateInfo = useCallback(
+    async (e) => {
+      e.preventDefault()
+      setIsSaving(true)
+      const variables = {
+        user: activeUser._id,
+        details: { displayName, firstName, lastName, institution },
+      }
+      const { updateUser: userDetails } = await query({
+        query: updateUser,
+        variables,
+      })
+      updateActiveUserDetails(userDetails)
+      setIsSaving(false)
+    },
+    [activeUser._id, displayName, firstName, lastName, institution]
+  )
 
-  const updateInfo = useCallback(async (e) => {
-    e.preventDefault()
-    setIsSaving(true)
-    const variables = {
-      user: activeUser._id,
-      details: { yaml, displayName, firstName, lastName, institution },
-    }
-    const { updateUser: userDetails } = await runQuery({ query: updateUser, variables })
-    updateActiveUserDetails(userDetails)
-    setIsSaving(false)
-  }, [activeUser._id, yaml, displayName, firstName, lastName, institution])
-
-  return (<>
-    <section className={styles.section}>
-      <h2>Account information</h2>
-      <form onSubmit={updateInfo}>
-        <Field
-          id="displayNameField"
-          label="Display name"
-          type="text"
-          value={displayName}
-          onChange={(e) => setDisplayName(etv(e))}
-          placeholder="Display name"
-        />
-        <Field
-          id="firstNameField"
-          label="First Name"
-          type="text"
-          value={firstName}
-          onChange={(e) => setFirstName(etv(e))}
-          placeholder="First name"
-        />
-        <Field
-          id="lastNameField"
-          label="Last Name"
-          type="text"
-          value={lastName}
-          onChange={(e) => setLastName(etv(e))}
-          placeholder="Last name"
-        />
-        <Field
-          id="institutionField"
-          label="Institution"
-          type="text"
-          value={institution}
-          onChange={(e) => setInstitution(etv(e))}
-          placeholder="Institution name"
-        />
-        <Field id="yamlField" label="Default YAML">
-          <MonacoYamlEditor
-            id="yamlField"
-            text={activeUser.yaml}
-            onTextUpdate={handleYamlUpdate}
+  return (
+    <>
+      <Helmet>
+        <title>{t('user.account.title')}</title>
+      </Helmet>
+      <section className={styles.section}>
+        <h2>{t('user.account.title')}</h2>
+        <form onSubmit={updateInfo} className={styles.form}>
+          <Field
+            id="displayNameField"
+            label={t('user.account.displayName')}
+            type="text"
+            value={displayName}
+            onChange={(e) => setDisplayName(etv(e))}
           />
-        </Field>
-        <Field  label="Zotero">
-          <>
-            {zoteroToken && <span>Linked with <b>{zoteroToken}</b> account.</span>}
-            {!zoteroToken && <span>No linked account.</span>}
-            {zoteroToken && (
-              <Button title="Unlink this Zotero account" onClick={unlinkZoteroAccount}>
-                Unlink
-              </Button>
-            )}
-          </>
-        </Field>
+          <Field
+            id="firstNameField"
+            label={t('user.account.firstName')}
+            type="text"
+            value={firstName}
+            onChange={(e) => setFirstName(etv(e))}
+          />
+          <Field
+            id="lastNameField"
+            label={t('user.account.lastName')}
+            type="text"
+            value={lastName}
+            onChange={(e) => setLastName(etv(e))}
+          />
+          <Field
+            id="institutionField"
+            label={t('user.account.institution')}
+            type="text"
+            value={institution}
+            onChange={(e) => setInstitution(etv(e))}
+          />
+          <Field label="Zotero">
+            <>
+              {zoteroToken && (
+                <div className={styles.zotero}>
+                  <p>
+                    {t('credentials.authentication.linkedService.description', {
+                      service: 'Zotero',
+                      token: zoteroToken,
+                    })}
+                  </p>
+                  <Button
+                    onClick={unlinkZoteroAccount}
+                    type="button"
+                    aria-label={t('credentials.authentication.unlinkLabel', {
+                      service: 'zotero',
+                    })}
+                  >
+                    {t('credentials.authentication.unlinkButton')}
+                  </Button>
+                </div>
+              )}
+              {!zoteroToken && (
+                <div className={styles.zotero}>
+                  <p>
+                    {t(
+                      'credentials.authentication.unlinkedService.description'
+                    )}
+                  </p>
 
-        <div className={formStyles.footer}>
-          <Button primary={true} disabled={isSaving}>
-            {isSaving ? <Loader /> : <Check />}
-            Save changes
-          </Button>
-        </div>
-      </form>
-    </section>
-
-    <section className={styles.section}>
-      <Field label="Email">
-        <>{activeUser.email}</>
-      </Field>
-      {activeUser.username && <Field label="Username"><>{activeUser.username}</></Field>}
-      <Field label="Authentication">
-        <>{activeUser.authType === 'oidc' ? 'OpenID (External)' : 'Password'}</>
-      </Field>
-      <Field label="API Key">
-        <>
-          <code className={styles.apiKey} title={`API Key value is ${sessionToken}`}>{sessionToken}</code>
-          <CopyToClipboard text={sessionToken}>
-            <Button title="Copy API Key value to clipboard" icon={true}>
-              <Clipboard />
+                  <Button
+                    onClick={linkZoteroAccount}
+                    type="button"
+                    aria-label={t('credentials.authentication.linkLabel', {
+                      service: 'zotero',
+                    })}
+                  >
+                    {t('credentials.authentication.linkButton')}
+                  </Button>
+                </div>
+              )}
+            </>
+          </Field>
+          <div className={formStyles.footer}>
+            <Button primary={true} disabled={isSaving}>
+              {isSaving ? <Loader /> : <Check />}
+              Save changes
             </Button>
-          </CopyToClipboard>
-        </>
-      </Field>
-      <Field label="Identifier">
-        <code>{activeUser._id}</code>
-      </Field>
-      {activeUser.admin && <Field label="Admin">✔️</Field>}
-      <Field label="Created">
-        <TimeAgo date={activeUser.createdAt}/>
-      </Field>
-      <Field label="Updated">
-        <TimeAgo date={activeUser.updatedAt}/>
-      </Field>
-    </section>
-  </>
+          </div>
+        </form>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.info}>
+          <Field label={t('user.account.email')}>
+            <>{activeUser.email}</>
+          </Field>
+          {activeUser.username && (
+            <Field label="Username">
+              <>{activeUser.username}</>
+            </Field>
+          )}
+          <Field label={t('user.account.authentication')}>
+            <>
+              {activeUser.authType === 'oidc'
+                ? 'OpenID (External)'
+                : 'Password'}
+            </>
+          </Field>
+          <Field
+            label={t('user.account.apiKey')}
+            className={styles.apiKeyField}
+          >
+            <code
+              className={styles.apiKeyValue}
+              title={t('user.account.apiKeyValue', { token: sessionToken })}
+            >
+              {sessionToken}
+            </code>
+          </Field>
+          <Field label={t('user.account.id')}>
+            <code>{activeUser._id}</code>
+          </Field>
+          <Field label={t('user.account.createdAt')}>
+            <TimeAgo date={activeUser.createdAt} />
+          </Field>
+          <Field label={t('user.account.updatedAt')}>
+            <TimeAgo date={activeUser.updatedAt} />
+          </Field>
+        </div>
+      </section>
+    </>
   )
 }

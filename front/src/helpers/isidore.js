@@ -4,7 +4,7 @@
  * Search a vocabulary from the Isidore API.
  * Eg: https://api.isidore.science/vocabulary/suggest?q=quebe&output=json
  * @param {string} searchValue
- * @returns {Promise<Object>}
+ * @returns {Promise<object>}
  */
 export async function searchKeyword(searchValue) {
   if (searchValue && searchValue.length > 0) {
@@ -51,7 +51,7 @@ export async function searchKeyword(searchValue) {
  * Search an author from the Isidore API.
  * Eg: https://api.isidore.science/resource/suggest?q=marcell&feed=feed-creator&output=json
  * @param {string} searchValue
- * @returns {Promise<Object>}
+ * @returns {Promise<object>}
  */
 export async function searchAuthor(searchValue) {
   if (searchValue && searchValue.length > 0) {
@@ -66,11 +66,11 @@ export async function searchAuthor(searchValue) {
         return response.ok
           ? response.json()
           : Promise.reject(
-            new Error(
-              'Error while fetching results from Isidore',
-              response.text
+              new Error(
+                'Error while fetching results from Isidore',
+                response.text
+              )
             )
-          )
       })
       .then((json) => {
         if (

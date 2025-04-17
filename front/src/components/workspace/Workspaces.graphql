@@ -1,3 +1,5 @@
+## queries
+
 query getWorkspaces {
   workspaces {
     _id
@@ -68,9 +70,11 @@ query getWorkspaceMembers($workspaceId: ID!) {
   }
 }
 
-mutation inviteMember($workspaceId: ID!, $userId: ID!, $role: String) {
+## mutations
+
+mutation inviteMember($workspaceId: ID!, $userId: ID!) {
   workspace(workspaceId: $workspaceId) {
-    inviteMember(userId: $userId, role: $role) {
+    inviteMember(userId: $userId) {
       _id
       members {
         _id
@@ -98,10 +102,52 @@ mutation removeMember($workspaceId: ID!, $userId: ID!) {
   }
 }
 
+mutation createWorkspace($createWorkspaceInput: CreateWorkspaceInput!) {
+  createWorkspace(createWorkspaceInput: $createWorkspaceInput) {
+    _id
+  }
+}
+
+mutation create($data: CreateWorkspaceInput!) {
+  createWorkspace(createWorkspaceInput: $data) {
+    _id
+    name
+    description
+    color
+    bibliographyStyle
+    createdAt
+    updatedAt
+    stats {
+      membersCount
+      articlesCount
+    }
+  }
+}
+
 mutation leave($workspaceId: ID!) {
   workspace(workspaceId: $workspaceId) {
     leave {
       _id
+    }
+  }
+}
+
+# Add/remove article
+
+mutation addArticle($workspaceId: ID!, $articleId: ID!) {
+  workspace(workspaceId: $workspaceId) {
+    addArticle(articleId: $articleId) {
+      _id
+    }
+  }
+}
+
+mutation removeArticle($workspaceId: ID!, $articleId: ID!) {
+  workspace(workspaceId: $workspaceId) {
+    article(articleId: $articleId) {
+      remove {
+        _id
+      }
     }
   }
 }

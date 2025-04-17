@@ -1,22 +1,22 @@
-import { Button, Textarea, useInput, useToasts } from '@geist-ui/core'
+import { Textarea, useInput, useToasts } from '@geist-ui/core'
 import React, { useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useGraphQL } from '../../helpers/graphQL.js'
+import { useCorpusActions } from '../../hooks/corpus.js'
 
 import Field from '../Field.jsx'
+import FormActions from '../molecules/FormActions.jsx'
 
-import { updateCorpus } from "./Corpus.graphql"
+import styles from './corpusUpdate.module.scss'
 
-import styles from './corpusEdit.module.scss'
-
-
-export default function CorpusUpdate ({corpus, onSubmit}) {
+export default function CorpusUpdate({ corpus, onSubmit, onCancel }) {
   const { t } = useTranslation()
   const { setToast } = useToasts()
   const { state: title, bindings: titleBindings } = useInput(corpus.name)
-  const { state: description, bindings: descriptionBindings } = useInput(corpus.description)
-  const titleInputRef = useRef()
-  const runQuery = useGraphQL()
+  const { state: description, bindings: descriptionBindings } = useInput(
+    corpus.description
+  )
+  const titleInputRef = useRef(null)
+  const { updateCorpus } = useCorpusActions()
 
   useEffect(() => {
     if (titleInputRef.current !== undefined) {
@@ -24,36 +24,35 @@ export default function CorpusUpdate ({corpus, onSubmit}) {
     }
   }, [titleInputRef])
 
-  const handleSubmit = useCallback(async (event) => {
-    try {
-      event.preventDefault()
-      await runQuery({
-        query: updateCorpus,
-        variables: {
+  const handleSubmit = useCallback(
+    async (event) => {
+      try {
+        event.preventDefault()
+        await updateCorpus({
           corpusId: corpus._id,
-          updateCorpusInput: {
-            name: title,
-            description,
-            metadata: ''
-          }
-        }
-      })
-      onSubmit()
-      setToast({
-        text: t('corpus.update.toastSuccess'),
-        type: 'default'
-      })
-    } catch (err) {
-      setToast({
-        text: t('corpus.update.toastFailure', {errorMessage: err.toString()}),
-        type: 'error'
-      })
-    }
-  }, [title, description])
+          title,
+          description,
+        })
+        onSubmit()
+        setToast({
+          text: t('corpus.update.toastSuccess'),
+          type: 'default',
+        })
+      } catch (err) {
+        setToast({
+          text: t('corpus.update.toastFailure', {
+            errorMessage: err.toString(),
+          }),
+          type: 'error',
+        })
+      }
+    },
+    [title, description]
+  )
 
   return (
     <section>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className={styles.form}>
         <Field
           ref={titleInputRef}
           {...titleBindings}
@@ -68,17 +67,14 @@ export default function CorpusUpdate ({corpus, onSubmit}) {
             placeholder={t('corpus.createForm.descriptionPlaceholder')}
           />
         </div>
-        <ul className={styles.actions}>
-          <li>
-            <Button
-              onClick={handleSubmit}
-              className={styles.button}
-              type="secondary"
-              title={t('corpus.editForm.buttonTitle')}>
-              {t('corpus.editForm.buttonText')}
-            </Button>
-          </li>
-        </ul>
+        <FormActions
+          onSubmit={handleSubmit}
+          onCancel={onCancel}
+          submitButton={{
+            text: t('corpus.editForm.buttonText'),
+            title: t('corpus.editForm.buttonTitle'),
+          }}
+        />
       </form>
     </section>
   )

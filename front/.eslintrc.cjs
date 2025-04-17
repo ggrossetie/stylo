@@ -8,6 +8,8 @@ module.exports = {
     'eslint:recommended',
     'plugin:react/recommended',
     'plugin:jsonc/recommended-with-json',
+    'plugin:jsdoc/recommended-typescript-flavor',
+    'prettier',
   ],
   parserOptions: {
     ecmaFeatures: {
@@ -18,33 +20,45 @@ module.exports = {
   },
   overrides: [
     {
-      files: ["**/*.json", "**/*.json5", "**/*.jsonc"],
-      parser: "jsonc-eslint-parser",
+      files: ['**/*.json', '**/*.json5', '**/*.jsonc'],
+      parser: 'jsonc-eslint-parser',
+    },
+    {
+      files: ['**/locales/**/*.json'],
+      rules: {
+        'no-irregular-whitespace': ['off'],
+      },
     },
   ],
-  plugins: ['react', 'vitest'],
+  plugins: ['react', 'vitest', 'jsdoc'],
   settings: {
     react: {
-      version: '16.13',
+      version: '18.3',
     },
   },
   globals: {
     APP_VERSION: true,
+    APP_ENVIRONMENT: true,
+    SENTRY_DSN: true,
+    __ANNOTATIONS_CANONICAL_BASE_URL__: true,
     __BACKEND_ENDPOINT__: true,
     __GRAPHQL_ENDPOINT__: true,
-    __EXPORT_ENDPOINT__: true,
-    __PROCESS_ENDPOINT__: true,
     __PANDOC_EXPORT_ENDPOINT__: true,
-    __HUMANID_REGISTER_ENDPOINT__: true
   },
   rules: {
-    'react/prop-types': ['warn'],
+    'jsdoc/require-description': ['off'],
+    'jsdoc/require-example': ['off'],
+    'jsdoc/require-jsdoc': ['off'],
+    'jsdoc/require-param-description': ['off'],
+    'jsdoc/require-returns-description': ['off'],
+    'jsdoc/require-property-description': ['off'],
+    'react/prop-types': 'off',
     'no-unused-vars': ['warn'],
     'jsonc/indent': ['error', 2],
     // 'jsonc/sort-keys': ['warn'],
     'jsonc/key-spacing': ['error'],
     'jsonc/no-irregular-whitespace': ['error'],
     'jsonc/object-curly-newline': ['error'],
-    'jsonc/object-property-newline': ['error']
+    'jsonc/object-property-newline': ['error'],
   },
 }

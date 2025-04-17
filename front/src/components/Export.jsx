@@ -1,99 +1,203 @@
-import React, { useMemo, useState } from 'react'
-import { useSelector, shallowEqual } from 'react-redux'
-import { useTranslation } from 'react-i18next'
 import clsx from 'clsx'
-import PropTypes from 'prop-types'
+import React, { useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
+import { shallowEqual, useDispatch, useSelector } from 'react-redux'
 import slugify from 'slugify'
+import { applicationConfig } from '../config.js'
 import useStyloExport from '../hooks/stylo-export.js'
+import Button from './Button.jsx'
+import buttonStyles from './button.module.scss'
+import styles from './export.module.scss'
+import formStyles from './form.module.scss'
+import Loading from './molecules/Loading.jsx'
 
 import Select from './Select'
 import Combobox from './SelectCombobox.jsx'
-import Loading from './Loading'
-import styles from './export.module.scss'
-import buttonStyles from "./button.module.scss";
-import formStyles from "./form.module.scss";
 
-export default function Export ({ bookId, articleVersionId, articleId, bib, name }) {
-  const { processEndpoint, exportEndpoint, pandocExportEndpoint } = useSelector(state => state.applicationConfig, shallowEqual)
-  const [format, setFormat] = useState(bookId ? 'html5' : 'html')
-  const [csl, setCsl] = useState('chicagomodified')
-  const [toc, setToc] = useState('0')
-  const [unnumbered, setUnnumbered] = useState('false')
-  const [tld, setTld] = useState('false')
-  const { exportFormats, exportStyles, exportStylesPreview, isLoading } = useStyloExport({ csl, bib })
-  const { host } = window.location
-  const exportId = useMemo(() => slugify(name, { strict: true, lower: true }) || (articleVersionId ?? articleId ?? bookId), [name])
+/**
+ * @param {object} props
+ * @param {string?} props.bookId
+ * @param {string?} props.articleVersionId
+ * @param {string?} props.articleId
+ * @param {string} props.bib
+ * @param {string} props.name
+ * @param {() => {}} props.onCancel
+ * @returns {React.ReactElement}
+ */
+export default function Export({
+  bookId,
+  articleVersionId = '',
+  articleId,
+  bib,
+  name,
+  onCancel,
+}) {
   const { t } = useTranslation()
+  const dispatch = useDispatch()
+  const { pandocExportHost, pandocExportEndpoint } = applicationConfig
 
-  const exportUrl = bookId
-    ? `${processEndpoint}/cgi-bin/exportBook/exec.cgi?id=${exportId}&book=${bookId}&processor=xelatex&source=${exportEndpoint}/&format=${format}&bibstyle=${csl}&toc=${Boolean(toc)}&tld=${tld}&unnumbered=${unnumbered}`
-    : `${pandocExportEndpoint}/generique/export/${host}/${articleId}/${exportId}/?with_toc=${toc}&with_ascii=0&bibliography_style=${csl}&formats=originals&formats=${format}&version=${articleVersionId ?? ''}`
+  const {
+    bibliography_style,
+    with_toc,
+    link_citations,
+    with_nocite,
+    formats,
+    unnumbered,
+    book_division,
+  } = useSelector((state) => state.exportPreferences, shallowEqual)
+
+  const setPreference = useCallback(
+    /** @param {string} key */ (key) =>
+      /** @param {string|Event} event */ (event) =>
+        dispatch({
+          type: 'SET_EXPORT_PREFERENCES',
+          key,
+          value: event?.target?.value ?? event,
+        }),
+    []
+  )
+
+  const { exportFormats, exportStyles, exportStylesPreview, isLoading } =
+    useStyloExport({ bibliography_style, bib })
+
+  const exportId = useMemo(
+    () =>
+      slugify(name, { strict: true, lower: true }) ||
+      (articleVersionId ?? articleId ?? bookId),
+    [name]
+  )
+  const groupedExportStyles = useMemo(() => {
+    return exportStyles?.map(({ key, name }, index) => ({
+      key,
+      name,
+      section: '',
+      // pre-assign an index to each entry. It will persist upon filtered results.
+      // @see https://github.com/EcrituresNumeriques/stylo/issues/1014
+      index,
+    }))
+  }, [exportStyles])
+
+  const exportUrl = useMemo(() => {
+    return `${pandocExportEndpoint}/generique/${
+      articleId ? 'article' : 'corpus'
+    }/export/${pandocExportHost}/${
+      articleId ?? bookId
+    }/${exportId}/?with_toc=${with_toc}&with_nocite=${with_nocite}&with_link_citations=${link_citations}&with_ascii=0&bibliography_style=${bibliography_style}&formats=originals&formats=${formats}&version=${articleVersionId}`
+  }, [with_toc, bibliography_style, formats, with_nocite, link_citations])
 
   return (
-    <section className={styles.export}>
-      <form className={clsx(formStyles.form, formStyles.verticalForm)}>
-      {(articleId && !exportFormats.length) && <Loading inline size="24" />}
-      {(articleId && exportFormats.length) && <Select id="export-formats" label="Formats" value={format} onChange={(e) => setFormat(e.target.value)}>
-        {exportFormats.map(({ key, name }) => <option value={key} key={key}>{ name }</option>)}
-        </Select>}
-        {bookId && <Select id="export-formats" label={t('export.format.label')} value={format} onChange={(e) => setFormat(e.target.value)}>
-          <option value="html5">HTML5</option>
-          <option value="zip">ZIP</option>
-          <option value="pdf">PDF</option>
-          <option value="tex">LATEX</option>
-          <option value="xml">XML (érudit)</option>
-          <option value="odt">ODT</option>
-          <option value="docx">DOCX</option>
-          <option value="epub">EPUB</option>
-          <option value="tei">TEI</option>
-          <option value="icml">ICML</option>
-        </Select>}
+    <>
+      <section className={styles.export}>
+        <form className={formStyles.form}>
+          {!exportFormats.length && <Loading size="1.5rem" />}
+          {exportFormats.length && (
+            <Select
+              id="export-formats"
+              label={t('export.format.label')}
+              value={formats}
+              onChange={setPreference('formats')}
+            >
+              {exportFormats.map(({ key, name }) => (
+                <option value={key} key={key}>
+                  {name}
+                </option>
+              ))}
+            </Select>
+          )}
 
-        {(articleId && bib && !exportStyles.length) && <Loading inline size="24" />}
-        {(articleId && bib && exportStyles.length) && <Combobox id="export-styles" label="Bibliography style" items={exportStyles} value={csl} onChange={setCsl} />}
-        {articleId && bib && <div className={styles.bibliographyPreview}>
-          {isLoading && <Loading inline size="24" />}
-          {!isLoading && <div dangerouslySetInnerHTML={{ __html: exportStylesPreview }} />}
-        </div>}
+          {bib && !exportStyles.length && <Loading inline size="1.5rem" />}
+          {bib && exportStyles.length && (
+            <Combobox
+              id="export-styles"
+              label={t('export.bibliography.label')}
+              items={groupedExportStyles}
+              value={bibliography_style}
+              onChange={setPreference('bibliography_style')}
+            />
+          )}
+          {bib && (
+            <div className={styles.bibliographyPreview}>
+              {isLoading && <Loading inline size="1.5rem" />}
+              {!isLoading && (
+                <div
+                  dangerouslySetInnerHTML={{ __html: exportStylesPreview }}
+                />
+              )}
+            </div>
+          )}
 
-        {bookId && bib && <Select id="export-styles" label="Bibliography style" value={csl} setCsl={setCsl}>
-          <option value="chicagomodified">chicagomodified</option>
-          <option value="lettres-et-sciences-humaines-fr"> lettres-et-sciences-humaines-fr</option>
-          <option value="chicago-fullnote-bibliography-fr"> chicago-fullnote-bibliography-fr</option>
-        </Select>}
-
-        <Select id="export-toc" label="Additional options" value={toc} onChange={(e) => setToc(parseInt(e.target.value, 10))}>
-          <option value="1">{t('export.additionnalOptions.toc')}</option>
-          <option value="0">{t('export.additionnalOptions.notoc')}</option>
-        </Select>
-        {bookId && (
-          <Select id="export-numbering" value={unnumbered} onChange={(e) => setUnnumbered(e.target.value)}>
-            <option value="false">{t('export.sectionChapters.numbered')}</option>
-            <option value="true">{t('export.sectionChapters.unnumbered')}</option>
+          <Select
+            label={t('export.toc.label')}
+            value={with_toc}
+            onChange={setPreference('with_toc')}
+          >
+            <option value="1">{t('export.toc.yes')}</option>
+            <option value="0">{t('export.toc.no')}</option>
           </Select>
-        )}
-        {bookId && (
-          <Select value={tld} onChange={(e) => setTld(e.target.value)}>
+
+          <Select
+            label={t('export.nocite.label')}
+            value={with_nocite}
+            onChange={setPreference('with_nocite')}
+          >
+            <option value="1">{t('export.nocite.all')}</option>
+            <option value="0">{t('export.nocite.onlyUsed')}</option>
+          </Select>
+
+          <Select
+            label={t('export.linkCitations.label')}
+            value={link_citations}
+            onChange={setPreference('link_citations')}
+          >
+            <option value="1">{t('export.linkCitations.yes')}</option>
+            <option value="0">{t('export.linkCitations.no')}</option>
+          </Select>
+
+          {/*bookId && (
+          <Select
+            id="export-numbering"
+            value={unnumbered}
+            onChange={setPreference('unnumbered')}
+          >
+            <option value="false">
+              {t('export.sectionChapters.numbered')}
+            </option>
+            <option value="true">
+              {t('export.sectionChapters.unnumbered')}
+            </option>
+          </Select>
+        )*/}
+          {/*bookId && (
+          <Select
+            value={book_division}
+            onChange={setPreference('book_division')}
+          >
             <option value="part">{t('export.bookDivision.part')}</option>
             <option value="chapter">{t('export.bookDivision.chapter')}</option>
           </Select>
+        )*/}
+        </form>
+      </section>
+      <footer className={styles.actions}>
+        {onCancel && (
+          <Button
+            aria-label={t('modal.cancelButton.label')}
+            secondary={true}
+            onClick={() => onCancel()}
+          >
+            {t('modal.cancelButton.text')}
+          </Button>
         )}
-      </form>
-
-      <nav className={styles.actions}>
-        <a className={clsx(buttonStyles.button, buttonStyles.primary)} href={exportUrl} rel="noreferrer noopener" target="_blank" role="button">
+        <a
+          className={clsx(buttonStyles.button, buttonStyles.primary)}
+          href={exportUrl}
+          rel="noreferrer noopener"
+          target="_blank"
+          role="button"
+        >
           {t('export.submitForm.button')}
         </a>
-      </nav>
-    </section>
+      </footer>
+    </>
   )
-}
-
-// TODO use "shapes" to either have bookId, or articleId, or articleId and articleVersionId
-Export.propTypes = {
-  bookId: PropTypes.string,
-  articleVersionId: PropTypes.string,
-  articleId: PropTypes.string,
-  name: PropTypes.string.isRequired,
-  bib: PropTypes.string,
 }

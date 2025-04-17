@@ -1,20 +1,38 @@
+import clsx from 'clsx'
+import { Loader } from 'lucide-react'
 import React from 'react'
-import PropTypes from 'prop-types'
-import { Dot, Loading } from '@geist-ui/core'
-
 
 import styles from './CollaborativeEditorWebSocketStatus.module.scss'
 
-export default function CollaborativeEditorWebSocketStatus ({ status }) {
-  return (
-    <>
-      {status === 'connected' && <Dot type="success" className={styles.dot}>Connected</Dot>}
-      {status === 'disconnected' && <Dot type="error" className={styles.dot}>Disconnected</Dot>}
-      {status === 'connecting' && <Dot type="warning" className={styles.dot}>Connecting <Loading/></Dot>}
-    </>
-  )
-}
+/**
+ * @param props
+ * @param {string} props.status
+ * @return {Element}
+ * @constructor
+ */
+export default function CollaborativeEditorWebSocketStatus({ status }) {
+  if (status === 'connected') {
+    return <></>
+  }
 
-CollaborativeEditorWebSocketStatus.propTypes = {
-  status: PropTypes.string.isRequired
+  if (status === 'connecting') {
+    return (
+      <div className={clsx(styles.status, styles.connecting)}>
+        <span className={clsx(styles.dot, styles.warning)}></span>
+        Connecting
+        <Loader className={styles.loadingIndicator} />
+      </div>
+    )
+  }
+
+  return (
+    <div className={clsx(styles.status, styles.disconnected)}>
+      {status === 'disconnected' && (
+        <>
+          <span className={clsx(styles.dot, styles.info)}></span>
+          Disconnected
+        </>
+      )}
+    </div>
+  )
 }
