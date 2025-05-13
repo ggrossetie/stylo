@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import { LifeBuoy } from 'lucide-react'
-import { NavLink, Route, Switch } from 'react-router-dom'
+import { NavLink, Route, Routes } from 'react-router'
 import { useTranslation } from 'react-i18next'
 
 import logoContent from '/images/logo.svg?inline'
@@ -22,7 +22,7 @@ export default function Header() {
   const userId = useActiveUserId()
 
   return (
-    <Switch>
+    <Routes>
       <Route path="*/annotate" />
       <Route path="/credentials/auth-callback" />
       <Route path="*">
@@ -81,6 +81,6 @@ export default function Header() {
           </section>
         </header>
       </Route>
-    </Switch>
+    </Routes>
   )
 }

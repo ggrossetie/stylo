@@ -1,12 +1,11 @@
-import React, { useCallback, useRef, useState, useEffect } from 'react'
-import { Link, useHistory } from 'react-router-dom'
+import React, { useCallback, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router'
 import { useDispatch } from 'react-redux'
 import { Helmet } from 'react-helmet'
 import { useToasts } from '@geist-ui/core'
 import { useTranslation } from 'react-i18next'
 import { applicationConfig } from '../config.js'
 import { fromFormData } from '../helpers/forms.js'
-import { useActiveUserId } from '../hooks/user.js'
 
 import styles from './login.module.scss'
 import buttonStyles from './button.module.scss'
@@ -21,27 +20,8 @@ export default function Login() {
   const dispatch = useDispatch()
   const { setToast } = useToasts()
   const usernameRef = useRef(null)
-  const { replace, location } = useHistory()
-  const userId = useActiveUserId()
-
-  const setSessionToken = useCallback(
-    (token) => dispatch({ type: 'UPDATE_SESSION_TOKEN', token }),
-    []
-  )
-
+  const navigate = useNavigate()
   const { backendEndpoint } = applicationConfig
-
-  useEffect(() => {
-    const authToken = new URLSearchParams(location.hash).get('#auth-token')
-
-    if (authToken) {
-      setSessionToken(authToken)
-    }
-
-    if (userId) {
-      replace('/articles')
-    }
-  }, [userId])
 
   const handleSubmit = useCallback((event) => {
     event.preventDefault()
@@ -65,7 +45,7 @@ export default function Login() {
       })
       .then((data) => {
         dispatch({ type: 'LOGIN', ...data })
-        replace('/articles')
+        navigate('/articles')
       })
       .catch((error) => {
         setToast({

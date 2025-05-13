@@ -42,7 +42,7 @@ export default defineConfig(async ({ mode }) => {
               'react-helmet',
               'react-i18next',
               'react-redux',
-              'react-router-dom',
+              'react-router',
               'redux',
             ],
             ui: ['@geist-ui/core', 'lucide-react'],

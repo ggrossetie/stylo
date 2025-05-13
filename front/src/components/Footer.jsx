@@ -1,5 +1,5 @@
 import React from 'react'
-import { Switch, Route, Link } from 'react-router-dom'
+import { Routes, Route, Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 
 import { usePreferenceItem } from '../hooks/user.js'
@@ -15,7 +15,7 @@ export default function Footer() {
   )
 
   return (
-    <Switch>
+    <Routes>
       <Route path="*/annotate" />
       <Route path="/article/*" />
       <Route path="/credentials/auth-callback" />
@@ -51,6 +51,6 @@ export default function Footer() {
           </ul>
         </footer>
       </Route>
-    </Switch>
+    </Routes>
   )
 }
