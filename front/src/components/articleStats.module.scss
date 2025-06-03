@@ -6,10 +6,18 @@
   background-color: #f9f9f9;
   padding: 0.5rem;
   border: 1px solid #d8d8d8;
-  min-width: 450px;
+  gap: 1rem;
+  align-items: center;
 }
 
-.stats > li:not(:last-child)::after {
-  content: '•' / '';
-  margin: 0 0.5em;
+.stats > li:nth-child(2) {
+  border-left: 1px solid #d8d8d8;
+  border-right: 1px solid #d8d8d8;
+  padding: 0 1rem;
+  text-align: center;
 }
+
+.count {
+  font-weight: 600;
+}
+
