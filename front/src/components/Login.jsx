@@ -148,6 +148,7 @@ export default function Login() {
             onSubmit={handleSubmit}
             className={formStyles.form}
             aria-labelledby="local-login"
+            data-testid="local-login-form"
           >
             <Field
               label={t('user.account.username')}
