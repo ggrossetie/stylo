@@ -1,19 +1,27 @@
-import React, { useCallback, useRef, useState, useEffect } from 'react'
-import { Link, useLocation, useNavigate, useRevalidator, useRouteLoaderData } from 'react-router'
-import { useDispatch } from 'react-redux'
+import { HelpCircle } from 'lucide-react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Helmet } from 'react-helmet'
-import { useToasts } from '@geist-ui/core'
 import { useTranslation } from 'react-i18next'
+import { useDispatch } from 'react-redux'
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useRevalidator,
+  useRouteLoaderData,
+} from 'react-router'
+
+import Button from './Button'
+import Field from './Field'
+import { useToasts } from '@geist-ui/core'
+
 import { applicationConfig } from '../config.js'
 import { fromFormData } from '../helpers/forms.js'
 import { useLogout } from '../hooks/user.js'
 
-import styles from './login.module.scss'
 import buttonStyles from './button.module.scss'
 import formStyles from './form.module.scss'
-import Field from './Field'
-import Button from './Button'
-import { HelpCircle } from 'lucide-react'
+import styles from './login.module.scss'
 
 export default function Login() {
   const { t } = useTranslation()
@@ -155,6 +163,7 @@ export default function Login() {
             onSubmit={handleSubmit}
             className={formStyles.form}
             aria-labelledby="local-login"
+            data-testid="local-login-form"
           >
             <Field
               label={t('user.account.username')}
@@ -192,7 +201,7 @@ export default function Login() {
   )
 }
 
-export function Logout () {
+export function Logout() {
   const logout = useLogout()
   const navigate = useNavigate()
 
