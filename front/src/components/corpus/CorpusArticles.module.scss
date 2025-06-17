@@ -1,0 +1,18 @@
+.partsTitle {
+  font-size: 0.95em;
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+  font-weight: 500;
+}
+
+.count {
+  font-weight: 300;
+  padding-left: 0.15rem;
+}
+
+.heading {
+  display: flex;
+  margin-top: 0.75rem;
+  justify-content: space-between;
+}

@@ -1,16 +1,29 @@
 .card {
+  display: flex;
   border: 1px solid #e1e1e1;
   padding: 0.5rem 1rem;
   margin-bottom: 0.5rem;
   background-color: white;
   cursor: move;
-  display: flex;
   align-items: center;
   color: #323333;
 }
 
 .title {
+  flex: 1;
   font-weight: 600;
   font-size: 0.9rem;
   padding-left: 0.5em;
+  align-items: center;
+  display: flex;
+  gap: 0.35rem;
+}
+
+.actions {
+  cursor: default;
+}
+
+.action {
+  cursor: pointer;
+  padding: 0.25rem;
 }

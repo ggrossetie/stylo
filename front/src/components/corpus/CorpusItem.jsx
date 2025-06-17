@@ -1,30 +1,18 @@
-import {
-  ChevronDown,
-  ChevronRight,
-  MessageSquareShare,
-  Printer,
-  Settings,
-  Trash,
-} from 'lucide-react'
-import React, { useCallback, useMemo, useState } from 'react'
+import { Book, EllipsisVertical, Printer, Settings, Trash } from 'lucide-react'
+import React, { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router'
 
 import { useToasts } from '@geist-ui/core'
 
 import { useCorpusActions } from '../../hooks/corpus.js'
 import { useModal } from '../../hooks/modal.js'
 
-import Button from '../Button.jsx'
 import Export from '../Export.jsx'
 import Modal from '../Modal.jsx'
-import TimeAgo from '../TimeAgo.jsx'
 import FormActions from '../molecules/FormActions.jsx'
 import CorpusArticles from './CorpusArticles.jsx'
 import CorpusForm from './CorpusForm.jsx'
-import CorpusMetadataModal from './CorpusMetadataModal.jsx'
 
-import buttonStyles from '../button.module.scss'
 import styles from './corpusItem.module.scss'
 
 /**
@@ -80,87 +68,72 @@ export default function CorpusItem({ corpus }) {
     }
   }, [corpusId])
 
-  const [expanded, setExpanded] = useState(false)
-  const toggleExpansion = useCallback(
-    (event) => {
-      if (!event.key || [' ', 'Enter'].includes(event.key)) {
-        setExpanded(!expanded)
-      }
-    },
-    [expanded]
-  )
-
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <div className={styles.heading} onClick={toggleExpansion}>
-          <h4 className={styles.title}>
-            <span
-              tabIndex={0}
-              onKeyUp={toggleExpansion}
-              className={styles.icon}
-            >
-              {expanded ? <ChevronDown /> : <ChevronRight />}
-            </span>
-            {corpus.name}
-          </h4>
-          <p className={styles.metadata}>
-            <span className={styles.by}>{t('corpus.by.text')}</span>
-            <span className={styles.creator}>
-              {corpus.creator.displayName || corpus.creator.username}
-            </span>
-            <TimeAgo date={corpus.updatedAt} className={styles.updatedAt} />
-          </p>
+        <div className={styles.heading}>
+          <div className={styles.icon}>
+            <Book />
+          </div>
+          <h4 className={styles.title}>{corpus.name}</h4>
+          <div className={styles.menu}>
+            <EllipsisVertical />
+          </div>
+          {/*<p className={styles.metadata}>*/}
+          {/*  <span className={styles.by}>{t('corpus.by.text')}</span>*/}
+          {/*  <span className={styles.creator}>*/}
+          {/*    {corpus.creator.displayName || corpus.creator.username}*/}
+          {/*  </span>*/}
+          {/*  <TimeAgo date={corpus.updatedAt} className={styles.updatedAt} />*/}
+          {/*</p>*/}
         </div>
-        <aside className={styles.actionButtons}>
-          <Button
-            title={t('corpus.edit.buttonTitle')}
-            icon={true}
-            onClick={() => editCorpusModal.show()}
-          >
-            <Settings />
-          </Button>
+        {/*<aside className={styles.actionButtons}>*/}
+        {/*  <Button*/}
+        {/*    title={t('corpus.edit.buttonTitle')}*/}
+        {/*    icon={true}*/}
+        {/*    onClick={() => editCorpusModal.show()}*/}
+        {/*  >*/}
+        {/*    <Settings />*/}
+        {/*  </Button>*/}
 
-          <CorpusMetadataModal
-            corpusId={corpusId}
-            corpusType={corpus.type}
-            initialValue={corpus.metadata}
-          />
+        {/*  <CorpusMetadataModal*/}
+        {/*    corpusId={corpusId}*/}
+        {/*    corpusType={corpus.type}*/}
+        {/*    initialValue={corpus.metadata}*/}
+        {/*  />*/}
 
-          <Button
-            title={t('corpus.delete.buttonTitle')}
-            icon={true}
-            onClick={(event) => {
-              event.preventDefault()
-              deleteCorpusModal.show()
-            }}
-          >
-            <Trash />
-          </Button>
-          <Button
-            title={t('corpus.export.buttonTitle')}
-            icon={true}
-            onClick={() => exportCorpusModal.show()}
-          >
-            <Printer />
-          </Button>
+        {/*  <Button*/}
+        {/*    title={t('corpus.delete.buttonTitle')}*/}
+        {/*    icon={true}*/}
+        {/*    onClick={(event) => {*/}
+        {/*      event.preventDefault()*/}
+        {/*      deleteCorpusModal.show()*/}
+        {/*    }}*/}
+        {/*  >*/}
+        {/*    <Trash />*/}
+        {/*  </Button>*/}
+        {/*  <Button*/}
+        {/*    title={t('corpus.export.buttonTitle')}*/}
+        {/*    icon={true}*/}
+        {/*    onClick={() => exportCorpusModal.show()}*/}
+        {/*  >*/}
+        {/*    <Printer />*/}
+        {/*  </Button>*/}
 
-          <Link
-            title={t('article.annotate.button')}
-            target="_blank"
-            className={buttonStyles.icon}
-            to={`/corpus/${corpus._id}/annotate`}
-          >
-            <MessageSquareShare />
-          </Link>
-        </aside>
+        {/*  <Link*/}
+        {/*    title={t('article.annotate.button')}*/}
+        {/*    target="_blank"*/}
+        {/*    className={buttonStyles.icon}*/}
+        {/*    to={`/corpus/${corpus._id}/annotate`}*/}
+        {/*  >*/}
+        {/*    <MessageSquareShare />*/}
+        {/*  </Link>*/}
+        {/*</aside>*/}
       </div>
-      {expanded && (
-        <div className={styles.detail}>
-          {corpus.description && <p>{corpus.description}</p>}
-          <CorpusArticles corpusId={corpusId} />
-        </div>
-      )}
+      <div className={styles.detail}>
+        {corpus.description && <p>{corpus.description}</p>}
+        <CorpusArticles corpusId={corpusId} />
+      </div>
 
       <Modal
         {...deleteCorpusModal.bindings}

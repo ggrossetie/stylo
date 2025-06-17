@@ -1,3 +1,4 @@
+import { NotebookText } from 'lucide-react'
 import React, { useCallback, useMemo } from 'react'
 import { DndProvider } from 'react-dnd'
 import { Trans, useTranslation } from 'react-i18next'
@@ -7,13 +8,14 @@ import { dragAndDropManager } from '../../hooks/dnd.js'
 import useFetchData from '../../hooks/graphql.js'
 import { useActiveWorkspaceId } from '../../hooks/workspace.js'
 
+import Button from '../Button.jsx'
 import Alert from '../molecules/Alert.jsx'
 import Loading from '../molecules/Loading.jsx'
 import CorpusArticleItems from './CorpusArticleItems.jsx'
 
 import { getCorpus } from './Corpus.graphql'
 
-import styles from './corpusItem.module.scss'
+import styles from './CorpusArticles.module.scss'
 
 export default function CorpusArticles({ corpusId }) {
   const { t } = useTranslation()
@@ -39,39 +41,28 @@ export default function CorpusArticles({ corpusId }) {
 
   return (
     <>
-      <h5 className={styles.partsTitle}>{t('corpus.parts.label')}</h5>
       {isLoading && <Loading />}
-      {!isLoading && corpusArticles.length > 0 && (
-        <ul>
-          <DndProvider manager={dragAndDropManager}>
-            <CorpusArticleItems
-              corpusId={corpusId}
-              articles={corpusArticles}
-              onUpdate={handleUpdate}
-            />
-          </DndProvider>
-        </ul>
-      )}
-      {!isLoading && corpusArticles.length === 0 && (
-        <Alert
-          className={styles.message}
-          type={'info'}
-          message={
-            <Trans i18nKey="corpus.addPart.note">
-              To add a new chapter, go to the
-              <Link
-                to={
-                  activeWorkspaceId
-                    ? `/workspaces/${activeWorkspaceId}/articles`
-                    : '/articles'
-                }
-              >
-                articles page
-              </Link>
-              and select this corpus.
-            </Trans>
-          }
-        />
+      {!isLoading && (
+        <>
+          <div className={styles.heading}>
+            <Button secondary>Associer un article</Button>
+            <h5 className={styles.partsTitle}>
+              Articles
+              <span className={styles.count}>{corpusArticles.length}</span>
+            </h5>
+          </div>
+          {corpusArticles.length > 0 && (
+            <ul>
+              <DndProvider manager={dragAndDropManager}>
+                <CorpusArticleItems
+                  corpusId={corpusId}
+                  articles={corpusArticles}
+                  onUpdate={handleUpdate}
+                />
+              </DndProvider>
+            </ul>
+          )}
+        </>
       )}
     </>
   )

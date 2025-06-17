@@ -1,10 +1,15 @@
+import { NotebookText, Pencil, View } from 'lucide-react'
 import React, { useRef } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
+import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router'
 
+import buttonStyles from '../button.module.scss'
 import styles from './corpusArticleCard.module.scss'
 
 export default function CorpusArticleCard({ id, article, index, moveCard }) {
   const ref = useRef(null)
+  const { t } = useTranslation()
   const [{ handlerId }, drop] = useDrop({
     accept: 'card',
     collect(monitor) {
@@ -62,6 +67,7 @@ export default function CorpusArticleCard({ id, article, index, moveCard }) {
   })
   const opacity = isDragging ? 0 : 1
   drag(drop(ref))
+
   return (
     <div
       ref={ref}
@@ -70,6 +76,7 @@ export default function CorpusArticleCard({ id, article, index, moveCard }) {
       data-handler-id={handlerId}
     >
       <svg
+        style={{ minWidth: 24 }}
         xmlns="http://www.w3.org/2000/svg"
         width="1.05rem"
         height="1.05rem"
@@ -88,7 +95,14 @@ export default function CorpusArticleCard({ id, article, index, moveCard }) {
         <path d="M15 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
         <path d="M15 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
       </svg>
-      <span className={styles.title}>{article.title}</span>
+      <div className={styles.title}>
+        <NotebookText /> {article.title}
+      </div>
+      <div className={styles.actions}>
+        <div className={styles.action}>
+          <View />
+        </div>
+      </div>
     </div>
   )
 }
