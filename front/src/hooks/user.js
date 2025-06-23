@@ -1,30 +1,35 @@
 import { useCallback, useMemo, useState } from 'react'
-import { shallowEqual, useDispatch, useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 
 import { applicationConfig } from '../config.js'
 import { useGraphQLClient } from '../helpers/graphQL.js'
-import { useMutateData } from './graphql.js'
+import { useConditionalFetchData, useMutateData } from './graphql.js'
 
 import {
   logoutMutation,
   unsetAuthTokenMutation,
 } from '../components/Credentials.graphql'
+import { getFullUserProfile as getUserProfileQuery } from '../components/Credentials.graphql'
 import { createTag, getTags } from '../components/Tag.graphql'
 
-/**
- * There is no need to use `shallowEqual` because we don't mutate the data
- * but only replace them, either on form update or logout
- * @returns {Object}
- */
 export function useActiveUser() {
-  return useSelector((state) => state.activeUser)
-}
-
-/**
- * @returns {string}
- */
-export function useActiveUserId() {
-  return useSelector((state) => state.activeUser?._id)
+  const sessionToken = localStorage.getItem('sessionToken')
+  const { data, error, isLoading } = useConditionalFetchData(
+    sessionToken !== null ? { query: getUserProfileQuery } : null,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      fallbackData: {
+        user: null,
+      },
+    }
+  )
+  return {
+    user: data?.user,
+    userId: data?.user?._id,
+    error,
+    isLoading,
+  }
 }
 
 /**

@@ -1,24 +1,24 @@
+import clsx from 'clsx'
 import React from 'react'
-import { Link } from 'react-router'
-import { useTranslation, Trans } from 'react-i18next'
+import { Trans, useTranslation } from 'react-i18next'
+
 import styloLogo from '/images/logo.svg'
 
+import { useFeed } from '../hooks/feed.js'
+
+import RegisterLoginActions from './RegisterLoginActions.jsx'
 import Loading from './molecules/Loading.jsx'
 import Publication from './publications/Publication.jsx'
 import Release from './publications/Release.jsx'
 import Workshop from './publications/Workshop.jsx'
 
 import styles from '../layout.module.scss'
-import headerStyles from './header.module.scss'
 import buttonStyles from './button.module.scss'
-import clsx from 'clsx'
-import { useActiveUserId } from '../hooks/user.js'
-import { useFeed } from '../hooks/feed.js'
+import headerStyles from './header.module.scss'
 
 export default function Home() {
   const { t } = useTranslation('home')
   const { t: tGlobal } = useTranslation()
-  const userId = useActiveUserId()
 
   const styloFeed = useFeed('/feed/publications')
   const releaseFeed = useFeed('/feed/releases')
@@ -40,17 +40,7 @@ export default function Home() {
 
         <p>{t('hero.description')}</p>
 
-        {!userId && (
-          <p className={styles.horizontalActions}>
-            <Link to="/register" className={buttonStyles.linkPrimary}>
-              {tGlobal('credentials.login.registerLink')}
-            </Link>
-
-            <Link to="/login" className={buttonStyles.linkSecondary}>
-              {tGlobal('credentials.login.confirmButton')}
-            </Link>
-          </p>
-        )}
+        <RegisterLoginActions />
 
         <p>
           <a
@@ -69,17 +59,13 @@ export default function Home() {
 
       <section className={styles.sectionAlternate} aria-labelledby="project">
         <h1 id="project">{t('project.title')}</h1>
-
         <p>
           <Trans i18nKey="project.tool" ns="home" />
         </p>
-
         <p>
           <Trans i18nKey="project.research" ns="home" />
         </p>
-
         <h2>{t('project.features.title')}</h2>
-
         <ul className={styles.spacer}>
           <li>{t('project.features.0')}</li>
           <li>{t('project.features.1')}</li>
@@ -91,19 +77,7 @@ export default function Home() {
           <li>{t('project.features.7')}</li>
           <li>{t('project.features.8')}</li>
         </ul>
-
-        {!userId && (
-          <p className={styles.horizontalActions}>
-            <Link to="/register" className={buttonStyles.linkPrimary}>
-              {tGlobal('credentials.login.registerLink')}
-            </Link>
-
-            <Link to="/login" className={buttonStyles.linkSecondary}>
-              {tGlobal('credentials.login.confirmButton')}
-            </Link>
-          </p>
-        )}
-
+        <RegisterLoginActions />
         <p>
           <a
             href="https://stylo-doc.ecrituresnumeriques.ca/fr/about/"

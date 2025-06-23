@@ -2,15 +2,18 @@ import clsx from 'clsx'
 import { Menu } from 'lucide-react'
 import React, { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, NavLink, useLocation, useRouteLoaderData } from 'react-router'
+import { Link, NavLink, useLocation } from 'react-router'
 
 import logoContent from '/images/logo.svg?inline'
 
 import useComponentVisible from '../hooks/componentVisible.js'
+import { useActiveUser } from '../hooks/user.js'
 import { useActiveWorkspaceId } from '../hooks/workspace.js'
 
 import LanguagesMenu from './header/LanguagesMenu.jsx'
 import UserMenu from './header/UserMenu.jsx'
+import Alert from './molecules/Alert.jsx'
+import Loading from './molecules/Loading.jsx'
 import WorkspacesMenu from './workspace/WorkspacesMenu.jsx'
 
 import styles from './header.module.scss'
@@ -18,12 +21,12 @@ import styles from './header.module.scss'
 export default function Header() {
   const { t } = useTranslation()
   const activeWorkspaceId = useActiveWorkspaceId()
-  const { user } = useRouteLoaderData('app')
+  const { user: activeUser, error, isLoading } = useActiveUser()
   const location = useLocation()
   const activeTool = location.pathname.includes('/corpus')
     ? 'corpus'
     : 'articles'
-  const userId = user?._id
+  const userId = activeUser?._id
   const baseUrl = useMemo(
     () => (activeWorkspaceId ? `/workspaces/${activeWorkspaceId}` : ''),
     [activeWorkspaceId]
@@ -38,6 +41,13 @@ export default function Header() {
     isComponentVisible: areToolsVisible,
     toggleComponentIsVisible: toggleTools,
   } = useComponentVisible(false, 'tools')
+
+  if (isLoading) {
+    return <Loading />
+  }
+  if (error) {
+    return <Alert message={error.message} />
+  }
 
   return (
     <header className={styles.header} role="banner">
@@ -136,7 +146,7 @@ export default function Header() {
           </nav>
         )}
 
-        <UserMenu />
+        <UserMenu activeUser={activeUser} />
         <LanguagesMenu />
       </div>
     </header>
