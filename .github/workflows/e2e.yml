@@ -1,0 +1,31 @@
+name: Tests e2e
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-assets:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install dependencies
+        run: |
+          npm clean-install --prefix=front
+      - name: Start containers
+        run: |
+          cp stylo-example.env .env
+          docker compose up -d mongodb-stylo export-stylo pandoc-api
+      - name: Start services
+        run: |
+          npm run start
+      - name: Wait services
+        run: |
+          sleep 10
+      - name: Run tests e2e
+        run: |
+          npm run test:e2e --prefix=front
