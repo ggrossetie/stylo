@@ -28,7 +28,7 @@ jobs:
           docker compose up -d mongodb-stylo
       - name: Start services
         run: |
-          npm run start &
+          npm run dev &
       - name: Wait services
         run: |
           sleep 10
