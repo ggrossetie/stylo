@@ -18,6 +18,10 @@ jobs:
           npm clean-install
           npm clean-install --prefix=front
           npm clean-install --prefix=graphql
+      - name: Install playwright
+        run: |
+          npx playwright install
+        working-directory: front
       - name: Start containers
         run: |
           cp stylo-example.env .env
