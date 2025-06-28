@@ -32,6 +32,9 @@ jobs:
       - name: Wait services
         run: |
           sleep 10
+      - name: Create e2e user
+        run: |
+          docker compose exec mongodb-stylo mongosh stylo-dev --eval 'db.users.insertOne({username: "teste2e", password: "$2a$10$HDlQLh3to041y0HYWEeYLef9PHa0J9g7NX8TDOo9p7n.NZ.kfIMz6"})'
       - name: Run tests e2e
         run: |
           npm run test:e2e --prefix=front
