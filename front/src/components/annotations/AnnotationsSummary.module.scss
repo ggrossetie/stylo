@@ -1,0 +1,55 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.thread {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  box-shadow: 1px 2px 2px hsla(221, 10%, 50%, 0.1), 2px 4px 4px hsla(220, 10%, 50%, 0.1), 3px 6px 6px hsla(220, 10%, 50%, 0.1);
+  padding: 0.75rem;
+}
+
+.header {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding-bottom: 0.5rem;
+}
+
+.main {
+  padding-bottom: 1rem;
+}
+
+.repliesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.repliesThread {
+  padding-left: 0.5rem;
+}
+
+.replyThread {
+  padding-bottom: 0.5rem;
+}
+
+.tags {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tag {
+  background-color: hsl(0, 0%, 95%);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.9rem;
+}
+
+.name {
+  font-weight: 600;
+}

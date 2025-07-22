@@ -11,6 +11,7 @@ export const applicationConfig = {
   pandocExportHost: import.meta.env.SNOWPACK_PUBLIC_PANDOC_EXPORT_HOST ?? host,
   websocketEndpoint: toWebsocketEndpoint(__BACKEND_ENDPOINT__),
   imgurClientId: __IMGUR_CLIENT_ID__,
+  hypothesisEndpoint: 'https://hypothes.is/api',
 }
 
 function toWebsocketEndpoint(endpoint) {
