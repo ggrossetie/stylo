@@ -91,6 +91,19 @@ export default function CorpusForm({ corpus, onSubmit = () => {}, onCancel }) {
             {t('corpus.type.book')}
           </option>
         </Select>
+        <Select
+          name="articleSorting"
+          id="articleSorting"
+          label={t('corpus.createForm.articleSorting')}
+          defaultValue={corpus?.articleSorting}
+        >
+          <option value={'reverseChronological'} key={'reverseChronological'}>
+            {t('corpus.articleSorting.reverseChronological')}
+          </option>
+          <option value={'unrestricted'} key={'unrestricted'}>
+            {t('corpus.articleSorting.unrestricted')}
+          </option>
+        </Select>
         <div className={clsx(fieldStyles.field, 'control-field')}>
           <label htmlFor="description">
             {t('corpus.createForm.descriptionField')}
