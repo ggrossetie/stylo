@@ -1,4 +1,4 @@
-#import '../components/Credentials.graphql'
+#import '../components/organisms/Credentials.graphql'
 
 fragment basicVersionFields on Version {
   _id

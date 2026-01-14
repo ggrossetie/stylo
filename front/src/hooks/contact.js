@@ -1,12 +1,13 @@
-import useFetchData from './graphql.js'
 import { useSelector } from 'react-redux'
+
+import { executeQuery } from '../helpers/graphQL.js'
+import useFetchData from './graphql.js'
 
 import {
   addContact,
-  removeContact,
   getContacts,
-} from '../components/Contacts.graphql'
-import { executeQuery } from '../helpers/graphQL.js'
+  removeContact,
+} from '../components/organisms/Contacts.graphql'
 
 export function useContactActions() {
   const activeUser = useSelector((state) => state.activeUser)

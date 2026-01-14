@@ -1,0 +1,295 @@
+@use '../../styles/defaults' as *;
+@use '../../styles/variables' as *;
+
+@mixin actionField {
+  border: none;
+  user-select: none;
+  margin: 0;
+  align-items: center;
+  box-shadow: none;
+  display: inline-flex;
+  font-size: 1em;
+  justify-content: flex-start;
+  line-height: 1.5;
+  padding: calc(0.5em - 1px) calc(0.8em - 1px);
+  position: relative;
+  vertical-align: top;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+@mixin selectField {
+  appearance: none;
+  cursor: pointer;
+  display: block;
+  font-size: 1em;
+  max-width: 100%;
+  outline: 0;
+  padding-right: 2.5em;
+  background-color: #fff;
+  color: $main-color;
+  border: 1px solid $main-color;
+  width: 100%;
+
+  &:disabled {
+    border: none;
+    color: #202020;
+    background-color: #ececec;
+    opacity: 1;
+    cursor: not-allowed !important;
+    pointer-events: none;
+  }
+}
+
+@mixin selectFieldContainer {
+  display: inline-block;
+  width: 100%;
+  position: relative;
+  vertical-align: top;
+
+  &:after {
+    right: 1.125em;
+    z-index: 4;
+    border: 3px solid $main-color;
+    border-radius: 2px;
+    border-right: 0;
+    border-top: 0;
+    content: ' ';
+    display: block;
+    height: 0.625em;
+    margin-top: -0.55em;
+    pointer-events: none;
+    position: absolute;
+    top: 50%;
+    transform: rotate(-45deg);
+    transform-origin: center;
+    width: 0.625em;
+  }
+}
+
+select.select {
+  @include actionField;
+  @include selectField;
+}
+
+.selectContainer {
+  @include selectFieldContainer;
+}
+
+.selectDisabled {
+  &:after {
+    display: none;
+  }
+}
+
+.inlineGroup {
+  display: flex;
+  gap: 0;
+}
+
+.button {
+  @include actionField;
+
+  > svg {
+    margin-right: 0.3em;
+  }
+}
+
+.button:disabled {
+  cursor: default;
+}
+
+a.button:not(.primary),
+a.icon:not(.primary) {
+  color: currentColor;
+}
+
+a.icon:after {
+  display: none;
+}
+
+.link {
+  background-color: transparent;
+  border: none;
+  color: currentColor;
+  cursor: pointer;
+  font-size: inherit;
+  text-decoration: none;
+
+  &:hover,
+  &:focus {
+    text-decoration: none;
+  }
+}
+
+.linkPrimary {
+  @extend .link;
+  @extend .primary;
+  text-decoration: none;
+}
+
+.linkSecondary:not(.activeLink) {
+  @extend .link;
+  @extend .secondary;
+  text-decoration: none;
+}
+
+.activeLink {
+  @extend .link;
+  @extend .primary;
+}
+
+.loginLink {
+  @extend .link;
+  @extend .secondary;
+  @extend .block;
+
+  padding: 0.5em 0.5em 0.5em 2.5em;
+
+  &::before {
+    content: '';
+    width: 1.25em;
+    display: block;
+    background-image: var(--login-icon);
+    background-size: contain;
+    background-position: left center;
+    background-repeat: no-repeat;
+    position: absolute;
+    left: 0.5em;
+    top: 0;
+    bottom: 0;
+  }
+}
+
+.block {
+  display: block;
+}
+
+.primary {
+  @extend .button;
+
+  background-color: $main-color;
+  color: $main-background-color;
+  border: 1px solid $main-color;
+
+  &:disabled {
+    color: rgb(170, 170, 170);
+    background-color: rgba(239, 239, 239, 0.3);
+    border-color: rgba(118, 118, 118, 0.3);
+  }
+
+  &:hover:not([disabled]),
+  &:focus-visible:not([disabled]) {
+    background-color: rgba(0, 0, 0, 0.75);
+    color: $main-background-color;
+  }
+}
+
+.secondary {
+  @extend .button;
+
+  background-color: $main-background-color;
+  color: $main-color;
+  border: 1px solid $main-color;
+
+  &:disabled {
+    color: rgb(170, 170, 170);
+    background-color: rgba(239, 239, 239, 0.3);
+    border-color: rgba(118, 118, 118, 0.3);
+  }
+
+  &:hover:not([disabled]),
+  &:focus-visible:not([disabled]) {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+}
+
+details.secondary {
+  height: auto;
+  cursor: default;
+  user-select: text;
+
+  summary {
+    cursor: pointer;
+    user-select: none;
+  }
+}
+
+.tertiary {
+  @extend .button;
+
+  background-color: transparent;
+  text-decoration: underline;
+
+  &:hover,
+  &:focus {
+    text-decoration: none;
+  }
+}
+
+.isDisabled {
+  cursor: not-allowed !important;
+  pointer-events: none;
+
+  color: rgb(170, 170, 170);
+}
+
+.primaryDisabled {
+  @extend .primary;
+  @extend .isDisabled;
+}
+
+.icon {
+  @extend .button;
+
+  background: none;
+  border: none;
+  transition:
+    color 1s ease,
+    background 1s ease;
+  color: currentColor;
+
+  &:hover:not([disabled]),
+  &:focus-visible:not([disabled]),
+  &.isDisabled {
+    background: none;
+    opacity: 0.5;
+  }
+  &:active:not([disabled]) {
+    background-color: $button-primary-background;
+    color: $button-primary-color;
+    transition: none;
+  }
+
+  &:disabled {
+    @extend .isDisabled;
+  }
+
+  > svg {
+    margin: 0;
+  }
+}
+
+.icon.small {
+  margin-left: 0.5rem;
+  padding: 0.2rem;
+  height: auto;
+}
+
+.toggle {
+  transition: none;
+  &:active:not([disabled]) {
+    background: none;
+  }
+  &:hover:not([disabled]),
+  &:focus-visible:not([disabled]) {
+    opacity: 1;
+    background-color: rgba(239, 239, 239, 0.8);
+  }
+}
+
+.textarea {
+  background-color: $main-background-color;
+  border: 1px solid $main-color;
+  padding: 1rem;
+}

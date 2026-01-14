@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { useRouteLoaderData } from 'react-router'
 
@@ -9,9 +10,12 @@ import useFetchData, { useMutateData } from './graphql.js'
 import {
   logoutMutation,
   unsetAuthTokenMutation,
-} from '../components/Credentials.graphql'
-import { createTag, getTags, updateTag } from '../components/Tag.graphql'
-import { useTranslation } from 'react-i18next'
+} from '../components/organisms/Credentials.graphql'
+import {
+  createTag,
+  getTags,
+  updateTag,
+} from '../components/organisms/Tag.graphql'
 
 /**
  * @returns {string|null}
@@ -198,10 +202,10 @@ export function useLogout() {
 /**
  * @returns {(user: User) => string}
  */
-export function useDisplayName () {
+export function useDisplayName() {
   const { t } = useTranslation()
 
-  return function displayName (user = {}) {
+  return function displayName(user = {}) {
     if (user.deletedAt) {
       return t('user.account.isDeleted.displayName')
     }

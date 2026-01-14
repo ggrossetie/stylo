@@ -16,11 +16,11 @@ import { getUserProfile } from '../helpers/user.js'
 import { useDiscourseFeed } from '../hooks/feed.js'
 import { usePreferenceItem } from '../hooks/user.js'
 
-import CommunityAlerts from '../components/CommunityAlerts.jsx'
-import DevModeAlert from '../components/DevModeAlert.jsx'
-import Footer from '../components/Footer.jsx'
-import Header from '../components/Header.jsx'
-import SkipLinks from '../components/SkipLinks.jsx'
+import CommunityAlerts from '../components/molecules/CommunityAlerts.jsx'
+import DevModeAlert from '../components/molecules/DevModeAlert.jsx'
+import Footer from '../components/molecules/Footer.jsx'
+import Header from '../components/molecules/Header.jsx'
+import SkipLinks from '../components/molecules/SkipLinks.jsx'
 
 /**
  * Loads user data from localStorage JWT

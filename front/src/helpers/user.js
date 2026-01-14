@@ -1,6 +1,6 @@
 import { executeQuery } from './graphQL.js'
 
-import { getFullUserProfile as getUserProfileQuery } from '../components/Credentials.graphql'
+import { getFullUserProfile as getUserProfileQuery } from '../components/organisms/Credentials.graphql'
 
 /**
  * @param sessionToken
