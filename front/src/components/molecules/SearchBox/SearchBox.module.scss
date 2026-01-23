@@ -1,0 +1,35 @@
+.searchBox {
+  position: relative;
+  width: 100%;
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.75rem;
+  color: #6c757d;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.input {
+  padding-left: 2.5rem !important;
+  padding-right: 2.5rem !important;
+  width: 100%;
+}
+
+.clearButton {
+  position: absolute;
+  right: 0.5rem;
+  z-index: 2;
+  padding: 0.25rem;
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+}

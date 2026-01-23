@@ -1,0 +1,77 @@
+.tagItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem;
+  border: 1px solid #e9ecef;
+  border-radius: 0.25rem;
+  background-color: white;
+  transition: all 0.2s ease;
+
+  &.interactive {
+    cursor: pointer;
+
+    &:hover {
+      border-color: #dee2e6;
+      background-color: #f8f9fa;
+    }
+  }
+
+  &.selected {
+    border-color: #007bff;
+    background-color: #e7f3ff;
+  }
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  cursor: inherit;
+  margin: 0;
+}
+
+.checkbox {
+  margin-right: 0.5rem;
+}
+
+.name {
+  flex: 1;
+  font-weight: 500;
+  color: #212529;
+}
+
+.colorChip {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-left: 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.actions {
+  display: flex;
+  gap: 0.25rem;
+  margin-left: 0.5rem;
+}
+
+.tagBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  position: relative;
+
+  .removeButton {
+    margin-left: 0.25rem;
+    padding: 0;
+    min-width: auto;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+  }
+}
