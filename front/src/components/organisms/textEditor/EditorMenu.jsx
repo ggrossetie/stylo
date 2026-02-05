@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import {
   BookMarked,
+  Database,
   History,
   Maximize2,
   MessageSquare,
@@ -11,11 +12,12 @@ import {
 } from 'lucide-react'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useRouteLoaderData } from 'react-router'
+import { useRouteLoaderData } from 'react-router'
 
 import ArticleBibliography from '../bibliography/ArticleBibliography.jsx'
 import Export from '../export/Export.jsx'
 import ArticleMetadata from '../metadata/ArticleMetadata.jsx'
+import ArticleData from '../nakala/ArticleData.jsx'
 import ArticleTableOfContents from './ArticleTableOfContents.jsx'
 import CollaborativeVersions from './CollaborativeVersions.jsx'
 import EditorMenuItem from './EditorMenuItem.jsx'
@@ -69,6 +71,7 @@ export default function EditorMenu({ articleId, versionId }) {
               showTitle={true}
             />
           )}
+          {activeMenu === 'data' && <ArticleData />}
         </div>
       )}
       <div className={styles.menu}>
@@ -114,6 +117,13 @@ export default function EditorMenu({ articleId, versionId }) {
             minimized={minimized}
             icon={<Printer />}
             text={t('export.title')}
+          />
+          <EditorMenuItem
+            onClick={toggleActiveMenu('data')}
+            selected={activeMenu === 'data'}
+            minimized={minimized}
+            icon={<Database />}
+            text={t('data.title')}
           />
           <EditorMenuItem
             onClick={handleAnnotate}
