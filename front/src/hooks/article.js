@@ -100,9 +100,6 @@ export function useArticlesActions({ activeWorkspaceId }) {
     variables: {
       workspaceId: activeWorkspaceId,
       isPersonalWorkspace: !activeWorkspaceId,
-      filter: {
-        workspaceId: activeWorkspaceId,
-      },
     },
   })
   const create = async (createInput) => {
@@ -141,9 +138,6 @@ export function useArticleActions({ articleId, activeWorkspaceId }) {
     variables: {
       workspaceId: activeWorkspaceId,
       isPersonalWorkspace: !activeWorkspaceId,
-      filter: {
-        workspaceId: activeWorkspaceId,
-      },
     },
   })
   const copy = async (toUserId) => {

@@ -6,6 +6,7 @@ const Article = require('../models/article.js')
 const User = require('../models/user.js')
 const Corpus = require('../models/corpus.js')
 const Workspace = require('../models/workspace.js')
+const Tag = require('../models/tag.js')
 const Version = require('../models/version.js')
 
 const isUser = require('../policies/isUser.js')
@@ -371,25 +372,59 @@ module.exports = {
       const { userId } = isUser(args, context)
       let filterIds = null
 
-      // prefilter by articles contained in a workspace or corpus
-      if (args.filter?.workspaceId) {
+      // prefilter by articles contained in a workspace and/or corpus
+      // REMIND: we should probably check that the user has access to the corpus?
+      if (args.filter?.corpusId) {
+        const corpus = await Corpus.findById(args.filter?.corpusId)
+        if (!corpus) {
+          // QUESTION: should we return an error to indicate that the corpus does not exist?
+          return []
+        }
+        if (args.filter?.workspaceId) {
+          if (corpus.workspace !== args.filter?.workspaceId) {
+            throw new Error('Invalid filter!')
+          }
+        }
+        filterIds = corpus.articles.map((a) => a.article)
+      } else if (args.filter?.workspaceId) {
+        // REMIND: we should probably check that the user has access to the workspace?
         const workspace = await Workspace.findById(
           args.filter.workspaceId,
           'articles'
         ).lean()
+        if (!workspace) {
+          // QUESTION: should we return an error to indicate that the workspace does not exist?
+          return []
+        }
         filterIds = [...workspace.articles]
       }
+      // REMIND: we should probably check that the user has access to the tag?
+      const tagFilter = args.filter?.tagId
+        ? {
+            tags: { $in: args.filter.tagId },
+          }
+        : {}
 
       return Article.getArticles({
         filter: !Array.isArray(filterIds)
           ? {
-              $or: [
-                { owner: userId },
-                { contributors: { $elemMatch: { user: userId } } },
+              $and: [
+                {
+                  $or: [
+                    { owner: userId },
+                    { contributors: { $elemMatch: { user: userId } } },
+                  ],
+                },
+                tagFilter,
               ],
             }
           : {
-              _id: { $in: filterIds },
+              $and: [
+                {
+                  _id: { $in: filterIds },
+                },
+                tagFilter,
+              ],
             },
         loaders: context.loaders,
       })

@@ -28,9 +28,6 @@ export function ArticlesSelector({ corpusArticles, onUpdate }) {
       variables: {
         workspaceId: activeWorkspaceId,
         isPersonalWorkspace: !activeWorkspaceId,
-        filter: {
-          workspaceId: activeWorkspaceId,
-        },
       },
     },
     {

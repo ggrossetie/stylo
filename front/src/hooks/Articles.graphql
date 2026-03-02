@@ -3,7 +3,6 @@
 query getWorkspaceArticles(
   $workspaceId: ID
   $isPersonalWorkspace: Boolean!
-  $filter: FilterCorpusInput
 ) {
   tags {
     _id
@@ -20,7 +19,7 @@ query getWorkspaceArticles(
     description
   }
 
-  corpus(filter: $filter) {
+  corpus(filter: {workspaceId: $workspaceId}) {
     _id
     name
     articles {
@@ -30,7 +29,7 @@ query getWorkspaceArticles(
     }
   }
 
-  articles(filter: $filter) {
+  articles(filter: {workspaceId: $workspaceId}) {
     _id
     title
     updatedAt

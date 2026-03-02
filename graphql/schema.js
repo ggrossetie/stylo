@@ -417,6 +417,15 @@ input FilterCorpusInput {
   corpusId: ID
 }
 
+input ArticlesFilterInput {
+  "Filter articles belonging to a specific corpus (by corpus ID)"
+  corpusId: ID
+  "Filter articles belonging to a specific workspace (by workspace ID)"
+  workspaceId: ID
+  "Filter articles belonging to a specific tag (by tag ID)"
+  tagId: ID
+}
+
 type Query {
   """
   Get authenticated user info.
@@ -431,8 +440,13 @@ type Query {
   "Fetch tagged articles for a given user"
   tag(user: ID, tag: ID!): Tag
 
-  "Fetch articles, optionally from a given Workspace"
-  articles (user: ID, filter: FilterCorpusInput): [Article]
+  """
+  Fetch articles accessible to the authenticated user: articles they own or contribute to.
+  When a workspaceId filter is provided, returns all articles in that workspace instead.
+  When a tagId filter is provided, restricts results to articles with that tag.
+  Requires authentication.
+  """
+  articles (user: ID, filter: ArticlesFilterInput): [Article]
 
   "Fetch article info [need to have access to this article]"
   article(user: ID, article: ID!): Article

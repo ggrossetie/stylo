@@ -37,9 +37,6 @@ export default function Articles() {
       variables: {
         workspaceId: activeWorkspaceId,
         isPersonalWorkspace: !activeWorkspaceId,
-        filter: {
-          workspaceId: activeWorkspaceId,
-        },
       },
     },
     {

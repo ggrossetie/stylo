@@ -288,8 +288,14 @@ type Mutation {
 type Query {
   "Fetch article info [need to have access to this article]"
   article(article: ID!, user: ID): Article
-  "Fetch articles, optionally from a given Workspace"
-  articles(filter: FilterCorpusInput, user: ID): [Article]
+  """
+
+  Fetch articles accessible to the authenticated user: articles they own or contribute to.
+  When a workspaceId filter is provided, returns all articles in that workspace instead.
+  When a tagId filter is provided, restricts results to articles with that tag.
+  Requires authentication.
+  """
+  articles(filter: ArticlesFilterInput, user: ID): [Article]
   "Get a list of corpus with an optional filter"
   corpus(filter: FilterCorpusInput): [Corpus!]
   getUser(filter: UserFilter): User
@@ -500,6 +506,15 @@ input ArticleVersionInput {
   major: Boolean
   message: String
   userId: ID!
+}
+
+input ArticlesFilterInput {
+  "Filter articles belonging to a specific corpus (by corpus ID)"
+  corpusId: ID
+  "Filter articles belonging to a specific tag (by tag ID)"
+  tagId: ID
+  "Filter articles belonging to a specific workspace (by workspace ID)"
+  workspaceId: ID
 }
 
 input CreateArticleInput {
