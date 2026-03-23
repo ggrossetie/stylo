@@ -1,5 +1,7 @@
 import clsx from 'clsx'
 
+import { Badge } from '../../atoms/index.js'
+
 import styles from './EditorMenuItem.module.scss'
 
 export default function EditorMenuItem({
@@ -8,6 +10,7 @@ export default function EditorMenuItem({
   minimized,
   selected,
   external = false,
+  counter = 0,
   onClick,
 }) {
   return (
@@ -17,6 +20,9 @@ export default function EditorMenuItem({
       title={text}
     >
       {icon}
+      {counter > 0 && (
+        <Badge label={counter} color={'#E91E63'} className={styles.badge} />
+      )}
       <span
         className={clsx(
           styles.text,

@@ -6,11 +6,28 @@
   background: none;
   border-radius: 0.75rem;
   padding: 0.5rem 0.75rem;
+  position: relative;
 }
 
 .selected {
   background-color: #636363;
   color: white;
+}
+
+.badge {
+  color: white;
+  border-radius: 50%;
+  border: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  font-size: 0.75rem;
+  line-height: 0.75;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: -0.225rem;
+  right: -0.255rem;
 }
 
 .text {

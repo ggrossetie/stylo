@@ -63,6 +63,7 @@ export default function EditorMenu({ articleId, onChange }) {
           minimized={minimized}
           icon={<TableOfContents />}
           text={t('toc.title')}
+          counter={2}
         />
         <EditorMenuItem
           onClick={toggleActiveMenu('metadata')}
@@ -77,6 +78,7 @@ export default function EditorMenu({ articleId, onChange }) {
           minimized={minimized}
           icon={<BookKey />}
           text={t('bibliography.title')}
+          counter={6}
         />
         {enableNakala && (
           <EditorMenuItem
@@ -93,6 +95,7 @@ export default function EditorMenu({ articleId, onChange }) {
           minimized={minimized}
           icon={<History />}
           text={t('versions.title')}
+          counter={1}
         />
         <EditorMenuItem
           onClick={toggleActiveMenu('export')}
@@ -108,6 +111,7 @@ export default function EditorMenu({ articleId, onChange }) {
           icon={<MessageSquareShare />}
           text={t('annotate.title')}
           external={true}
+          counter={12}
         />
       </div>
     </div>
