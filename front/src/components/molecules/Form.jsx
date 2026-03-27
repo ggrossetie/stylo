@@ -117,11 +117,73 @@ function CustomCheckboxesWidget(properties) {
   )
 }
 
+function ArrayFieldItemButtonsTemplate(props) {
+  console.log({ props })
+  const inlineRemoveButton = true
+  const removeItemTitle = 'form.itemRemove'
+  return (
+    <Button
+      icon={inlineRemoveButton}
+      type="button"
+      className={[
+        styles.removeButton,
+        inlineRemoveButton ? styles.inlineRemoveButton : '',
+      ].join(' ')}
+      tabIndex={-1}
+      disabled={props.disabled || props.readonly}
+      onClick={(event) => props.handleRemoveItem(event, props.index)}
+    >
+      <Trash />
+      {inlineRemoveButton ? (
+        ''
+      ) : (
+        <Translation ns="form" useSuspense={false}>
+          {(t) => t(removeItemTitle)}
+        </Translation>
+      )}
+    </Button>
+  )
+}
+
+function ArrayFieldItemTemplate(props) {
+  console.log({ props })
+  const { children, itemKey, itemUiSchema, className } = props
+  console.log('ArrayFieldItemTemplate', { props })
+  console.log({ butpros: props.buttonsProps })
+  return (
+    <div
+      id={itemKey}
+      key={itemKey}
+      className={clsx(
+        className,
+        'can-add-remove',
+        itemUiSchema['ui:className']
+      )}
+    >
+      {children}
+      {props.registry.templates.ArrayFieldItemButtonsTemplate(props)}
+    </div>
+  )
+}
+
+function ArrayFieldTemplate(props) {
+  return (
+    <div>
+      {props.items.map((element) => element.children)}
+      {props.canAdd && (
+        <button type="button" onClick={props.onAddClick}></button>
+      )}
+    </div>
+  )
+}
+
 /**
  * @param {ArrayFieldTemplateProps} properties
  * @returns {JSX.Element}
  */
+/*
 function ArrayFieldTemplate(properties) {
+  console.log({ properties })
   const addItemTitle =
     properties.uiSchema['ui:add-item-title'] ?? 'form.itemAdd'
   const removeItemTitle =
@@ -132,8 +194,8 @@ function ArrayFieldTemplate(properties) {
   const items = [...properties.items].reverse()
   return (
     <fieldset
-      className={clsx(styles.fieldset, styles.array)}
-      key={properties.key}
+      className={clsx(styles.fieldset, styles.rjsfFieldArray)}
+      key={properties.itemKey}
     >
       {title && (
         <Translation ns="form" useSuspense={false}>
@@ -154,48 +216,13 @@ function ArrayFieldTemplate(properties) {
           </Translation>
         </Button>
       )}
-      {items &&
-        items.map((element) => {
-          return (
-            <div
-              id={element.key}
-              key={element.key}
-              className={clsx(
-                element.className,
-                'can-add-remove',
-                element?.uiSchema?.['ui:className']
-              )}
-            >
-              {element.children}
-              {element.hasRemove && (
-                <Button
-                  icon={inlineRemoveButton}
-                  type="button"
-                  className={[
-                    styles.removeButton,
-                    inlineRemoveButton ? styles.inlineRemoveButton : '',
-                  ].join(' ')}
-                  tabIndex={-1}
-                  disabled={element.disabled || element.readonly}
-                  onClick={element.onDropIndexClick(element.index)}
-                >
-                  <Trash />
-                  {inlineRemoveButton ? (
-                    ''
-                  ) : (
-                    <Translation ns="form" useSuspense={false}>
-                      {(t) => t(removeItemTitle)}
-                    </Translation>
-                  )}
-                </Button>
-              )}
-            </div>
-          )
-        })}
+      {items?.map((element) => {
+        return <div key={element.props.itemKey}>{element.children}</div>
+      })}
     </fieldset>
   )
 }
-
+*/
 function FieldTemplate(properties) {
   const {
     id,
@@ -229,104 +256,6 @@ function FieldTemplate(properties) {
       {help}
     </div>
   )
-}
-
-/**
- * @param {ObjectFieldTemplateProps} properties
- * @param {Record<string, unknown>} context
- * @returns {JSX.Element|undefined}
- */
-function ObjectFieldTemplate(properties, context) {
-  if (properties.uiSchema['ui:groups']) {
-    const groups = properties.uiSchema['ui:groups']
-    const groupedElements = groups.map(
-      ({ fields, title, importFromArticle }) => {
-        const elements = fields
-          .filter(
-            (field) =>
-              (properties.uiSchema[field] || {})['ui:widget'] !== 'hidden'
-          )
-          .map((field) => {
-            const element = properties.properties.find(
-              (element) => element.name === field
-            )
-
-            if (!element) {
-              console.error(
-                'Field configuration not found for "%s" in \'ui:groups\' "%s" — part of %o',
-                field,
-                title || '',
-                fields
-              )
-            }
-
-            return [field, element]
-          })
-
-        if (elements && elements.length > 0) {
-          return (
-            <fieldset className={styles.fieldset} key={fields.join('-')}>
-              {title && (
-                <legend className={styles.legend}>
-                  <Translation ns="form" useSuspense={false}>
-                    {(t) => <>{t(title)}</>}
-                  </Translation>
-                  {importFromArticle && (
-                    <CorpusArticleMetadataSelector
-                      corpusId={context.corpusId}
-                      onSelectedItem={(item) => {
-                        const { $id: id } = properties.idSchema
-                        const partialMetadata = Object.keys(
-                          item.workingVersion.metadata
-                        )
-                          .filter((key) => fields.includes(key))
-                          .reduce((obj, key) => {
-                            obj[key] = item.workingVersion.metadata[key]
-                            return obj
-                          }, {})
-                        properties.formContext.partialUpdate({
-                          id,
-                          value: partialMetadata,
-                        })
-                      }}
-                    />
-                  )}
-                </legend>
-              )}
-              {elements.map(([field, element]) => {
-                return element ? (
-                  <Fragment key={field}>{element.content}</Fragment>
-                ) : (
-                  <p key={field} className={styles.fieldHasNoElementError}>
-                    Field <code>{field}</code> defined in <code>ui:groups</code>{' '}
-                    is not an entry of <code>data-schema.json[properties]</code>{' '}
-                    object.
-                  </p>
-                )
-              })}
-            </fieldset>
-          )
-        }
-      }
-    )
-
-    return <>{groupedElements}</>
-  }
-
-  if (properties) {
-    const autocomplete = properties.uiSchema['ui:autocomplete']
-    return (
-      <Fragment key={properties.key}>
-        {properties.description}
-        {autocomplete === 'IsidoreAuthorSearch' && (
-          <IsidoreAuthorAPIAutocompleteField {...properties} />
-        )}
-        {properties.properties.map((element) => (
-          <Fragment key={element.name}>{element.content}</Fragment>
-        ))}
-      </Fragment>
-    )
-  }
 }
 
 const customFields = {
@@ -378,11 +307,9 @@ export default function SchemaForm({
 
   const customTemplates = useMemo(
     () => ({
-      ObjectFieldTemplate: (properties) =>
-        ObjectFieldTemplate(properties, context),
       FieldTemplate,
       BaseInputTemplate,
-      ArrayFieldTemplate,
+      ArrayFieldItemButtonsTemplate,
     }),
     [context]
   )
