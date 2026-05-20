@@ -8,13 +8,19 @@ import ArticleMetadata from '../metadata/ArticleMetadata.jsx'
 import ArticleData from '../nakala/ArticleData.jsx'
 import ArticleTableOfContents from './ArticleTableOfContents.jsx'
 import CollaborativeVersions from './CollaborativeVersions.jsx'
-
 import styles from './EditorMenu.module.scss'
+import EditorValidation from './EditorValidation.jsx'
 
 export default function EditorMenuContent({
   articleId,
   versionId,
   activeMenu,
+  validationDiagnostics = [],
+  isValidating = false,
+  hasValidated = false,
+  onValidate,
+  onClearDiagnostics,
+  onNavigateToDiagnostic,
 }) {
   const { article } = useRouteLoaderData('article')
   const { t } = useTranslation()
@@ -50,6 +56,16 @@ export default function EditorMenuContent({
           articleId={articleId}
           selectedVersion={versionId}
           showTitle={true}
+        />
+      )}
+      {activeMenu === 'validation' && (
+        <EditorValidation
+          diagnostics={validationDiagnostics}
+          isValidating={isValidating}
+          hasValidated={hasValidated}
+          onValidate={onValidate}
+          onClear={onClearDiagnostics}
+          onNavigate={onNavigateToDiagnostic}
         />
       )}
     </div>

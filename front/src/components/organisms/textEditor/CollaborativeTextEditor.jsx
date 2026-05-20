@@ -15,6 +15,7 @@ import {
 import { useBibliographyCompletion } from '../../../hooks/bibliography.js'
 import { useCollaboration } from '../../../hooks/collaboration.js'
 import { useStyloExportPreview } from '../../../hooks/stylo-export.js'
+import { useMarkdownValidator } from '../../../hooks/useMarkdownValidator.js'
 import { Alert, Loading, MonacoEditor } from '../../molecules/index.js'
 import { onDropIntoEditor } from '../bibliography/support.js'
 import defaultEditorOptions from '../monaco/options.js'
@@ -41,12 +42,14 @@ import styles from './CollaborativeTextEditor.module.scss'
  * @param {string} props.articleId
  * @param {string|undefined} props.versionId
  * @param {'write' | 'compare' | 'preview'} props.mode
+ * @param {(api: {validate: () => Promise<void>, clearDiagnostics: () => void, diagnostics: Array, isValidating: boolean}) => void} [props.onValidatorReady]
  * @returns {Element}
  */
 export default function CollaborativeTextEditor({
   articleId,
   versionId,
   mode,
+  onValidatorReady,
 }) {
   const { yText, awareness, websocketStatus, dynamicStyles } = useCollaboration(
     { articleId, versionId }
@@ -86,6 +89,14 @@ export default function CollaborativeTextEditor({
 
   const dispatch = useDispatch()
   const editorRef = useRef(null)
+  const {
+    validate,
+    diagnostics,
+    isValidating,
+    hasValidated,
+    clearDiagnostics,
+    navigateTo,
+  } = useMarkdownValidator(editorRef)
   const editorCursorPosition = useSelector(
     (state) => state.editorCursorPosition,
     shallowEqual
@@ -204,6 +215,25 @@ export default function CollaborativeTextEditor({
       bibliographyCompletionProvider.bibTeXEntries = bibliography.entries
     }
   }, [bibliography])
+
+  useEffect(() => {
+    onValidatorReady?.({
+      validate,
+      diagnostics,
+      isValidating,
+      hasValidated,
+      clearDiagnostics,
+      navigateTo,
+    })
+  }, [
+    validate,
+    diagnostics,
+    isValidating,
+    hasValidated,
+    clearDiagnostics,
+    navigateTo,
+    onValidatorReady,
+  ])
 
   useEffect(() => {
     const line = editorCursorPosition.lineNumber
