@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router'
 
 import { executeQuery } from '../../helpers/graphQL.js'
@@ -51,6 +51,30 @@ export default function CollaborativeEditor(props) {
     'article'
   )
 
+  const [validationState, setValidationState] = useState({
+    diagnostics: [],
+    isValidating: false,
+    hasValidated: false,
+  })
+  const validatorApiRef = useRef(null)
+
+  const handleValidatorReady = useCallback(({ validate, diagnostics, isValidating, hasValidated, clearDiagnostics, navigateTo }) => {
+    validatorApiRef.current = { validate, clearDiagnostics, navigateTo }
+    setValidationState({ diagnostics, isValidating, hasValidated })
+  }, [])
+
+  const handleValidate = useCallback(() => {
+    validatorApiRef.current?.validate()
+  }, [])
+
+  const handleClearDiagnostics = useCallback(() => {
+    validatorApiRef.current?.clearDiagnostics()
+  }, [])
+
+  const handleNavigateTo = useCallback((line, column) => {
+    validatorApiRef.current?.navigateTo(line, column)
+  }, [])
+
   const handleActiveMenuChange = useCallback(
     (value) => {
       setActiveMenu(value)
@@ -66,6 +90,7 @@ export default function CollaborativeEditor(props) {
             mode={mode}
             articleId={articleId}
             versionId={versionId}
+            onValidatorReady={handleValidatorReady}
           />
           <ArticleStats />
         </div>
@@ -73,6 +98,12 @@ export default function CollaborativeEditor(props) {
           articleId={articleId}
           versionId={versionId}
           activeMenu={activeMenu}
+          validationDiagnostics={validationState.diagnostics}
+          isValidating={validationState.isValidating}
+          hasValidated={validationState.hasValidated}
+          onValidate={handleValidate}
+          onClearDiagnostics={handleClearDiagnostics}
+          onNavigateToDiagnostic={handleNavigateTo}
         />
       </div>
 

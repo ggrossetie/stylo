@@ -6,6 +6,7 @@ import {
   History,
   MessageSquareShare,
   Printer,
+  ShieldCheck,
   TableOfContents,
   TextCursorInput,
 } from 'lucide-react'
@@ -102,6 +103,13 @@ export default function EditorMenu({ articleId, onChange }) {
           minimized={minimized}
           icon={<Printer />}
           text={t('export.title')}
+        />
+        <EditorMenuItem
+          onClick={toggleActiveMenu('validation')}
+          selected={activeMenu === 'validation'}
+          minimized={minimized}
+          icon={<ShieldCheck />}
+          text={t('validation.title')}
         />
         <EditorMenuItem
           onClick={handleAnnotate}

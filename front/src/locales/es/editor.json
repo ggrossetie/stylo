@@ -50,5 +50,18 @@
   "types": {
     "block": "Bloque",
     "inline": "Elemento"
+  },
+  "validation": {
+    "clear": "Limpiar",
+    "empty": "Haga clic en «Validar» para analizar el documento.",
+    "errorSummary_one": "{{count}} error encontrado",
+    "errorSummary_other": "{{count}} errores encontrados",
+    "navigateTo": "Ir a la línea {{line}}",
+    "run": "Validar",
+    "running": "Validando…",
+    "success": "No se encontraron problemas",
+    "title": "Validación",
+    "warningSummary_one": "{{count}} advertencia",
+    "warningSummary_other": "{{count}} advertencias"
   }
 }
