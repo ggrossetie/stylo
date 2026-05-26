@@ -2,11 +2,13 @@
  * Minimal parser for pandoc-style fenced divs `:::{.class attr="val"}`.
  * remark-directive does not correctly handle multiple consecutive nested
  * containers at the same `:::` depth, so we parse the structure ourselves.
- *
  * @typedef {{ type: 'div', className: string, attrs: Record<string, string>, startLine: number, endLine: number|null, children: DivNode[] }} DivNode
  */
 
-/** @param {string} attrsStr - raw content inside `{...}` */
+/**
+ * @param {string} attrsStr - raw content inside `{...}`
+ * @returns {Record<string, string>}
+ */
 function parseAttrs(attrsStr) {
   const attrs = {}
   const attrRx = /([a-zA-Z0-9_-]+)="([^"]*)"/g
@@ -24,7 +26,6 @@ function parseAttrs(attrsStr) {
 /**
  * Parse pandoc fenced divs from raw markdown, returning a tree
  * that correctly reflects the nesting based on stack tracking.
- *
  * @param {string} markdown
  * @returns {DivNode[]} top-level div nodes
  */

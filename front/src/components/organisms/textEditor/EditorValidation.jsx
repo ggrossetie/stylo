@@ -1,4 +1,4 @@
-import { AlertCircle, AlertTriangle, ShieldCheck } from 'lucide-react'
+import { AlertCircle, AlertTriangle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '../../atoms/index.js'

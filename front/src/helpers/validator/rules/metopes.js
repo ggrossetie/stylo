@@ -36,12 +36,18 @@ const KNOWN_INLINE_CLASSES = new Set([
   'aut',
 ])
 
-/** @param {string} value */
+/**
+ * @param {string} value
+ * @returns {string[]}
+ */
 function parseClasses(value) {
   return (value || '').split(/\s+/).filter((c) => c.startsWith('.')).map((c) => c.slice(1))
 }
 
-/** @param {object} node */
+/**
+ * @param {object} node
+ * @returns {boolean}
+ */
 function hasImage(node) {
   let found = false
   visit(node, 'image', () => {

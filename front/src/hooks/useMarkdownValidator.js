@@ -5,7 +5,10 @@ import { VALIDATORS } from '../helpers/validator/index.js'
 
 const MARKER_OWNER = 'stylo-validator'
 
-/** @param {'error'|'warning'} severity */
+/**
+ * @param {'error'|'warning'} severity
+ * @returns {number}
+ */
 function toMonacoSeverity(severity) {
   return severity === 'error'
     ? monaco.MarkerSeverity.Error

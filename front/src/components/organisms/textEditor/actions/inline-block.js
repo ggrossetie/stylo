@@ -69,13 +69,9 @@ export default function createInlineBlockCommand(
     contentAfter = ']',
     forceMoveMarkers = true,
     selectionState = defaultSelectionState,
-  } = {}
-) {
-  /**
-   * @param {ICodeEditor} editor
-   * @param {TFunction} t
-   */
-  function run(editor, t) {
+  } = {}) {
+  /** @param {ICodeEditor} editor */
+  function run(editor) {
     const selection = editor.getSelection()
     const selectionText = editor.getModel().getValueInRange(selection) || ''
 
@@ -87,8 +83,7 @@ export default function createInlineBlockCommand(
         attrs,
         contentBefore,
         contentAfter,
-      },
-      { t }
+      }
     )
 
     editor.executeEdits(
@@ -181,9 +176,7 @@ export function createEnclosingTextFormattingEdit({
 /**
  * Wraps the selection with a Pandoc span carrying a CSS class attribute,
  * e.g. `[text]{.smallcaps}`.
- *
  * @param {{ selection: Selection, selectionText: string, className: string, attrs: {[key: string]: string}, preamble: string, contentBefore: string, contentAfter: string }} params
- * @param {{ t: TFunction }?} helpers
  * @returns {EditResult}
  */
 export function createInlineBlockEdit(
@@ -194,8 +187,7 @@ export function createInlineBlockEdit(
     attrs,
     contentBefore = '[',
     contentAfter = ']',
-  },
-  { t } = {}
+  }
 ) {
   const attributes = blockAttributes({ classNames: [className], attrs })
   const hasSelectionText = selectionText.length > 1

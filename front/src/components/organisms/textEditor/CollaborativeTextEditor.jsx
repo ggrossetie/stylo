@@ -42,7 +42,7 @@ import styles from './CollaborativeTextEditor.module.scss'
  * @param {string} props.articleId
  * @param {string|undefined} props.versionId
  * @param {'write' | 'compare' | 'preview'} props.mode
- * @param {(api: {validate: Function, clearDiagnostics: Function, diagnostics: Array, isValidating: boolean}) => void} [props.onValidatorReady]
+ * @param {(api: {validate: () => Promise<void>, clearDiagnostics: () => void, diagnostics: Array, isValidating: boolean}) => void} [props.onValidatorReady]
  * @returns {Element}
  */
 export default function CollaborativeTextEditor({

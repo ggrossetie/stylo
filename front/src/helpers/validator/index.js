@@ -19,7 +19,7 @@ function preprocessPandocDivs(markdown) {
 }
 
 /**
- * @param {Array<Function>} rules
+ * @param {Array<(tree: object, markdown: string, diagnostics: Array) => void>} rules
  * @returns {(markdown: string) => Promise<Array>}
  */
 export function createValidator(rules) {
