@@ -7,6 +7,7 @@ import {
   figureMustContainImage,
   indexEntryRequiresIdref,
   prenoteRequiresOrigin,
+  sponsorTextOnly,
   translationNotNested,
   translationRequiresLang,
   unknownBlockClass,
@@ -107,6 +108,44 @@ just text
     expect(d.severity).toBe('error')
     expect(d.code).toBe('figure-missing-image')
     expect(d.line).toBe(1)
+  })
+})
+
+// ─── sponsorTextOnly ─────────────────────────────────────────────────────────
+
+describe('sponsorTextOnly()', () => {
+  test('no diagnostic for plain text', () => {
+    const md = `:::{.sponsor}
+Texte du sponsor
+:::`
+    expect(run(sponsorTextOnly, md)).toHaveLength(0)
+  })
+
+  test('no diagnostic for text with inline markup', () => {
+    const md = `:::{.sponsor}
+**Sponsor** en *italique* avec [lien](https://example.com)
+:::`
+    expect(run(sponsorTextOnly, md)).toHaveLength(0)
+  })
+
+  test('error when sponsor contains an image', () => {
+    const md = `:::{.sponsor}
+![logo](logo.png)
+:::`
+    const [d] = run(sponsorTextOnly, md)
+    expect(d.severity).toBe('error')
+    expect(d.code).toBe('sponsor-text-only')
+  })
+
+  test('error when sponsor contains a nested block', () => {
+    const md = `:::{.sponsor}
+:::{.figure}
+![logo](logo.png)
+:::
+:::`
+    const [d] = run(sponsorTextOnly, md)
+    expect(d.severity).toBe('error')
+    expect(d.code).toBe('sponsor-text-only')
   })
 })
 

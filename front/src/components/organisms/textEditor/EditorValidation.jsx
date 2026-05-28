@@ -78,7 +78,12 @@ export default function EditorValidation({
                     <AlertTriangle size={14} />
                   )}
                 </span>
-                <span className={styles.message}>{d.message}</span>
+                <span className={styles.message}>
+                  {t(`validation.rules.${d.code}`, {
+                    ...d.data,
+                    defaultValue: d.message,
+                  })}
+                </span>
                 <span className={styles.location}>:{d.line}</span>
               </li>
             ))}

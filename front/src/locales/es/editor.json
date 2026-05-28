@@ -62,6 +62,16 @@
     "success": "No se encontraron problemas",
     "title": "Análisis",
     "warningSummary_one": "{{count}} advertencia",
-    "warningSummary_other": "{{count}} advertencias"
+    "warningSummary_other": "{{count}} advertencias",
+    "rules": {
+      "unknown-block-class": "Clase de bloque desconocida: \".{{cls}}\"",
+      "unknown-inline-class": "Clase en línea desconocida: \".{{cls}}\"",
+      "figure-missing-image": "Un bloque figure debe contener una imagen `![caption](url)`",
+      "sponsor-text-only": "Un bloque sponsor solo puede contener texto (se permiten marcas tipográficas)",
+      "prenote-missing-origin": "Un bloque prenote debe tener un atributo `origin` (aut, pbl o tr)",
+      "translation-missing-lang": "Un bloque translation debe tener un atributo `lang`",
+      "translation-nesting-invalid": "Los bloques translation no pueden anidarse",
+      "index-entry-missing-idref": "Una entrada de índice debe tener un atributo `idref`"
+    }
   }
 }

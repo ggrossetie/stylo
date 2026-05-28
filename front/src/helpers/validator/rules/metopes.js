@@ -41,7 +41,10 @@ const KNOWN_INLINE_CLASSES = new Set([
  * @returns {string[]}
  */
 function parseClasses(value) {
-  return (value || '').split(/\s+/).filter((c) => c.startsWith('.')).map((c) => c.slice(1))
+  return (value || '')
+    .split(/\s+/)
+    .filter((c) => c.startsWith('.'))
+    .map((c) => c.slice(1))
 }
 
 /**
@@ -74,6 +77,7 @@ export function unknownBlockClass(tree, _markdown, diagnostics) {
           severity: 'warning',
           message: `Classe de bloc inconnue : ".${cls}"`,
           code: 'unknown-block-class',
+          data: { cls },
         })
       }
     }
@@ -93,7 +97,10 @@ export function unknownInlineClass(tree, markdown, diagnostics) {
     let match
     while ((match = spanRx.exec(line)) !== null) {
       const attrStr = match[2]
-      const classes = attrStr.split(/\s+/).filter((t) => t.startsWith('.')).map((t) => t.slice(1))
+      const classes = attrStr
+        .split(/\s+/)
+        .filter((t) => t.startsWith('.'))
+        .map((t) => t.slice(1))
       for (const cls of classes) {
         if (cls && !KNOWN_INLINE_CLASSES.has(cls)) {
           diagnostics.push({
@@ -104,6 +111,7 @@ export function unknownInlineClass(tree, markdown, diagnostics) {
             severity: 'warning',
             message: `Classe inline inconnue : ".${cls}"`,
             code: 'unknown-inline-class',
+            data: { cls },
           })
         }
       }
@@ -138,6 +146,45 @@ export function figureMustContainImage(tree, _markdown, diagnostics) {
  * @param {string} _markdown
  * @param {Array} diagnostics
  */
+export function sponsorTextOnly(tree, _markdown, diagnostics) {
+  visit(tree, 'containerDirective', (node) => {
+    if (node.name !== 'sponsor') return
+    for (const child of node.children) {
+      if (child.type !== 'paragraph') {
+        diagnostics.push({
+          line: child.position.start.line,
+          column: child.position.start.column,
+          endLine: child.position.start.line,
+          endColumn: child.position.start.column + 3,
+          severity: 'error',
+          message:
+            'Un bloc sponsor ne peut contenir que du texte (balisage typographique autorisé)',
+          code: 'sponsor-text-only',
+        })
+      } else {
+        // remark enveloppe `![...](...)` dans un paragraph — l'image n'est pas un enfant direct
+        visit(child, 'image', (imgNode) => {
+          diagnostics.push({
+            line: imgNode.position.start.line,
+            column: imgNode.position.start.column,
+            endLine: imgNode.position.end.line,
+            endColumn: imgNode.position.end.column,
+            severity: 'error',
+            message:
+              'Un bloc sponsor ne peut contenir que du texte (balisage typographique autorisé)',
+            code: 'sponsor-text-only',
+          })
+        })
+      }
+    }
+  })
+}
+
+/**
+ * @param {import('unist').Node} tree
+ * @param {string} _markdown
+ * @param {Array} diagnostics
+ */
 export function prenoteRequiresOrigin(tree, _markdown, diagnostics) {
   visit(tree, 'containerDirective', (node) => {
     if (node.name !== 'prenote') return
@@ -148,7 +195,8 @@ export function prenoteRequiresOrigin(tree, _markdown, diagnostics) {
         endLine: node.position.start.line,
         endColumn: node.position.start.column + 3,
         severity: 'error',
-        message: 'Un bloc prenote doit avoir un attribut `origin` (aut, pbl ou tr)',
+        message:
+          'Un bloc prenote doit avoir un attribut `origin` (aut, pbl ou tr)',
         code: 'prenote-missing-origin',
       })
     }
@@ -237,6 +285,7 @@ export const metopesRules = [
   unknownBlockClass,
   unknownInlineClass,
   figureMustContainImage,
+  sponsorTextOnly,
   prenoteRequiresOrigin,
   translationRequiresLang,
   translationNotNested,

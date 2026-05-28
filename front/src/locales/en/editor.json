@@ -62,6 +62,16 @@
     "success": "No issues found",
     "title": "Analysis",
     "warningSummary_one": "{{count}} warning",
-    "warningSummary_other": "{{count}} warnings"
+    "warningSummary_other": "{{count}} warnings",
+    "rules": {
+      "unknown-block-class": "Unknown block class: \".{{cls}}\"",
+      "unknown-inline-class": "Unknown inline class: \".{{cls}}\"",
+      "figure-missing-image": "A figure block must contain an image `![caption](url)`",
+      "sponsor-text-only": "A sponsor block can only contain text (typographic markup allowed)",
+      "prenote-missing-origin": "A prenote block must have an `origin` attribute (aut, pbl or tr)",
+      "translation-missing-lang": "A translation block must have a `lang` attribute",
+      "translation-nesting-invalid": "Translation blocks cannot be nested",
+      "index-entry-missing-idref": "An index entry must have an `idref` attribute"
+    }
   }
 }
