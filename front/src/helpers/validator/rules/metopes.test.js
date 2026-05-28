@@ -1,7 +1,7 @@
-import { describe, expect, test } from 'vitest'
-import { unified } from 'unified'
-import remarkParse from 'remark-parse'
 import remarkDirective from 'remark-directive'
+import remarkParse from 'remark-parse'
+import { unified } from 'unified'
+import { describe, expect, test } from 'vitest'
 
 import {
   figureMustContainImage,
@@ -15,11 +15,14 @@ import {
 } from './metopes.js'
 
 function makeTree(md) {
-  const preprocessed = md.replace(/^(:::+)\{([^}]*)\}/gm, (_, colons, attrs) => {
-    const classMatch = attrs.match(/\.([a-zA-Z0-9_-]+)/)
-    const name = classMatch ? classMatch[1] : 'div'
-    return `${colons}${name}{${attrs}}`
-  })
+  const preprocessed = md.replace(
+    /^(:::+)\{([^}]*)\}/gm,
+    (_, colons, attrs) => {
+      const classMatch = attrs.match(/\.([a-zA-Z0-9_-]+)/)
+      const name = classMatch ? classMatch[1] : 'div'
+      return `${colons}${name}{${attrs}}`
+    }
+  )
   return unified().use(remarkParse).use(remarkDirective).parse(preprocessed)
 }
 
@@ -49,13 +52,30 @@ describe('unknownBlockClass()', () => {
 
   test('no false positive for all known classes', () => {
     const knownClasses = [
-      'ack', 'argument', 'credits', 'dedication', 'epigraph', 'figure',
-      'outline', 'box', 'prenote', 'question', 'answer', 'quote-alt',
-      'refs', 'rich-quote', 'sig', 'sponsor', 'translation',
+      'ack',
+      'argument',
+      'credits',
+      'dedication',
+      'epigraph',
+      'figure',
+      'outline',
+      'box',
+      'prenote',
+      'question',
+      'answer',
+      'quote-alt',
+      'refs',
+      'rich-quote',
+      'sig',
+      'sponsor',
+      'translation',
     ]
     for (const cls of knownClasses) {
       const md = `:::{.${cls}}\n:::`
-      expect(run(unknownBlockClass, md), `unexpected warning for .${cls}`).toHaveLength(0)
+      expect(
+        run(unknownBlockClass, md),
+        `unexpected warning for .${cls}`
+      ).toHaveLength(0)
     }
   })
 })
@@ -81,11 +101,23 @@ describe('unknownInlineClass()', () => {
 
   test('no false positive for all known inline classes', () => {
     const knownClasses = [
-      'credits', 'endnote', 'footnote', 'index-type', 'inlinequote',
-      'smallcaps', 'head', 'speaker', 'name', 'surname', 'aut',
+      'credits',
+      'endnote',
+      'footnote',
+      'index-type',
+      'inlinequote',
+      'smallcaps',
+      'head',
+      'speaker',
+      'name',
+      'surname',
+      'aut',
     ]
     for (const cls of knownClasses) {
-      expect(run(unknownInlineClass, `[text]{.${cls}}`), `unexpected warning for .${cls}`).toHaveLength(0)
+      expect(
+        run(unknownInlineClass, `[text]{.${cls}}`),
+        `unexpected warning for .${cls}`
+      ).toHaveLength(0)
     }
   })
 })
@@ -247,7 +279,9 @@ describe('translationNotNested()', () => {
 
 describe('indexEntryRequiresIdref()', () => {
   test('no diagnostic when idref is present', () => {
-    expect(run(indexEntryRequiresIdref, '[term]{.index-type idref="abc-123"}')).toHaveLength(0)
+    expect(
+      run(indexEntryRequiresIdref, '[term]{.index-type idref="abc-123"}')
+    ).toHaveLength(0)
   })
 
   test('warning when idref is missing', () => {

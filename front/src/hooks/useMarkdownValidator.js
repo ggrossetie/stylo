@@ -73,14 +73,24 @@ export function useMarkdownValidator(editorRef, profile = 'metopes') {
     setHasValidated(false)
   }, [editorRef])
 
-  const navigateTo = useCallback((line, column = 1) => {
-    const editor = editorRef.current
-    if (!editor) return
-    const endColumn = editor.getModel()?.getLineMaxColumn(line) ?? column
-    editor.focus()
-    editor.setPosition({ lineNumber: line, column: endColumn })
-    editor.revealLineNearTop(line, 1)
-  }, [editorRef])
+  const navigateTo = useCallback(
+    (line, column = 1) => {
+      const editor = editorRef.current
+      if (!editor) return
+      const endColumn = editor.getModel()?.getLineMaxColumn(line) ?? column
+      editor.focus()
+      editor.setPosition({ lineNumber: line, column: endColumn })
+      editor.revealLineNearTop(line, 1)
+    },
+    [editorRef]
+  )
 
-  return { validate, diagnostics, isValidating, hasValidated, clearDiagnostics, navigateTo }
+  return {
+    validate,
+    diagnostics,
+    isValidating,
+    hasValidated,
+    clearDiagnostics,
+    navigateTo,
+  }
 }
