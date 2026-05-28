@@ -53,14 +53,14 @@
   },
   "validation": {
     "clear": "Limpiar",
-    "empty": "Haga clic en «Validar» para analizar el documento.",
+    "empty": "Haga clic en «Analizar» para analizar el documento.",
     "errorSummary_one": "{{count}} error encontrado",
     "errorSummary_other": "{{count}} errores encontrados",
     "navigateTo": "Ir a la línea {{line}}",
-    "run": "Validar",
-    "running": "Validando…",
+    "run": "Analizar",
+    "running": "Analizando…",
     "success": "No se encontraron problemas",
-    "title": "Validación",
+    "title": "Análisis",
     "warningSummary_one": "{{count}} advertencia",
     "warningSummary_other": "{{count}} advertencias"
   }

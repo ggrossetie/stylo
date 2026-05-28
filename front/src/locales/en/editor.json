@@ -53,14 +53,14 @@
   },
   "validation": {
     "clear": "Clear",
-    "empty": "Click \"Validate\" to analyse the document.",
+    "empty": "Click \"Analyse\" to analyse the document.",
     "errorSummary_one": "{{count}} error found",
     "errorSummary_other": "{{count}} errors found",
     "navigateTo": "Go to line {{line}}",
-    "run": "Validate",
-    "running": "Validating…",
+    "run": "Analyse",
+    "running": "Analysing…",
     "success": "No issues found",
-    "title": "Validation",
+    "title": "Analysis",
     "warningSummary_one": "{{count}} warning",
     "warningSummary_other": "{{count}} warnings"
   }
