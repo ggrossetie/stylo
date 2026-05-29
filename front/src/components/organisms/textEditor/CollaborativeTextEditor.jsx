@@ -1,6 +1,6 @@
 import { DiffEditor } from '@monaco-editor/react'
 import clsx from 'clsx'
-import throttle from 'lodash.throttle'
+import { throttle } from '../../../helpers/timers.js'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'

@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import { useCombobox } from 'downshift'
-import throttle from 'lodash.throttle'
+import { throttle } from '../../../helpers/timers.js'
 import { Search } from 'lucide-react'
 import { useCallback, useState } from 'react'
 

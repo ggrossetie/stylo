@@ -1,4 +1,4 @@
-import debounce from 'lodash.debounce'
+import { debounce } from '../helpers/timers.js'
 import { useEffect, useRef, useState } from 'react'
 
 import { BibliographyCompletionProvider } from '../components/organisms/bibliography/support.js'

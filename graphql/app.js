@@ -2,7 +2,18 @@ const Sentry = require('@sentry/node')
 const { nodeProfilingIntegration } = require('@sentry/profiling-node')
 const pkg = require('./package.json')
 const process = require('node:process')
-const debounce = require('lodash.debounce')
+function debounce(fn, delay, { leading = false, trailing = true } = {}) {
+  let timeoutId = null
+  return function (...args) {
+    const callLeading = leading && timeoutId === null
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => {
+      timeoutId = null
+      if (trailing) fn.apply(this, args)
+    }, delay)
+    if (callLeading) fn.apply(this, args)
+  }
+}
 const config = require('./config.js')
 const proxy = require('express-http-proxy')
 const bodyParser = require('body-parser')

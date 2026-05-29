@@ -1,4 +1,4 @@
-import debounce from 'lodash.debounce'
+import { debounce } from '../../../helpers/timers.js'
 import { CheckSquare, Search, Square } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'

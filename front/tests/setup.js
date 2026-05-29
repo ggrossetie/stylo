@@ -10,9 +10,20 @@ import '../src/i18n.js'
 
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render } from '@testing-library/react'
-import merge from 'lodash.merge'
-
 import createReduxStore, { initialState } from '../src/createReduxStore.js'
+
+function merge(target, ...sources) {
+  return sources.reduce((acc, source) => {
+    Object.entries(source).forEach(([key, value]) => {
+      if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+        acc[key] = merge(acc[key] ?? {}, value)
+      } else {
+        acc[key] = value
+      }
+    })
+    return acc
+  }, target)
+}
 
 // mock queryCommandSupported
 document.queryCommandSupported = () => true

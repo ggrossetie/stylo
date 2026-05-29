@@ -52,7 +52,6 @@
     "js-yaml": "^4.1.0",
     "jsdom": "^21.0.0",
     "jsonwebtoken": "~9.0",
-    "lodash.debounce": "^4.0.8",
     "mongodb": "~7.0",
     "mongoose": "~9.3",
     "passport": "~0.7",

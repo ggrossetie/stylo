@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import { useCombobox } from 'downshift'
-import throttle from 'lodash.throttle'
+import { throttle } from '../../../helpers/timers.js'
 import { useCallback, useState } from 'react'
 
 import { searchKeyword as isidoreKeywordSearch } from '../../../helpers/isidore.js'

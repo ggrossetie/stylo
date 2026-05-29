@@ -1,4 +1,4 @@
-import debounce from 'lodash.debounce'
+import { debounce } from '../../../helpers/timers.js'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'react-toastify'
