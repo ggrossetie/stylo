@@ -89,18 +89,8 @@ export default function CollaborativeEditor(props) {
       clearDiagnostics,
       navigateTo,
     }) => {
-      // isFirstSetup prevents re-triggering validate on every state update
-      // (onValidatorReady fires on each diagnostics/isValidating change)
-      const isFirstSetup = validatorApiRef.current === null
       validatorApiRef.current = { validate, clearDiagnostics, navigateTo }
       setValidationState({ diagnostics, isValidating, hasValidated })
-      if (
-        isFirstSetup &&
-        activeMenuRef.current === 'validation' &&
-        enabledProfilesRef.current.length > 0
-      ) {
-        validate()
-      }
     },
     []
   )
@@ -110,6 +100,15 @@ export default function CollaborativeEditor(props) {
       validatorApiRef.current?.validate()
     }
   }, [])
+
+  const handleEditorReady = useCallback(() => {
+    if (
+      activeMenuRef.current === 'validation' &&
+      enabledProfilesRef.current.length > 0
+    ) {
+      handleValidate()
+    }
+  }, [handleValidate])
 
   const handleClearDiagnostics = useCallback(() => {
     validatorApiRef.current?.clearDiagnostics()
@@ -159,6 +158,7 @@ export default function CollaborativeEditor(props) {
             versionId={versionId}
             profiles={enabledProfiles}
             onValidatorReady={handleValidatorReady}
+            onEditorReady={handleEditorReady}
           />
           <ArticleStats />
         </div>

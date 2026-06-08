@@ -52,6 +52,7 @@ export default function CollaborativeTextEditor({
   mode,
   profiles = [],
   onValidatorReady,
+  onEditorReady,
 }) {
   const { yText, awareness, websocketStatus, dynamicStyles } = useCollaboration(
     { articleId, versionId }
@@ -91,6 +92,8 @@ export default function CollaborativeTextEditor({
 
   const dispatch = useDispatch()
   const editorRef = useRef(null)
+  const onEditorReadyRef = useRef(onEditorReady)
+  onEditorReadyRef.current = onEditorReady
   const {
     validate,
     diagnostics,
@@ -174,12 +177,15 @@ export default function CollaborativeTextEditor({
       if (yText && awareness) {
         new MonacoBinding(yText, model, new Set([editor]), awareness)
       }
+
+      onEditorReadyRef.current?.()
     },
     [yText, awareness]
   )
 
   const handleEditorDidMount = useCallback((editor) => {
     editorRef.current = editor
+    onEditorReadyRef.current?.()
   }, [])
 
   let timeoutId
