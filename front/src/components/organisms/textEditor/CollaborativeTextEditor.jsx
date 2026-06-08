@@ -42,6 +42,7 @@ import styles from './CollaborativeTextEditor.module.scss'
  * @param {string} props.articleId
  * @param {string|undefined} props.versionId
  * @param {'write' | 'compare' | 'preview'} props.mode
+ * @param {string[]} [props.profiles] - active validator profile ids
  * @param {(api: {validate: () => Promise<void>, clearDiagnostics: () => void, diagnostics: Array, isValidating: boolean}) => void} [props.onValidatorReady]
  * @returns {Element}
  */
@@ -49,6 +50,7 @@ export default function CollaborativeTextEditor({
   articleId,
   versionId,
   mode,
+  profiles = [],
   onValidatorReady,
 }) {
   const { yText, awareness, websocketStatus, dynamicStyles } = useCollaboration(
@@ -96,7 +98,7 @@ export default function CollaborativeTextEditor({
     hasValidated,
     clearDiagnostics,
     navigateTo,
-  } = useMarkdownValidator(editorRef)
+  } = useMarkdownValidator(editorRef, profiles)
   const editorCursorPosition = useSelector(
     (state) => state.editorCursorPosition,
     shallowEqual
@@ -117,6 +119,7 @@ export default function CollaborativeTextEditor({
       dropIntoEditor: {
         enabled: true,
       },
+      glyphMargin: true,
     }),
     [websocketStatus, hasVersion]
   )

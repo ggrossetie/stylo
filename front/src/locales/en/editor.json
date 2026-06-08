@@ -57,6 +57,12 @@
     "errorSummary_one": "{{count}} error found",
     "errorSummary_other": "{{count}} errors found",
     "navigateTo": "Go to line {{line}}",
+    "noProfile": "Select at least one validation profile.",
+    "profile": {
+      "metopes": "Métopes"
+    },
+    "profiles": "Profiles",
+    "refreshing": "Updating…",
     "run": "Validate",
     "running": "Validating…",
     "success": "No issues found",

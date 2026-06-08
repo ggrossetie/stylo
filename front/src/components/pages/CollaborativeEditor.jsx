@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router'
 
 import { executeQuery } from '../../helpers/graphQL.js'
@@ -51,12 +51,34 @@ export default function CollaborativeEditor(props) {
     'article'
   )
 
+  // One preference per profile — default false (opt-in)
+  const { value: metopesEnabled, setValue: setMetopesEnabled } =
+    usePreferenceItem(`${articleId}.validation.profile.metopes`, 'article')
+
+  const enabledProfiles = useMemo(
+    () => (metopesEnabled === true ? ['metopes'] : []),
+    [metopesEnabled]
+  )
+
+  const handleProfileToggle = useCallback(
+    (profileId) => {
+      if (profileId === 'metopes') {
+        setMetopesEnabled(!(metopesEnabled === true))
+      }
+    },
+    [metopesEnabled, setMetopesEnabled]
+  )
+
   const [validationState, setValidationState] = useState({
     diagnostics: [],
     isValidating: false,
     hasValidated: false,
   })
   const validatorApiRef = useRef(null)
+  const activeMenuRef = useRef(activeMenu)
+  activeMenuRef.current = activeMenu
+  const enabledProfilesRef = useRef(enabledProfiles)
+  enabledProfilesRef.current = enabledProfiles
 
   const handleValidatorReady = useCallback(
     ({
@@ -67,14 +89,26 @@ export default function CollaborativeEditor(props) {
       clearDiagnostics,
       navigateTo,
     }) => {
+      // isFirstSetup prevents re-triggering validate on every state update
+      // (onValidatorReady fires on each diagnostics/isValidating change)
+      const isFirstSetup = validatorApiRef.current === null
       validatorApiRef.current = { validate, clearDiagnostics, navigateTo }
       setValidationState({ diagnostics, isValidating, hasValidated })
+      if (
+        isFirstSetup &&
+        activeMenuRef.current === 'validation' &&
+        enabledProfilesRef.current.length > 0
+      ) {
+        validate()
+      }
     },
     []
   )
 
   const handleValidate = useCallback(() => {
-    validatorApiRef.current?.validate()
+    if (enabledProfilesRef.current.length > 0) {
+      validatorApiRef.current?.validate()
+    }
   }, [])
 
   const handleClearDiagnostics = useCallback(() => {
@@ -92,6 +126,29 @@ export default function CollaborativeEditor(props) {
     [setActiveMenu]
   )
 
+  // Auto-validate when opening the panel, clear when closing
+  const prevActiveMenuRef = useRef(activeMenu)
+  useEffect(() => {
+    if (activeMenu === 'validation') {
+      handleValidate()
+    } else if (prevActiveMenuRef.current === 'validation') {
+      handleClearDiagnostics()
+    }
+    prevActiveMenuRef.current = activeMenu
+  }, [activeMenu, handleValidate, handleClearDiagnostics])
+
+  // Re-validate (or clear) when the profile selection changes while panel is open.
+  // activeMenu is intentionally read via ref to avoid firing on panel open/close
+  // (that case is already handled by the effect above).
+  useEffect(() => {
+    if (activeMenuRef.current !== 'validation') return
+    if (enabledProfiles.length > 0) {
+      handleValidate()
+    } else {
+      handleClearDiagnostics()
+    }
+  }, [enabledProfiles, handleValidate, handleClearDiagnostics])
+
   return (
     <section className={styles.container}>
       <div className={styles.content}>
@@ -100,6 +157,7 @@ export default function CollaborativeEditor(props) {
             mode={mode}
             articleId={articleId}
             versionId={versionId}
+            profiles={enabledProfiles}
             onValidatorReady={handleValidatorReady}
           />
           <ArticleStats />
@@ -111,8 +169,8 @@ export default function CollaborativeEditor(props) {
           validationDiagnostics={validationState.diagnostics}
           isValidating={validationState.isValidating}
           hasValidated={validationState.hasValidated}
-          onValidate={handleValidate}
-          onClearDiagnostics={handleClearDiagnostics}
+          enabledProfiles={enabledProfiles}
+          onProfileToggle={handleProfileToggle}
           onNavigateToDiagnostic={handleNavigateTo}
         />
       </div>

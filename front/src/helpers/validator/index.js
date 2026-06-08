@@ -39,3 +39,8 @@ export function createValidator(rules) {
 export const VALIDATORS = {
   metopes: createValidator(metopesRules),
 }
+
+/** @type {Array<{id: string, labelKey: string}>} */
+export const VALIDATOR_PROFILE_DEFS = [
+  { id: 'metopes', labelKey: 'validation.profile.metopes' },
+]

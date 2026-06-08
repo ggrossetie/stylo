@@ -18,8 +18,8 @@ export default function EditorMenuContent({
   validationDiagnostics = [],
   isValidating = false,
   hasValidated = false,
-  onValidate,
-  onClearDiagnostics,
+  enabledProfiles = [],
+  onProfileToggle,
   onNavigateToDiagnostic,
 }) {
   const { article } = useRouteLoaderData('article')
@@ -63,8 +63,8 @@ export default function EditorMenuContent({
           diagnostics={validationDiagnostics}
           isValidating={isValidating}
           hasValidated={hasValidated}
-          onValidate={onValidate}
-          onClear={onClearDiagnostics}
+          enabledProfiles={enabledProfiles}
+          onProfileToggle={onProfileToggle}
           onNavigate={onNavigateToDiagnostic}
         />
       )}

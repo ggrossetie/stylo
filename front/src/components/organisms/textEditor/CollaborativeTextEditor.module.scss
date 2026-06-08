@@ -15,6 +15,14 @@
       font-size: 1.1em;
       text-decoration: none;
     }
+
+    .monaco-editor .glyph-margin-widgets .validator-error {
+      background: $error-color;
+    }
+
+    .monaco-editor .glyph-margin-widgets .validator-warning {
+      background: $warn-color;
+    }
   }
 }
 

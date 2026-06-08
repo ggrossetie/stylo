@@ -104,7 +104,7 @@ a.icon:not(.primary) {
   color: currentColor;
 }
 
-a.icon:after {
+a[target=_blank].icon:after {
   display: none;
 }
 

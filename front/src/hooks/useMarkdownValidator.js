@@ -1,3 +1,4 @@
+import throttle from 'lodash.throttle'
 import * as monaco from 'monaco-editor'
 import { useCallback, useRef, useState } from 'react'
 
@@ -17,30 +18,39 @@ function toMonacoSeverity(severity) {
 
 /**
  * @param {import('react').RefObject} editorRef
- * @param {string} profile - validator profile name (e.g. 'metopes')
+ * @param {string[]} profiles - list of active validator profile ids (e.g. ['metopes'])
  * @returns {{ validate: () => Promise<void>, diagnostics: Array, isValidating: boolean, clearDiagnostics: () => void }}
  */
-export function useMarkdownValidator(editorRef, profile = 'metopes') {
+export function useMarkdownValidator(editorRef, profiles = ['metopes']) {
   const [diagnostics, setDiagnostics] = useState([])
   const [isValidating, setIsValidating] = useState(false)
   const [hasValidated, setHasValidated] = useState(false)
-  const profileRef = useRef(profile)
-  profileRef.current = profile
+  const profilesRef = useRef(profiles)
+  profilesRef.current = profiles
+  const hasValidatedRef = useRef(false)
+  const decorationsRef = useRef(null)
+  const subscriptionRef = useRef(null)
 
   const validate = useCallback(async () => {
     const editor = editorRef.current
     if (!editor) return
 
-    const validator = VALIDATORS[profileRef.current]
-    if (!validator) return
-
     const markdown = editor.getModel()?.getValue() ?? ''
     setIsValidating(true)
 
     try {
-      const results = await validator(markdown)
+      const all = []
+      for (const profileId of profilesRef.current) {
+        const validator = VALIDATORS[profileId]
+        if (validator) {
+          const profileResults = await validator(markdown)
+          all.push(...profileResults)
+        }
+      }
+      const results = all.sort((a, b) => a.line - b.line || a.column - b.column)
       setDiagnostics(results)
       setHasValidated(true)
+      hasValidatedRef.current = true
 
       const model = editor.getModel()
       if (model) {
@@ -58,6 +68,52 @@ export function useMarkdownValidator(editorRef, profile = 'metopes') {
           }))
         )
       }
+
+      if (decorationsRef.current) {
+        decorationsRef.current.clear()
+      }
+      decorationsRef.current = editor.createDecorationsCollection(
+        results.map((d) => ({
+          range: new monaco.Range(d.line, 1, d.endLine || d.line, 1),
+          options: {
+            glyphMarginHoverMessage: { value: d.message },
+            glyphMarginClassName:
+              d.severity === 'error' ? 'validator-error' : 'validator-warning',
+            isWholeLine: false,
+            showIfCollapsed: true,
+          },
+        }))
+      )
+
+      // Subscribe to content changes for live re-validation after first run
+      if (!subscriptionRef.current) {
+        const throttledRevalidate = throttle(
+          () => {
+            if (hasValidatedRef.current) {
+              validate()
+            }
+          },
+          1000,
+          { leading: false, trailing: true }
+        )
+
+        const disposable = editor.onDidChangeModelContent(() => {
+          if (hasValidatedRef.current) {
+            setIsValidating(true)
+            throttledRevalidate()
+          }
+        })
+        subscriptionRef.current = {
+          disposable,
+          cancel: throttledRevalidate.cancel,
+        }
+
+        editor.onDidDispose(() => {
+          subscriptionRef.current?.disposable.dispose()
+          subscriptionRef.current?.cancel()
+          subscriptionRef.current = null
+        })
+      }
     } finally {
       setIsValidating(false)
     }
@@ -69,8 +125,18 @@ export function useMarkdownValidator(editorRef, profile = 'metopes') {
     if (model) {
       monaco.editor.setModelMarkers(model, MARKER_OWNER, [])
     }
+    if (decorationsRef.current) {
+      decorationsRef.current.clear()
+      decorationsRef.current = null
+    }
+    if (subscriptionRef.current) {
+      subscriptionRef.current.disposable.dispose()
+      subscriptionRef.current.cancel()
+      subscriptionRef.current = null
+    }
     setDiagnostics([])
     setHasValidated(false)
+    hasValidatedRef.current = false
   }, [editorRef])
 
   const navigateTo = useCallback(
