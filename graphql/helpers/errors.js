@@ -1,5 +1,17 @@
 const { GraphQLError } = require('graphql')
 
+class ResponseError extends Error {
+  /**
+   *
+   * @param {string} message
+   * @param {number} status
+   */
+  constructor(message, status = 500) {
+    super(message)
+    this.status = status
+  }
+}
+
 class ApiError extends Error {
   constructor(type, ...errors) {
     super(...errors)
@@ -73,4 +85,5 @@ module.exports = {
   NotAuthenticatedError,
   NotAuthorizedError,
   NotFoundError,
+  ResponseError,
 }

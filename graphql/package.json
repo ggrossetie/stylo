@@ -69,7 +69,8 @@
   },
   "devDependencies": {
     "c8": "~10.1",
-    "testcontainers": "~11.14"
+    "testcontainers": "~11.14",
+    "typescript": "^6.0.3"
   },
   "volta": {
     "node": "24.16.0",

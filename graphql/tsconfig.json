@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "checkJs": true,
+    "allowJs": true,
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "strict": false
+  },
+  "include": ["**/*.js"],
+  "exclude": ["node_modules", "coverage", "**/*.test.js"]
+}
