@@ -122,7 +122,6 @@ export default function CollaborativeTextEditor({
       dropIntoEditor: {
         enabled: true,
       },
-      glyphMargin: true,
     }),
     [websocketStatus, hasVersion]
   )

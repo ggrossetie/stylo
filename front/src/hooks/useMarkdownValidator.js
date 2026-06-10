@@ -76,8 +76,8 @@ export function useMarkdownValidator(editorRef, profiles = ['metopes']) {
         results.map((d) => ({
           range: new monaco.Range(d.line, 1, d.endLine || d.line, 1),
           options: {
-            glyphMarginHoverMessage: { value: d.message },
-            glyphMarginClassName:
+            linesDecorationsTooltip: d.message,
+            linesDecorationsClassName:
               d.severity === 'error' ? 'validator-error' : 'validator-warning',
             isWholeLine: false,
             showIfCollapsed: true,
