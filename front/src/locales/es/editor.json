@@ -34,6 +34,7 @@
       "refs": "Título personalizado de bibliografía"
     }
   },
+  "focusSideMenu": "Ir al menú lateral",
   "stylo": {
     "markdown": {
       "rootMenu": "Lenguaje de marcado ligero"
@@ -56,7 +57,9 @@
     "empty": "Haga clic en «Validar» para analizar el documento.",
     "errorSummary_one": "{{count}} error encontrado",
     "errorSummary_other": "{{count}} errores encontrados",
+    "keyboardHint": "↑↓ navegar · Intro ir a la línea · ← editor · → menú · Esc cerrar",
     "line": "línea",
+    "listLabel": "Problemas detectados",
     "navigateTo": "Ir a la línea {{line}}",
     "noProfile": "Seleccione al menos un perfil de validación.",
     "profile": {

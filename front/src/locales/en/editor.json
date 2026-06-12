@@ -34,6 +34,7 @@
       "refs": "Custom bibliography title"
     }
   },
+  "focusSideMenu": "Focus the side menu",
   "stylo": {
     "markdown": {
       "rootMenu": "Lightweight markup language"
@@ -56,7 +57,9 @@
     "empty": "Click \"Validate\" to analyse the document.",
     "errorSummary_one": "{{count}} error found",
     "errorSummary_other": "{{count}} errors found",
+    "keyboardHint": "↑↓ navigate · Enter go to line · ← editor · → menu · Esc close",
     "line": "line",
+    "listLabel": "Detected problems",
     "navigateTo": "Go to line {{line}}",
     "noProfile": "Select at least one validation profile.",
     "profile": {

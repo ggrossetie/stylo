@@ -53,6 +53,7 @@ export default function CollaborativeTextEditor({
   profiles = [],
   onValidatorReady,
   onEditorReady,
+  onFocusSideMenu,
 }) {
   const { yText, awareness, websocketStatus, dynamicStyles } = useCollaboration(
     { articleId, versionId }
@@ -94,6 +95,8 @@ export default function CollaborativeTextEditor({
   const editorRef = useRef(null)
   const onEditorReadyRef = useRef(onEditorReady)
   onEditorReadyRef.current = onEditorReady
+  const onFocusSideMenuRef = useRef(onFocusSideMenu)
+  onFocusSideMenuRef.current = onFocusSideMenu
   const {
     validate,
     diagnostics,
@@ -101,6 +104,7 @@ export default function CollaborativeTextEditor({
     hasValidated,
     clearDiagnostics,
     navigateTo,
+    focusEditor,
   } = useMarkdownValidator(editorRef, profiles)
   const editorCursorPosition = useSelector(
     (state) => state.editorCursorPosition,
@@ -138,6 +142,22 @@ export default function CollaborativeTextEditor({
     []
   )
 
+  const registerFocusSideMenuAction = useCallback(
+    (
+      /** @type {IStandaloneCodeEditor} */ editor,
+      /** @type {monaco} */ monaco
+    ) => {
+      editor.addAction({
+        id: 'stylo.focus-side-menu',
+        label: t('focusSideMenu'),
+        // Alt+M: Ctrl+Shift+M is reserved by Chrome (profile switcher)
+        keybindings: [monaco.KeyMod.Alt | monaco.KeyCode.KeyM],
+        run: () => onFocusSideMenuRef.current?.(),
+      })
+    },
+    [t]
+  )
+
   const handleCollaborativeEditorDidMount = useCallback(
     (
       /** @type {IStandaloneCodeEditor} */ editor,
@@ -146,6 +166,8 @@ export default function CollaborativeTextEditor({
       editorRef.current = editor
 
       editor.onDropIntoEditor(onDropIntoEditor(editor))
+
+      registerFocusSideMenuAction(editor, monaco)
 
       const contextMenu = editor.getContribution('editor.contrib.contextmenu')
       const originalMenuActions = contextMenu._getMenuActions(
@@ -179,13 +201,17 @@ export default function CollaborativeTextEditor({
 
       onEditorReadyRef.current?.()
     },
-    [yText, awareness]
+    [yText, awareness, registerFocusSideMenuAction]
   )
 
-  const handleEditorDidMount = useCallback((editor) => {
-    editorRef.current = editor
-    onEditorReadyRef.current?.()
-  }, [])
+  const handleEditorDidMount = useCallback(
+    (editor, monaco) => {
+      editorRef.current = editor
+      registerFocusSideMenuAction(editor, monaco)
+      onEditorReadyRef.current?.()
+    },
+    [registerFocusSideMenuAction]
+  )
 
   let timeoutId
   useEffect(() => {
@@ -232,6 +258,7 @@ export default function CollaborativeTextEditor({
       hasValidated,
       clearDiagnostics,
       navigateTo,
+      focusEditor,
     })
   }, [
     validate,
@@ -240,6 +267,7 @@ export default function CollaborativeTextEditor({
     hasValidated,
     clearDiagnostics,
     navigateTo,
+    focusEditor,
     onValidatorReady,
   ])
 

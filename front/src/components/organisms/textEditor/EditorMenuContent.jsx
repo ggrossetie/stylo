@@ -21,6 +21,11 @@ export default function EditorMenuContent({
   enabledProfiles = [],
   onProfileToggle,
   onNavigateToDiagnostic,
+  onClose,
+  onFocusMenu,
+  onFocusEditor,
+  panelRef,
+  validationPanelRef,
 }) {
   const { article } = useRouteLoaderData('article')
   const { t } = useTranslation()
@@ -29,8 +34,43 @@ export default function EditorMenuContent({
     return null
   }
 
+  const handleKeyDown = (event) => {
+    // defaultPrevented: let nested widgets (comboboxes, dropdowns) consume keys first
+    if (event.defaultPrevented) return
+
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      onClose?.()
+      return
+    }
+
+    // Don't hijack caret movement in form fields
+    if (
+      event.target.matches?.(
+        'input, textarea, select, [contenteditable="true"]'
+      )
+    ) {
+      return
+    }
+
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault()
+      onFocusEditor?.()
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault()
+      onFocusMenu?.()
+    }
+  }
+
   return (
-    <div className={clsx(styles.content, styles.active)}>
+    <div
+      ref={panelRef}
+      role="region"
+      aria-label={t(`${activeMenu}.title`)}
+      tabIndex={-1}
+      className={clsx(styles.content, styles.active)}
+      onKeyDown={handleKeyDown}
+    >
       {activeMenu === 'metadata' && (
         <ArticleMetadata articleId={articleId} versionId={versionId} />
       )}
@@ -60,6 +100,7 @@ export default function EditorMenuContent({
       )}
       {activeMenu === 'validation' && (
         <EditorValidation
+          ref={validationPanelRef}
           diagnostics={validationDiagnostics}
           isValidating={isValidating}
           hasValidated={hasValidated}

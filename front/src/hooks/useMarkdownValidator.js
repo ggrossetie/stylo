@@ -139,6 +139,10 @@ export function useMarkdownValidator(editorRef, profiles = ['metopes']) {
     hasValidatedRef.current = false
   }, [editorRef])
 
+  const focusEditor = useCallback(() => {
+    editorRef.current?.focus()
+  }, [editorRef])
+
   const navigateTo = useCallback(
     (line, column = 1) => {
       const editor = editorRef.current
@@ -158,5 +162,6 @@ export function useMarkdownValidator(editorRef, profiles = ['metopes']) {
     hasValidated,
     clearDiagnostics,
     navigateTo,
+    focusEditor,
   }
 }

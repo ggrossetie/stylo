@@ -10,14 +10,19 @@ import {
   TableOfContents,
   TextCursorInput,
 } from 'lucide-react'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useImperativeHandle, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { usePreferenceItem } from '../../../hooks/user.js'
 import styles from './EditorMenu.module.scss'
 import EditorMenuItem from './EditorMenuItem.jsx'
 
-export default function EditorMenu({ articleId, onChange }) {
+export default function EditorMenu({
+  articleId,
+  onChange,
+  onNavigateLeft,
+  menuRef,
+}) {
   const enableNakala = useMemo(
     () => !window.location.href.startsWith('https://stylo.huma-num.fr/'),
     []
@@ -46,6 +51,39 @@ export default function EditorMenu({ articleId, onChange }) {
     [activeMenu, onChange, setActiveMenu]
   )
 
+  const itemRefs = useRef({})
+  const itemsRef = useRef(null)
+  const lastFocusedItemRef = useRef(null)
+
+  useImperativeHandle(menuRef, () => ({
+    focusItem: (name) => itemRefs.current[name]?.focus(),
+    focus: () => {
+      if (lastFocusedItemRef.current?.isConnected) {
+        lastFocusedItemRef.current.focus()
+      } else {
+        itemsRef.current?.querySelector('button')?.focus()
+      }
+    },
+  }))
+
+  const setItemRef = useCallback(
+    (name) => (element) => {
+      itemRefs.current[name] = element
+    },
+    []
+  )
+
+  // ArrowLeft moves focus leftward: into the open panel, or to the editor
+  const handleItemKeyDown = useCallback(
+    (event) => {
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault()
+        onNavigateLeft?.()
+      }
+    },
+    [onNavigateLeft]
+  )
+
   return (
     <div className={styles.menu}>
       <button
@@ -60,23 +98,35 @@ export default function EditorMenu({ articleId, onChange }) {
           {minimized ? <ArrowLeftToLine /> : <ArrowRightToLine />}
         </span>
       </button>
-      <div className={styles.items}>
+      <div
+        ref={itemsRef}
+        className={styles.items}
+        onFocus={(event) => {
+          lastFocusedItemRef.current = event.target
+        }}
+      >
         <EditorMenuItem
+          buttonRef={setItemRef('toc')}
           onClick={toggleActiveMenu('toc')}
+          onKeyDown={handleItemKeyDown}
           selected={activeMenu === 'toc'}
           minimized={minimized}
           icon={<TableOfContents />}
           text={t('toc.title')}
         />
         <EditorMenuItem
+          buttonRef={setItemRef('metadata')}
           onClick={toggleActiveMenu('metadata')}
+          onKeyDown={handleItemKeyDown}
           selected={activeMenu === 'metadata'}
           minimized={minimized}
           icon={<TextCursorInput />}
           text={t('metadata.title')}
         />
         <EditorMenuItem
+          buttonRef={setItemRef('bibliography')}
           onClick={toggleActiveMenu('bibliography')}
+          onKeyDown={handleItemKeyDown}
           selected={activeMenu === 'bibliography'}
           minimized={minimized}
           icon={<BookKey />}
@@ -84,7 +134,9 @@ export default function EditorMenu({ articleId, onChange }) {
         />
         {enableNakala && (
           <EditorMenuItem
+            buttonRef={setItemRef('data')}
             onClick={toggleActiveMenu('data')}
+            onKeyDown={handleItemKeyDown}
             selected={activeMenu === 'data'}
             minimized={minimized}
             icon={<Database />}
@@ -92,21 +144,27 @@ export default function EditorMenu({ articleId, onChange }) {
           />
         )}
         <EditorMenuItem
+          buttonRef={setItemRef('versions')}
           onClick={toggleActiveMenu('versions')}
+          onKeyDown={handleItemKeyDown}
           selected={activeMenu === 'versions'}
           minimized={minimized}
           icon={<History />}
           text={t('versions.title')}
         />
         <EditorMenuItem
+          buttonRef={setItemRef('export')}
           onClick={toggleActiveMenu('export')}
+          onKeyDown={handleItemKeyDown}
           selected={activeMenu === 'export'}
           minimized={minimized}
           icon={<Printer />}
           text={t('export.title')}
         />
         <EditorMenuItem
+          buttonRef={setItemRef('validation')}
           onClick={toggleActiveMenu('validation')}
+          onKeyDown={handleItemKeyDown}
           selected={activeMenu === 'validation'}
           minimized={minimized}
           icon={<ListChecks />}

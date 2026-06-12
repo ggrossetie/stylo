@@ -9,10 +9,14 @@ export default function EditorMenuItem({
   selected,
   external = false,
   onClick,
+  onKeyDown,
+  buttonRef,
 }) {
   return (
     <button
+      ref={buttonRef}
       onClick={onClick}
+      onKeyDown={onKeyDown}
       className={clsx(styles.container, selected && styles.selected)}
       title={text}
     >

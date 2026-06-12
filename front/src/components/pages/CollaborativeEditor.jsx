@@ -75,6 +75,10 @@ export default function CollaborativeEditor(props) {
     hasValidated: false,
   })
   const validatorApiRef = useRef(null)
+  const validationPanelRef = useRef(null)
+  const menuContentRef = useRef(null)
+  const menuRef = useRef(null)
+  const lastPanelFocusRef = useRef(null)
   const activeMenuRef = useRef(activeMenu)
   activeMenuRef.current = activeMenu
   const enabledProfilesRef = useRef(enabledProfiles)
@@ -88,8 +92,14 @@ export default function CollaborativeEditor(props) {
       hasValidated,
       clearDiagnostics,
       navigateTo,
+      focusEditor,
     }) => {
-      validatorApiRef.current = { validate, clearDiagnostics, navigateTo }
+      validatorApiRef.current = {
+        validate,
+        clearDiagnostics,
+        navigateTo,
+        focusEditor,
+      }
       setValidationState({ diagnostics, isValidating, hasValidated })
     },
     []
@@ -116,6 +126,62 @@ export default function CollaborativeEditor(props) {
 
   const handleNavigateTo = useCallback((line, column) => {
     validatorApiRef.current?.navigateTo(line, column)
+  }, [])
+
+  // Escape inside a panel: close it and hand focus back to its menu item
+  const handleClosePanel = useCallback(() => {
+    const name = activeMenuRef.current
+    setActiveMenu('')
+    menuRef.current?.focusItem(name)
+  }, [setActiveMenu])
+
+  const handleFocusEditor = useCallback(() => {
+    validatorApiRef.current?.focusEditor()
+  }, [])
+
+  // ArrowRight inside a panel: move focus back to its menu item
+  const handleFocusMenu = useCallback(() => {
+    menuRef.current?.focusItem(activeMenuRef.current)
+  }, [])
+
+  // ArrowLeft on a menu item: move focus into the open panel, or to the editor
+  const handleMenuNavigateLeft = useCallback(() => {
+    const name = activeMenuRef.current
+    if (!name) {
+      handleFocusEditor()
+    } else if (name === 'validation') {
+      validationPanelRef.current?.focus()
+    } else {
+      menuContentRef.current?.focus()
+    }
+  }, [handleFocusEditor])
+
+  // Remember the last focused element inside the open panel (restored by Alt+M)
+  useEffect(() => {
+    const node = menuContentRef.current
+    if (!node) return
+    const handleFocusIn = (event) => {
+      lastPanelFocusRef.current = event.target
+    }
+    node.addEventListener('focusin', handleFocusIn)
+    return () => {
+      node.removeEventListener('focusin', handleFocusIn)
+      lastPanelFocusRef.current = null
+    }
+  }, [activeMenu])
+
+  // Alt+M from the editor: focus the open panel (last focused element) or the menu
+  const handleFocusSideMenu = useCallback(() => {
+    const name = activeMenuRef.current
+    if (!name) {
+      menuRef.current?.focus()
+    } else if (lastPanelFocusRef.current?.isConnected) {
+      lastPanelFocusRef.current.focus()
+    } else if (name === 'validation') {
+      validationPanelRef.current?.focus()
+    } else {
+      menuContentRef.current?.focus()
+    }
   }, [])
 
   const handleActiveMenuChange = useCallback(
@@ -159,6 +225,7 @@ export default function CollaborativeEditor(props) {
             profiles={enabledProfiles}
             onValidatorReady={handleValidatorReady}
             onEditorReady={handleEditorReady}
+            onFocusSideMenu={handleFocusSideMenu}
           />
           <ArticleStats />
         </div>
@@ -172,11 +239,21 @@ export default function CollaborativeEditor(props) {
           enabledProfiles={enabledProfiles}
           onProfileToggle={handleProfileToggle}
           onNavigateToDiagnostic={handleNavigateTo}
+          onClose={handleClosePanel}
+          onFocusMenu={handleFocusMenu}
+          onFocusEditor={handleFocusEditor}
+          panelRef={menuContentRef}
+          validationPanelRef={validationPanelRef}
         />
       </div>
 
       <div>
-        <EditorMenu articleId={articleId} onChange={handleActiveMenuChange} />
+        <EditorMenu
+          articleId={articleId}
+          onChange={handleActiveMenuChange}
+          onNavigateLeft={handleMenuNavigateLeft}
+          menuRef={menuRef}
+        />
       </div>
     </section>
   )
