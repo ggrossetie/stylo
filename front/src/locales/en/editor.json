@@ -56,12 +56,12 @@
     "empty": "Click \"Validate\" to analyse the document.",
     "errorSummary_one": "{{count}} error found",
     "errorSummary_other": "{{count}} errors found",
+    "line": "line",
     "navigateTo": "Go to line {{line}}",
     "noProfile": "Select at least one validation profile.",
     "profile": {
       "metopes": "Métopes"
     },
-    "profiles": "Profiles",
     "refreshing": "Updating…",
     "run": "Validate",
     "running": "Validating…",

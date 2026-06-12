@@ -56,12 +56,12 @@
     "empty": "Cliquez sur « Valider » pour analyser le document.",
     "errorSummary_one": "{{count}} erreur détectée",
     "errorSummary_other": "{{count}} erreurs détectées",
+    "line": "ligne",
     "navigateTo": "Aller à la ligne {{line}}",
     "noProfile": "Sélectionnez au moins un profil de validation.",
     "profile": {
       "metopes": "Métopes"
     },
-    "profiles": "Profils",
     "refreshing": "Mise à jour…",
     "run": "Valider",
     "running": "Validation en cours…",

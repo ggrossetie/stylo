@@ -4,9 +4,9 @@ import {
   BookKey,
   Database,
   History,
+  ListChecks,
   MessageSquareShare,
   Printer,
-  ShieldCheck,
   TableOfContents,
   TextCursorInput,
 } from 'lucide-react'
@@ -20,7 +20,7 @@ import EditorMenuItem from './EditorMenuItem.jsx'
 export default function EditorMenu({ articleId, onChange }) {
   const enableNakala = useMemo(
     () => !window.location.href.startsWith('https://stylo.huma-num.fr/'),
-    [window.location.href]
+    []
   ) // disable Nakala in production
   const { t } = useTranslation()
   const { value: minimized, setValue: setMinimized } = usePreferenceItem(
@@ -33,7 +33,7 @@ export default function EditorMenu({ articleId, onChange }) {
   )
 
   const handleAnnotate = useCallback(
-    () => window.open(location.pathname + '/annotate', '_blank').focus(),
+    () => window.open(`${location.pathname}/annotate`, '_blank').focus(),
     []
   )
 
@@ -43,12 +43,13 @@ export default function EditorMenu({ articleId, onChange }) {
       setActiveMenu(value)
       onChange(value)
     },
-    [activeMenu, onChange]
+    [activeMenu, onChange, setActiveMenu]
   )
 
   return (
     <div className={styles.menu}>
       <button
+        type="button"
         className={styles.toggleMinimized}
         onClick={() => setMinimized(!minimized)}
       >
@@ -108,7 +109,7 @@ export default function EditorMenu({ articleId, onChange }) {
           onClick={toggleActiveMenu('validation')}
           selected={activeMenu === 'validation'}
           minimized={minimized}
-          icon={<ShieldCheck />}
+          icon={<ListChecks />}
           text={t('validation.title')}
         />
         <EditorMenuItem

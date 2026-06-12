@@ -90,7 +90,9 @@ export default function EditorValidation({
                   )}
                 </span>
                 <span className={styles.message}>{d.message}</span>
-                <span className={styles.location}>:{d.line}</span>
+                <span className={styles.location}>
+                  {t('validation.line')} {d.line}
+                </span>
               </li>
             ))}
           </ul>
