@@ -1,5 +1,6 @@
 const { NotFoundError } = require('../helpers/errors.js')
 const YAML = require('js-yaml')
+const { ObjectId } = require('mongoose').Types
 const { Y, getTextFromYjsDoc } = require('../helpers/yjs-utils.mjs')
 
 const Article = require('../models/article.js')
@@ -534,6 +535,23 @@ module.exports = {
   },
 
   Article: {
+    async owner(article, _args, context) {
+      // articles loaded through a DataLoader are not populated
+      if (article.owner instanceof ObjectId) {
+        return context.loaders.users.load(article.owner)
+      }
+      return article.owner
+    },
+
+    async tags(article, _args, context) {
+      const tags = await Promise.all(
+        (article.tags ?? []).map((tag) =>
+          tag instanceof ObjectId ? context.loaders.tags.load(tag) : tag
+        )
+      )
+      return tags.filter((t) => t) // ignore unresolved tags
+    },
+
     async workspaces(article, _, { user, token }) {
       if (token.admin) {
         return Workspace.find({ articles: article._id })
@@ -636,6 +654,15 @@ module.exports = {
       }
       await article.save()
       return article
+    },
+  },
+
+  ArticleContributor: {
+    async user(contributor, _args, context) {
+      if (contributor.user instanceof ObjectId) {
+        return context.loaders.users.load(contributor.user)
+      }
+      return contributor.user
     },
   },
 

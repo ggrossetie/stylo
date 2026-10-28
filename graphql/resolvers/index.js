@@ -5,6 +5,7 @@ const {
 } = require('./userResolver')
 const {
   Article,
+  ArticleContributor,
   WorkingVersion,
   Query: ArticleQuery,
   Mutation: ArticleMutation,
@@ -47,6 +48,7 @@ module.exports = {
   // Types and Nested queries/mutations
   User,
   Article,
+  ArticleContributor,
   Tag,
   Version,
   InstanceUsageStats,

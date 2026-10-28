@@ -1,8 +1,14 @@
 const { Query, Corpus: CorpusMutation } = require('./corpusResolver')
+const {
+  Article: ArticleResolver,
+  ArticleContributor: ArticleContributorResolver,
+} = require('./articleResolver')
 const Corpus = require('../models/corpus')
 const User = require('../models/user')
 const Article = require('../models/article')
 const Workspace = require('../models/workspace')
+const Tag = require('../models/tag')
+const { createLoaders } = require('../loaders')
 const { NotAuthenticatedError, NotFoundError } = require('../helpers/errors')
 const { before, after, describe, test } = require('node:test')
 const assert = require('node:assert')
@@ -251,5 +257,53 @@ describe('corpus resolver', () => {
 
   test('refuse to list personal corpora when not authenticated', async () => {
     await assert.rejects(Query.corpora({}, {}, {}), NotAuthenticatedError)
+  })
+
+  test('resolve owner, tags and contributors of corpus articles', async () => {
+    const owner = await User.create({
+      email: 'owner@huma-num.fr',
+      displayName: 'Owner',
+    })
+    const contributor = await User.create({
+      email: 'contributor@huma-num.fr',
+      displayName: 'Contributor',
+    })
+    const tag = await Tag.create({ name: 'Tag', owner: owner.id })
+    const article = await Article.create({
+      title: 'Article in corpus',
+      owner: owner.id,
+      contributors: [{ user: contributor.id, roles: ['write'] }],
+      tags: [tag.id],
+    })
+    const corpus = await Corpus.create({
+      name: 'Corpus with owner',
+      articles: [{ article: article.id, order: 1 }],
+      creator: owner.id,
+    })
+    const context = { loaders: createLoaders() }
+
+    const [corpusArticle] = await CorpusMutation.articles(corpus, {}, context)
+
+    const articleOwner = await ArticleResolver.owner(
+      corpusArticle.article,
+      {},
+      context
+    )
+    assert.equal(articleOwner.displayName, 'Owner')
+    const articleTags = await ArticleResolver.tags(
+      corpusArticle.article,
+      {},
+      context
+    )
+    assert.deepEqual(
+      articleTags.map((t) => t.name),
+      ['Tag']
+    )
+    const contributorUser = await ArticleContributorResolver.user(
+      corpusArticle.article.contributors[0],
+      {},
+      context
+    )
+    assert.equal(contributorUser.displayName, 'Contributor')
   })
 })
