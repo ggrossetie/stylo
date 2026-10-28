@@ -46,9 +46,7 @@ export default function CorpusSelectItems({ articleId }) {
             id={c._id}
             name={c.name}
             articleId={articleId}
-            selected={c.articles
-              .map((a) => a?.article?._id)
-              .includes(articleId)}
+            selected={c.articles.map((a) => a.articleId).includes(articleId)}
             onChange={handleCorpusUpdate}
           />
         ))}

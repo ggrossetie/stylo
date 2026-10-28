@@ -363,7 +363,8 @@ input SetCorpusArticlesInput {
 
 type CorpusArticle {
   corpus: Corpus!
-  article: Article
+  articleId: ID!
+  article: Article @deprecated(reason: "Use articleId with the article query, or the articles query with a corpusId filter, instead.")
   order: Int
 
   # mutation
@@ -415,7 +416,8 @@ input CreateCorpusInput {
 
 input FilterCorpusInput {
   workspaceId: ID
-  corpusId: ID @deprecated(reason: "Use the corpus query with a corpusId argument instead (available in the next major version).")
+  "Articles query: list the articles of this corpus, in the corpus order. Corpus query: deprecated, use the corpus query with a corpusId argument instead (available in the next major version)."
+  corpusId: ID
 }
 
 input CorpusFilterInput {

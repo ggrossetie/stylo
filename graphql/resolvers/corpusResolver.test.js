@@ -1,4 +1,8 @@
-const { Query, Corpus: CorpusMutation } = require('./corpusResolver')
+const {
+  Query,
+  Corpus: CorpusMutation,
+  CorpusArticle: CorpusArticleResolver,
+} = require('./corpusResolver')
 const Corpus = require('../models/corpus')
 const User = require('../models/user')
 const Article = require('../models/article')
@@ -7,6 +11,7 @@ const { NotAuthenticatedError, NotFoundError } = require('../helpers/errors')
 const { before, after, describe, test } = require('node:test')
 const assert = require('node:assert')
 const { setup, teardown } = require('../tests/harness')
+const { createLoaders } = require('../loaders')
 
 describe('corpus resolver', () => {
   let container
@@ -251,5 +256,35 @@ describe('corpus resolver', () => {
 
   test('refuse to list personal corpora when not authenticated', async () => {
     await assert.rejects(Query.corpora({}, {}, {}), NotAuthenticatedError)
+  })
+
+  test('list corpus articles without loading them', async () => {
+    const creator = await User.create({ email: 'corpus-articles@huma-num.fr' })
+    const first = await Article.create({ title: 'First', owner: creator.id })
+    const second = await Article.create({ title: 'Second', owner: creator.id })
+    const corpus = await Corpus.create({
+      name: 'Corpus with articles',
+      creator: creator.id,
+      articles: [
+        { article: second.id, order: 2 },
+        { article: first.id, order: 1 },
+      ],
+    })
+
+    const corpusArticles = await CorpusMutation.articles(corpus)
+
+    assert.deepEqual(
+      corpusArticles.map((a) => [a.articleId, a.order]),
+      [
+        [first.id, 1],
+        [second.id, 2],
+      ]
+    )
+    const article = await CorpusArticleResolver.article(
+      corpusArticles[0],
+      {},
+      { loaders: createLoaders() }
+    )
+    assert.equal(article.title, 'First')
   })
 })

@@ -18,12 +18,7 @@ export default function CorpusArticleMetadataSelector({
   onSelectedItem = () => {},
 }) {
   const { t } = useTranslation('corpus', { useSuspense: false })
-  const { corpus, error, isLoading } = useCorpusArticles({ corpusId })
-  const articles =
-    corpus?.[0]?.articles?.map((item) => {
-      const article = item.article
-      return { ...article }
-    }) ?? []
+  const { articles = [], error, isLoading } = useCorpusArticles({ corpusId })
   if (error) return <Alert message={error.message} />
   if (isLoading) return <Loading />
   if (articles.length === 0) return null

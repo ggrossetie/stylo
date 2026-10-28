@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import { DndProvider } from 'react-dnd'
 import { useTranslation } from 'react-i18next'
-import { getCorpus } from '../../../hooks/Corpus.graphql'
+import { getCorpusArticles } from '../../../hooks/Corpus.graphql'
 import { dragAndDropManager } from '../../../hooks/dnd.js'
 import useFetchData from '../../../hooks/graphql.js'
 import { useModal } from '../../../hooks/modal.js'
@@ -17,18 +17,15 @@ export default function CorpusArticles({ corpusId }) {
   const addArticlesModal = useModal()
   const { data, isLoading, mutate } = useFetchData(
     {
-      query: getCorpus,
-      variables: { filter: { corpusId: corpusId }, includeArticles: true },
+      query: getCorpusArticles,
+      variables: { corpusId },
     },
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
     }
   )
-  const corpusArticles = useMemo(
-    () => data?.corpus?.[0]?.articles || [],
-    [data]
-  )
+  const corpusArticles = useMemo(() => data?.articles || [], [data])
 
   const handleUpdate = useCallback(() => {
     mutate()

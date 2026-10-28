@@ -9,6 +9,7 @@ const Workspace = require('../models/workspace.js')
 const Version = require('../models/version.js')
 
 const isUser = require('../policies/isUser.js')
+const { getCorpusByContext } = require('./corpusResolver.js')
 const { reformat } = require('../helpers/metadata.js')
 const {
   computeMajorVersion,
@@ -500,7 +501,7 @@ module.exports = {
      * - BUT not the granted account shared articles — we switch into their view for this
      *
      * @param {null} _root
-     * @param {{ filter?: { workspaceId?: string, corpusId?: string } }} args
+     * @param {{ filter?: { workspaceId?: string, corpusId?: string } }} args filter by workspace and/or corpus (the articles of a corpus are returned in the corpus order)
      * @param {{ user: User, token: Object, userId: String, loaders: { tags, users } }} context
      * @returns {Promise<import('./article')[]>}
      */
@@ -517,7 +518,18 @@ module.exports = {
         filterIds = [...workspace.articles]
       }
 
-      return Article.getArticles({
+      let corpusArticleIds = null
+      if (args.filter?.corpusId) {
+        const corpus = await getCorpusByContext(args.filter.corpusId, context)
+        corpusArticleIds = [...corpus.articles]
+          .sort((a, b) => (a.order < b.order ? -1 : 1))
+          .map((a) => String(a.article?._id ?? a.article))
+        filterIds = Array.isArray(filterIds)
+          ? filterIds.filter((id) => corpusArticleIds.includes(id.toString()))
+          : corpusArticleIds
+      }
+
+      const articles = await Article.getArticles({
         filter: !Array.isArray(filterIds)
           ? {
               $or: [
@@ -530,6 +542,16 @@ module.exports = {
             },
         loaders: context.loaders,
       })
+
+      // the articles of a corpus are returned in the corpus order
+      if (corpusArticleIds) {
+        articles.sort(
+          (a, b) =>
+            corpusArticleIds.indexOf(a._id.toString()) -
+            corpusArticleIds.indexOf(b._id.toString())
+        )
+      }
+      return articles
     },
   },
 

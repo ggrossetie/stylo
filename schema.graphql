@@ -92,7 +92,8 @@ type Corpus {
 }
 
 type CorpusArticle {
-  article: Article
+  article: Article @deprecated(reason: "Use articleId with the article query, or the articles query with a corpusId filter, instead.")
+  articleId: ID!
   corpus: Corpus!
   move(order: Int): Corpus @deprecated(reason: "Use moveCorpusArticle mutation at the root instead.")
   order: Int
@@ -682,7 +683,10 @@ input CreateWorkspaceInput {
 }
 
 input FilterCorpusInput {
-  corpusId: ID @deprecated(reason: "Use the corpus query with a corpusId argument instead (available in the next major version).")
+  """
+  Articles query: list the articles of this corpus, in the corpus order. Corpus query: deprecated, use the corpus query with a corpusId argument instead (available in the next major version).
+  """
+  corpusId: ID
   workspaceId: ID
 }
 

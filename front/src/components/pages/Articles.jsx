@@ -153,7 +153,7 @@ export default function Articles() {
               key={`article-${article._id}`}
               article={article}
               corpus={corpora.filter((c) =>
-                c.articles.map((a) => a.article._id).includes(article._id)
+                c.articles.map((a) => a.articleId).includes(article._id)
               )}
             />
           ))}

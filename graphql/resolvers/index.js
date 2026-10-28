@@ -22,6 +22,7 @@ const {
 } = require('./workspaceResolver')
 const {
   Corpus,
+  CorpusArticle,
   Query: CorpusQuery,
   Mutation: CorpusMutation,
 } = require('./corpusResolver')
@@ -53,6 +54,7 @@ module.exports = {
   WorkingVersion,
   Workspace,
   Corpus,
+  CorpusArticle,
   // Root queries & mutations
   Query: {
     ...UserQuery,

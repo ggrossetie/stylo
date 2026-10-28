@@ -11,7 +11,7 @@ import styles from './ArticlesSelector.module.scss'
 
 export function ArticlesSelector({ corpusArticles, onUpdate }) {
   const [selectedArticleIds, setSelectedArticleIds] = useState(
-    corpusArticles.map((a) => a.article._id)
+    corpusArticles.map((a) => a._id)
   )
   const { t } = useTranslation('corpus', { useSuspense: false })
   const [filter, setFilter] = useState('')

@@ -211,6 +211,49 @@ describe('article resolver', () => {
         ['Article A']
       )
     })
+
+    test('lists the articles of a corpus in the corpus order', async () => {
+      const first = await Article.create({
+        title: 'First in corpus',
+        owner: [user6._id],
+      })
+      const second = await Article.create({
+        title: 'Second in corpus',
+        owner: [context.userId],
+      })
+      const corpus = await Corpus.create({
+        name: 'Corpus A',
+        creator: context.userId,
+        articles: [
+          { article: second._id, order: 2 },
+          { article: first._id, order: 1 },
+        ],
+      })
+
+      const articles = await ArticleQuery.articles(
+        {},
+        { filter: { corpusId: corpus._id } },
+        context
+      )
+
+      assert.deepEqual(
+        articles.map((a) => a.title),
+        ['First in corpus', 'Second in corpus']
+      )
+      assert.equal(articles[0].owner.email, user6.email)
+    })
+
+    test('refuses to list the articles of an inaccessible corpus', async () => {
+      const corpus = await Corpus.create({
+        name: 'Corpus B',
+        creator: user6._id,
+        articles: [],
+      })
+
+      await assert.rejects(async () =>
+        ArticleQuery.articles({}, { filter: { corpusId: corpus._id } }, context)
+      )
+    })
   })
 
   describe('duplicate article', () => {

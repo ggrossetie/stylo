@@ -24,9 +24,7 @@ query getWorkspaceArticles(
     _id
     name
     articles {
-      article {
-        _id
-      }
+      articleId
     }
   }
 

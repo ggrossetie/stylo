@@ -39,22 +39,12 @@ query getCorpus(
   $isPersonalWorkspace: Boolean = true
   $workspaceId: ID
   $includeArticles: Boolean = false
-  $includeWorkingVersion: Boolean = false
 ) {
   corpus(filter: $filter) {
     ...basicCorpusFields
 
     articles @include(if: $includeArticles) {
-      article {
-        _id
-        title
-
-        workingVersion @include(if: $includeWorkingVersion) {
-          md
-          bib
-          yaml(options: { strip_markdown: true })
-        }
-      }
+      articleId
     }
   }
 
@@ -63,17 +53,13 @@ query getCorpus(
   }
 }
 
-query getCorpusArticles($filter: FilterCorpusInput) {
-  corpus(filter: $filter) {
-    articles {
-      article {
-        _id
-        title
+query getCorpusArticles($corpusId: ID!) {
+  articles(filter: { corpusId: $corpusId }) {
+    _id
+    title
 
-        workingVersion {
-          metadata
-        }
-      }
+    workingVersion {
+      metadata
     }
   }
 }

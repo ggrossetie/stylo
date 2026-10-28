@@ -1,7 +1,6 @@
 const { NotFoundError, NotAuthenticatedError } = require('../helpers/errors.js')
 const Corpus = require('../models/corpus')
 const Workspace = require('../models/workspace')
-const { logger } = require('../logger')
 const { NotAuthorizedError } = require('../helpers/errors')
 const { diff } = require('../helpers/diff')
 
@@ -64,8 +63,8 @@ async function getCorpusByUser(corpusId, userId) {
 }
 
 class CorpusArticle {
-  get article() {
-    return this._article
+  get articleId() {
+    return articleRefId(this._article.article)
   }
 
   get order() {
@@ -271,31 +270,10 @@ module.exports = {
   },
 
   Corpus: {
-    async articles(corpus, _args, context) {
-      const articles = (
-        await Promise.all(
-          corpus.articles
-            .map(async (article) => {
-              const articleLoaded = await context.loaders.articles.load(
-                article.article
-              )
-              if (articleLoaded === undefined) {
-                logger.warn(
-                  `Unable to find article ${article.article} on corpus ${corpus._id}`
-                )
-                return undefined
-              }
-              return {
-                _id: article._id,
-                order: article.order,
-                article: articleLoaded,
-              }
-            })
-            .filter((a) => a)
-        )
-      ).filter((a) => a)
-      articles.sort((a, b) => (a.order < b.order ? -1 : 1))
-      return articles
+    async articles(corpus) {
+      return [...corpus.articles]
+        .sort((a, b) => (a.order < b.order ? -1 : 1))
+        .map((article) => new CorpusArticle(corpus, article))
     },
 
     async article(corpus, { articleId }) {
@@ -337,4 +315,13 @@ module.exports = {
       return corpus.updateArticlesOrder(articlesOrderInput)
     },
   },
+
+  CorpusArticle: {
+    /** @deprecated Use articleId with the article or articles queries instead. */
+    async article(corpusArticle, _args, context) {
+      return context.loaders.articles.load(corpusArticle.articleId)
+    },
+  },
+
+  getCorpusByContext,
 }

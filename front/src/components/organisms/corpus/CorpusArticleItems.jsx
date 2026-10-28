@@ -11,7 +11,7 @@ import CorpusArticleCard from './CorpusArticleCard.jsx'
 /**
  * @param {object} props
  * @param {string} [props.corpusId]
- * @param {Array<{article: {_id: string}}>} [props.articles]
+ * @param {Array<{_id: string}>} [props.articles] - Articles of the corpus, in the corpus order
  * @param {() => void} props.onUpdate - Called after the article order has been updated
  * @returns {JSX.Element}
  */
@@ -21,7 +21,7 @@ export default function CorpusArticleItems({ corpusId, articles, onUpdate }) {
   const [articleCards, setArticleCards] = useState([])
   useEffect(() => {
     try {
-      setArticleCards(articles.map((a) => a.article))
+      setArticleCards(articles)
     } finally {
       setLoading(false)
     }
