@@ -33,7 +33,7 @@ describe('workspace resolver', () => {
     await RootMutation.createWorkspace(
       {},
       {
-        createWorkspaceInput: {
+        input: {
           name: 'Workspace A',
           color: '#49ffe0',
           description: 'Description',
@@ -186,7 +186,7 @@ describe('workspace resolver', () => {
       {},
       {
         workspaceId: workspace.id,
-        details: {
+        input: {
           data: `{"title": "book"}`,
           ui: `{"ui:groups": []}`,
         },
@@ -234,7 +234,7 @@ describe('workspace resolver', () => {
           {},
           {
             workspaceId: workspace.id,
-            details: {
+            input: {
               data: `{"title":}`, // invalid JSON
               ui: `{"ui:groups": []}`,
             },
@@ -266,7 +266,7 @@ describe('workspace resolver', () => {
           {},
           {
             workspaceId: workspace.id,
-            details: {
+            input: {
               data: `{"title": "book"}`,
               ui: `{`, // invalid JSON
             },

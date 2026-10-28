@@ -503,7 +503,7 @@ describe('article resolver', () => {
 
       const entries = await ArticleMutation.updateArticleBibliography(
         {},
-        { input: { articleId: article._id, bib } },
+        { articleId: article._id, input: { bib } },
         context
       )
 
@@ -526,7 +526,7 @@ describe('article resolver', () => {
 
       await ArticleMutation.updateArticleBibliography(
         {},
-        { input: { articleId: article._id, bib: newBib } },
+        { articleId: article._id, input: { bib: newBib } },
         context
       )
 
@@ -543,7 +543,7 @@ describe('article resolver', () => {
       await assert.rejects(async () =>
         ArticleMutation.updateArticleBibliography(
           {},
-          { input: { articleId: article._id, bib: '@article{x}' } },
+          { articleId: article._id, input: { bib: '@article{x}' } },
           context
         )
       )
@@ -558,7 +558,7 @@ describe('article resolver', () => {
       await assert.rejects(async () =>
         ArticleMutation.updateArticleBibliography(
           {},
-          { input: { articleId: article._id, bib: '' } },
+          { articleId: article._id, input: { bib: '' } },
           { user: {}, userId: null, token: {} }
         )
       )
@@ -589,7 +589,7 @@ describe('article resolver', () => {
 
       const updated = await ArticleMutation.updateArticleMetadata(
         {},
-        { input: { articleId: article._id, metadata } },
+        { articleId: article._id, input: { metadata } },
         context
       )
 
@@ -606,7 +606,7 @@ describe('article resolver', () => {
 
       const updated = await ArticleMutation.updateArticleMetadata(
         {},
-        { input: { articleId: article._id, metadata: newMetadata } },
+        { articleId: article._id, input: { metadata: newMetadata } },
         context
       )
 
@@ -622,7 +622,7 @@ describe('article resolver', () => {
       await assert.rejects(async () =>
         ArticleMutation.updateArticleMetadata(
           {},
-          { input: { articleId: article._id, metadata: { title: 'Hacked' } } },
+          { articleId: article._id, input: { metadata: { title: 'Hacked' } } },
           context
         )
       )
@@ -637,7 +637,7 @@ describe('article resolver', () => {
       await assert.rejects(async () =>
         ArticleMutation.updateArticleMetadata(
           {},
-          { input: { articleId: article._id, metadata: {} } },
+          { articleId: article._id, input: { metadata: {} } },
           { user: {}, userId: null, token: {} }
         )
       )

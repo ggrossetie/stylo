@@ -28,7 +28,7 @@ module.exports = {
       return true
     },
 
-    async createUser(_, { details: userInput }) {
+    async createUser(_, { input: userInput }) {
       // check for user uniqueness
       const existingUser = await User.findOne({ email: userInput.email })
       if (existingUser) {
@@ -54,12 +54,12 @@ module.exports = {
      * Create account after two steps login
      * @param {DataLoaders} _
      * @param {Object} args
-     * @param {Object} args.details Form details
+     * @param {Object} args.input Form details
      * @param {'humanid'|'hypothesis'|'zotero'} args.service Only used to validate GraphQL mutation.
      * @param {RequestContext} context
      * @returns {Promise<string>}
      */
-    async createUserWithAuth(_, { details }, { session }) {
+    async createUserWithAuth(_, { input }, { session }) {
       // link accounts
       if (!session?.pendingRegistration) {
         throw new BadRequestError(
@@ -73,10 +73,10 @@ module.exports = {
         ...session.pendingRegistration,
         // we want to keep the user defined choice if any
         displayName:
-          details.displayName || session.pendingRegistration.displayName,
-        firstName: details.firstName,
-        lastName: details.lastName,
-        institution: details.institution,
+          input.displayName || session.pendingRegistration.displayName,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        institution: input.institution,
         connectedAt: Date.now(),
       })
 
@@ -252,7 +252,7 @@ module.exports = {
 
     async updateUser(_, args, context) {
       const { userId } = isUser(args, context)
-      const { details } = args
+      const { input } = args
 
       const thisUser = await User.findById(userId)
       if (!thisUser) {
@@ -260,7 +260,7 @@ module.exports = {
       }
 
       // an empty email is ignored: the unique index does not allow blank values
-      const email = details.email?.trim()
+      const email = input.email?.trim()
       if (email && email !== thisUser.email) {
         const existingUser = await User.findOne({ email })
         if (existingUser) {
@@ -274,9 +274,9 @@ module.exports = {
 
       ;['displayName', 'firstName', 'lastName', 'institution', 'yaml'].forEach(
         (field) => {
-          if (Object.hasOwn(details, field)) {
+          if (Object.hasOwn(input, field)) {
             /* eslint-disable security/detect-object-injection */
-            thisUser.set(field, details[field])
+            thisUser.set(field, input[field])
           }
         }
       )

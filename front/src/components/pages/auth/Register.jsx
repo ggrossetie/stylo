@@ -21,10 +21,12 @@ export default function Register() {
 
   const handleFormSubmit = useCallback(async (event) => {
     event.preventDefault()
-    const details = fromFormData(event.target)
+    const input = fromFormData(event.target)
+    // the password confirmation is only checked by the form
+    delete input.passwordC
 
     try {
-      await query({ query: queries.createUser, variables: { details } })
+      await query({ query: queries.createUser, variables: { input } })
       // if no error thrown, we can navigate to /
       toast(t('credentials.register.successToast'), {
         type: 'info',

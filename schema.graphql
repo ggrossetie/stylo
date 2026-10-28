@@ -18,7 +18,7 @@ type Article {
   addContributor(userId: ID!): Article @deprecated(reason: "Use addArticleContributor mutation at the root instead.")
   addTags(tags: [ID]!): [Tag] @deprecated(reason: "Use addArticleTags mutation at the root instead.")
   contributors: [ArticleContributor]!
-  createVersion(articleVersionInput: ArticleVersionInput!): Article @deprecated(reason: "Use createArticleVersion mutation at the root instead.")
+  createVersion(articleVersionInput: CreateArticleVersionInput!): Article @deprecated(reason: "Use createArticleVersion mutation at the root instead.")
   createdAt: DateTime
   delete(dryRun: Boolean): Boolean @deprecated(reason: "Use deleteArticle mutation at the root instead.")
   nakalaLink: String
@@ -28,11 +28,11 @@ type Article {
   removeTags(tags: [ID]!): [Tag] @deprecated(reason: "Use removeArticleTags mutation at the root instead.")
   rename(title: String!): Boolean @deprecated(reason: "Use renameArticle mutation at the root instead.")
   setNakalaLink(nakala: String!): Boolean @deprecated(reason: "Use setArticleNakalaLink mutation at the root instead.")
-  setPreviewSettings(settings: ArticlePreviewInput!): Article @deprecated(reason: "Use setArticlePreviewSettings mutation at the root instead.")
+  setPreviewSettings(settings: SetArticlePreviewSettingsInput!): Article @deprecated(reason: "Use setArticlePreviewSettings mutation at the root instead.")
   setZoteroLink(zotero: String!): Boolean @deprecated(reason: "Use setArticleZoteroLink mutation at the root instead.")
   tags: [Tag!]!
   title: String
-  updateWorkingVersion(content: WorkingVersionInput!): Article @deprecated(reason: "Use updateArticleWorkingVersion mutation at the root instead.")
+  updateWorkingVersion(content: UpdateArticleWorkingVersionInput!): Article @deprecated(reason: "Use updateArticleWorkingVersion mutation at the root instead.")
   updatedAt: DateTime
   versions(limit: Int, page: Int): [Version!]
   workingVersion: WorkingVersion
@@ -85,7 +85,7 @@ type Corpus {
   rename(name: String!): Corpus @deprecated(reason: "Use renameCorpus mutation at the root instead.")
   type: CorpusType!
   update(updateCorpusInput: UpdateCorpusInput!): Corpus! @deprecated(reason: "Use updateCorpus mutation at the root instead.")
-  updateArticlesOrder(articlesOrderInput: [ArticleOrder!]!): Corpus @deprecated(reason: "Use updateCorpusArticlesOrder mutation at the root instead.")
+  updateArticlesOrder(articlesOrderInput: [ArticleOrderInput!]!): Corpus @deprecated(reason: "Use updateCorpusArticlesOrder mutation at the root instead.")
   updateMetadata(metadata: JSON!): Corpus @deprecated(reason: "Use updateCorpusMetadata mutation at the root instead.")
   updatedAt: DateTime
   workspace: String
@@ -166,7 +166,7 @@ type Mutation {
   Change the password of the authenticated user.
   Requires authentication.
   """
-  changePassword(new: String!, old: String!): User
+  changePassword(input: ChangePasswordInput!): User
   """
 
   Retrieve a corpus by ID to perform mutations on it.
@@ -179,44 +179,44 @@ type Mutation {
   Optionally assigns tags and workspaces to the article at creation time.
   Requires authentication.
   """
-  createArticle(createArticleInput: CreateArticleInput!): Article
+  createArticle(input: CreateArticleInput!): Article
   """
 
   Create a new version snapshot of an article's working copy.
   Requires authentication with access to the article.
   """
-  createArticleVersion(articleId: ID!, articleVersionInput: ArticleVersionInput!): Article
+  createArticleVersion(articleId: ID!, input: CreateArticleVersionInput!): Article
   """
 
   Create a new corpus in a workspace.
   A corpus groups articles together for publication or export purposes.
   """
-  createCorpus(createCorpusInput: CreateCorpusInput!): Corpus
+  createCorpus(input: CreateCorpusInput!): Corpus
   """
 
   Create a new tag for the authenticated user.
   Tags can be used to organise and filter articles.
   Requires authentication.
   """
-  createTag(color: HexColorCode!, description: String, name: String!): Tag
+  createTag(input: CreateTagInput!): Tag
   """
 
   Create a new user account with email/password authentication.
   Also creates a default article for the new user.
   """
-  createUser(details: NewUserInput!): User!
+  createUser(input: CreateUserInput!): User!
   """
 
   Finalize user account creation after authentication with an external provider (e.g. OIDC).
   Returns a JWT token for the newly created session.
   """
-  createUserWithAuth(details: NewUserWithAuthInput!, service: AuthTokenService!): String
+  createUserWithAuth(input: CreateUserWithAuthInput!, service: AuthTokenService!): String
   """
 
   Create a new workspace.
   The authenticated user becomes the creator and first member of the workspace.
   """
-  createWorkspace(createWorkspaceInput: CreateWorkspaceInput!): Workspace
+  createWorkspace(input: CreateWorkspaceInput!): Workspace
   """
 
   Permanently and irreversibly delete the authenticated user's account.
@@ -327,7 +327,7 @@ type Mutation {
   Update the preview settings (stylesheet, template) of an article.
   Requires authentication with access to the article.
   """
-  setArticlePreviewSettings(articleId: ID!, settings: ArticlePreviewInput!): Article
+  setArticlePreviewSettings(articleId: ID!, input: SetArticlePreviewSettingsInput!): Article
   """
 
   Set the Zotero library link on an article. Returns the updated article.
@@ -345,7 +345,7 @@ type Mutation {
   Updates the articles associated with the corpus.
   Existing articles that are not in the list will be removed, and articles not currently present will be added.
   """
-  setCorpusArticles(setCorpusArticlesInput: SetCorpusArticlesInput!): Corpus
+  setCorpusArticles(corpusId: ID!, input: SetCorpusArticlesInput!): Corpus
   """
 
   Share an article with another user, granting them contributor access.
@@ -370,39 +370,39 @@ type Mutation {
   Update an article's title, tags, or workspaces.
   Requires authentication as the article owner.
   """
-  updateArticle(updateArticleInput: UpdateArticleInput!): Article!
+  updateArticle(articleId: ID!, input: UpdateArticleInput!): Article!
   """
 
   Update the bibliography of an article from a BibTeX string.
   Returns the updated bibliography as a list of structured entries.
   Requires authentication with access to the article (as owner, contributor, or via a workspace).
   """
-  updateArticleBibliography(input: UpdateArticleBibliographyInput!): [BibliographyEntry]
+  updateArticleBibliography(articleId: ID!, input: UpdateArticleBibliographyInput!): [BibliographyEntry]
   """
 
   Update the metadata of an article's working copy.
   Replaces the entire metadata object stored in the working copy.
   Requires authentication with access to the article (as owner, contributor, or via a workspace).
   """
-  updateArticleMetadata(input: UpdateArticleMetadataInput!): Article
+  updateArticleMetadata(articleId: ID!, input: UpdateArticleMetadataInput!): Article
   """
 
   Update the working version content of an article (markdown, bibliography, metadata).
   Requires authentication with access to the article.
   """
-  updateArticleWorkingVersion(articleId: ID!, content: WorkingVersionInput!): Article
+  updateArticleWorkingVersion(articleId: ID!, input: UpdateArticleWorkingVersionInput!): Article
   """
 
   Update a corpus's name, description, or metadata.
   Requires authentication with access to the corpus.
   """
-  updateCorpus(corpusId: ID!, updateCorpusInput: UpdateCorpusInput!): Corpus!
+  updateCorpus(corpusId: ID!, input: UpdateCorpusInput!): Corpus!
   """
 
   Reorder the articles within a corpus.
   Requires authentication with access to the corpus.
   """
-  updateCorpusArticlesOrder(articlesOrderInput: [ArticleOrder!]!, corpusId: ID!): Corpus
+  updateCorpusArticlesOrder(corpusId: ID!, input: UpdateCorpusArticlesOrderInput!): Corpus
   """
 
   Update the metadata of a corpus.
@@ -414,20 +414,20 @@ type Mutation {
   Update the name, description, or color of an existing tag.
   Requires authentication as the tag owner.
   """
-  updateTag(color: HexColorCode, description: String, name: String, tag: ID!): Tag
+  updateTag(input: UpdateTagInput!, tagId: ID!): Tag
   """
 
   Update profile information of the authenticated user (display name, first/last name, institution).
   Requires authentication.
   """
-  updateUser(details: UserProfileInput!): User
+  updateUser(input: UpdateUserInput!): User
   """
 
   Update the JSON schema form metadata for a workspace.
   Controls the custom metadata form displayed in the workspace editor.
   Requires authentication as a workspace member.
   """
-  updateWorkspaceFormMetadata(details: UpdateWorkspaceFormMetadataInput!, workspaceId: ID!): Workspace
+  updateWorkspaceFormMetadata(input: UpdateWorkspaceFormMetadataInput!, workspaceId: ID!): Workspace
   """
 
   Retrieve a workspace by ID to perform mutations on it (e.g. adding members or articles).
@@ -639,20 +639,14 @@ scalar JSONObject
 "A field whose value is a JSON Web Token (JWT): https://jwt.io/introduction."
 scalar JWT
 
-input ArticleOrder {
+input ArticleOrderInput {
   articleId: ID!
   order: Int!
 }
 
-input ArticlePreviewInput {
-  stylesheet: String
-  template: String
-}
-
-input ArticleVersionInput {
-  major: Boolean
-  message: String
-  userId: ID!
+input ChangePasswordInput {
+  currentPassword: String!
+  newPassword: String!
 }
 
 input CorpusFilterInput {
@@ -661,9 +655,14 @@ input CorpusFilterInput {
 }
 
 input CreateArticleInput {
-  tags: [ID]
+  tags: [ID!]
   title: String!
-  workspaces: [ID]
+  workspaces: [ID!]
+}
+
+input CreateArticleVersionInput {
+  major: Boolean
+  message: String
 }
 
 input CreateCorpusInput {
@@ -671,7 +670,30 @@ input CreateCorpusInput {
   metadata: JSON
   name: String!
   type: CorpusType!
-  workspace: String
+  workspaceId: ID
+}
+
+input CreateTagInput {
+  color: HexColorCode!
+  description: String
+  name: String!
+}
+
+input CreateUserInput {
+  displayName: String
+  email: EmailAddress!
+  firstName: String
+  institution: String
+  lastName: String
+  password: String!
+  username: String!
+}
+
+input CreateUserWithAuthInput {
+  displayName: String
+  firstName: String
+  institution: String
+  lastName: String
 }
 
 "Input to create a new workspace"
@@ -693,50 +715,58 @@ input ImportArticleInput {
   title: String!
 }
 
-input NewUserInput {
-  displayName: String
-  email: EmailAddress!
-  firstName: String
-  institution: String
-  lastName: String
-  password: String!
-  passwordC: String!
-  username: String!
-}
-
-input NewUserWithAuthInput {
-  displayName: String
-  firstName: String
-  institution: String
-  lastName: String
+input SetArticlePreviewSettingsInput {
+  stylesheet: String
+  template: String
 }
 
 input SetCorpusArticlesInput {
-  articleIds: [ID]
-  corpusId: ID!
+  articleIds: [ID!]!
 }
 
 input UpdateArticleBibliographyInput {
-  articleId: ID!
   bib: String!
 }
 
 input UpdateArticleInput {
-  id: ID!
-  tags: [ID]
+  tags: [ID!]
   title: String!
-  workspaces: [ID]
+  workspaces: [ID!]
 }
 
 input UpdateArticleMetadataInput {
-  articleId: ID!
   metadata: JSON!
+}
+
+input UpdateArticleWorkingVersionInput {
+  bib: String
+  md: String
+  metadata: JSON
+  metadataFormType: String
+}
+
+input UpdateCorpusArticlesOrderInput {
+  articlesOrder: [ArticleOrderInput!]!
 }
 
 input UpdateCorpusInput {
   description: String
   metadata: JSON
   name: String
+}
+
+input UpdateTagInput {
+  color: HexColorCode
+  description: String
+  name: String
+}
+
+input UpdateUserInput {
+  displayName: String
+  email: String
+  firstName: String
+  institution: String
+  lastName: String
 }
 
 "Input to update the form metadata on a workspace"
@@ -747,21 +777,6 @@ input UpdateWorkspaceFormMetadataInput {
 
 input UserFilter {
   email: String!
-}
-
-input UserProfileInput {
-  displayName: String
-  email: String
-  firstName: String
-  institution: String
-  lastName: String
-}
-
-input WorkingVersionInput {
-  bib: String
-  md: String
-  metadata: JSON
-  metadataFormType: String
 }
 
 input YamlFormattingInput {

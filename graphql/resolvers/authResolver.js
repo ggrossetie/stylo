@@ -40,12 +40,12 @@ module.exports = {
       }
 
       // check old password
-      if (!(await user.comparePassword(args.old))) {
+      if (!(await user.comparePassword(args.input.currentPassword))) {
         throw new Error('Old password is incorrect')
       }
 
       // set new password
-      user.set('password', args.new)
+      user.set('password', args.input.newPassword)
       await user.save()
 
       return user

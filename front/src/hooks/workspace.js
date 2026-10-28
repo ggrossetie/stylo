@@ -138,7 +138,7 @@ export function useWorkspaceActions() {
       sessionToken,
       query: createMutation,
       variables: {
-        data: {
+        input: {
           color: workspace.color,
           description: workspace.description,
           name: workspace.name,

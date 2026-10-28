@@ -28,7 +28,7 @@ export default function TagEditForm({ tag, onSubmit, onCancel }) {
     event.preventDefault()
     const data = {
       ...fromFormData(event.target),
-      tag: tag?._id ?? null,
+      tagId: tag?._id ?? null,
     }
     const result = isNew ? await create(data) : await update(data)
     onSubmit(result)

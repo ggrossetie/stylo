@@ -31,14 +31,14 @@ export default function CorpusArticleItems({ corpusId, articles, onUpdate }) {
   const updateArticleOrder = useCallback(
     debounce(
       async (orderedArticles) => {
-        const articlesOrderInput = orderedArticles.map((item, index) => ({
+        const articlesOrder = orderedArticles.map((item, index) => ({
           articleId: item._id,
           order: index,
         }))
         try {
           await query({
             query: updateArticlesOrder,
-            variables: { corpusId, articlesOrderInput },
+            variables: { corpusId, articlesOrder },
           })
           onUpdate()
           toast(t('actions.reorderArticles.success'), { type: 'info' })

@@ -15,9 +15,9 @@ module.exports = {
         throw new Error('This user does not exist')
       }
       return await Tag.create({
-        name: args.name,
-        description: args.description,
-        color: args.color,
+        name: args.input.name,
+        description: args.input.description,
+        color: args.input.color,
         owner: thisUser,
       })
     },
@@ -34,14 +34,14 @@ module.exports = {
 
     async updateTag(_, args, context) {
       const { userId } = isUser(args, context)
-      const thisTag = await Tag.findOne({ _id: args.tag, owner: userId })
+      const thisTag = await Tag.findOne({ _id: args.tagId, owner: userId })
       if (!thisTag) {
         throw new Error('Unable to find tag')
       }
       ;['name', 'description', 'color'].forEach((field) => {
-        if (Object.hasOwn(args, field)) {
+        if (Object.hasOwn(args.input, field)) {
           /* eslint-disable security/detect-object-injection */
-          thisTag.set(field, args[field])
+          thisTag.set(field, args.input[field])
         }
       })
       return thisTag.save()

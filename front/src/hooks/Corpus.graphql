@@ -105,8 +105,8 @@ query getCorpusPreview(
   }
 }
 
-mutation createCorpus($createCorpusInput: CreateCorpusInput!) {
-  createCorpus(createCorpusInput: $createCorpusInput) {
+mutation createCorpus($input: CreateCorpusInput!) {
+  createCorpus(input: $input) {
     _id
     name
     description
@@ -131,8 +131,8 @@ mutation updateMetadata($corpusId: ID!, $metadata: JSON!) {
   }
 }
 
-mutation updateCorpus($corpusId: ID!, $updateCorpusInput: UpdateCorpusInput!) {
-  updateCorpus(corpusId: $corpusId, updateCorpusInput: $updateCorpusInput) {
+mutation updateCorpus($corpusId: ID!, $input: UpdateCorpusInput!) {
+  updateCorpus(corpusId: $corpusId, input: $input) {
     _id
   }
 }
@@ -151,20 +151,18 @@ mutation addArticleToCorpus($corpusId: ID!, $articleId: ID!) {
 
 mutation updateArticlesOrder(
   $corpusId: ID!
-  $articlesOrderInput: [ArticleOrder!]!
+  $articlesOrder: [ArticleOrderInput!]!
 ) {
   updateCorpusArticlesOrder(
     corpusId: $corpusId
-    articlesOrderInput: $articlesOrderInput
+    input: { articlesOrder: $articlesOrder }
   ) {
     _id
   }
 }
 
-mutation setCorpusArticles($corpusId: ID!, $articleIds: [ID]!) {
-  setCorpusArticles(
-    setCorpusArticlesInput: { corpusId: $corpusId, articleIds: $articleIds }
-  ) {
+mutation setCorpusArticles($corpusId: ID!, $articleIds: [ID!]!) {
+  setCorpusArticles(corpusId: $corpusId, input: { articleIds: $articleIds }) {
     _id
   }
 }

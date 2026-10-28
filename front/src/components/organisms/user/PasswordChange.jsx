@@ -43,8 +43,10 @@ export default function Credentials() {
     try {
       setIsUpdating(true)
       const variables = {
-        old: passwordO,
-        new: password,
+        input: {
+          currentPassword: passwordO,
+          newPassword: password,
+        },
       }
       const { changePassword: details } = await query({
         query: changePasswordQuery,

@@ -107,24 +107,24 @@ module.exports = {
      * Create a new corpus.
      *
      * @param _
-     * @param { createCorpusInput } args
+     * @param { input } args
      * @param { user } user
      * @returns {Promise<*>}
      */
     async createCorpus(_, args, { user }) {
-      const { createCorpusInput } = args
+      const { input } = args
       if (!user) {
         throw new NotAuthenticatedError()
       }
 
       // any user can create a corpus
       const newCorpus = new Corpus({
-        name: createCorpusInput.name,
-        type: createCorpusInput.type,
-        description: createCorpusInput.description,
+        name: input.name,
+        type: input.type,
+        description: input.description,
         articles: [],
-        metadata: createCorpusInput.metadata,
-        workspace: createCorpusInput.workspace,
+        metadata: input.metadata,
+        workspace: input.workspaceId,
         creator: user._id,
       })
       return newCorpus.save()
@@ -143,7 +143,8 @@ module.exports = {
     },
 
     async setCorpusArticles(_, args, context) {
-      const { articleIds, corpusId } = args.setCorpusArticlesInput
+      const { corpusId } = args
+      const { articleIds } = args.input
       const corpus = await getCorpusByContext(corpusId, context)
       const initialArticleIds = corpus.articles.map((a) =>
         a.article._id.toString()
@@ -178,9 +179,9 @@ module.exports = {
       return corpus.updateMetadata(metadata)
     },
 
-    async updateCorpus(_, { corpusId, updateCorpusInput }, context) {
+    async updateCorpus(_, { corpusId, input }, context) {
       const corpus = await getCorpusByContext(corpusId, context)
-      return corpus.update(updateCorpusInput)
+      return corpus.update(input)
     },
 
     async addCorpusArticle(_, { corpusId, articleId }, context) {
@@ -198,13 +199,9 @@ module.exports = {
       return corpus.moveArticle(articleId, order)
     },
 
-    async updateCorpusArticlesOrder(
-      _,
-      { corpusId, articlesOrderInput },
-      context
-    ) {
+    async updateCorpusArticlesOrder(_, { corpusId, input }, context) {
       const corpus = await getCorpusByContext(corpusId, context)
-      return corpus.updateArticlesOrder(articlesOrderInput)
+      return corpus.updateArticlesOrder(input.articlesOrder)
     },
   },
 

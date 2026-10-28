@@ -78,15 +78,15 @@ class WorkspaceMember {
 module.exports = {
   Mutation: {
     async createWorkspace(_, args, { user }) {
-      const { createWorkspaceInput } = args
+      const { input } = args
       if (!user) {
         throw new NotAuthenticatedError()
       }
       // any user can create a workspace
       const newWorkspace = new Workspace({
-        name: createWorkspaceInput.name,
-        color: createWorkspaceInput.color,
-        description: createWorkspaceInput.description,
+        name: input.name,
+        color: input.color,
+        description: input.description,
         members: [{ user: user._id }],
         articles: [],
         creator: user._id,
@@ -95,11 +95,11 @@ module.exports = {
     },
 
     async updateWorkspaceFormMetadata(_, args, { user, token }) {
-      const { details, workspaceId } = args
+      const { input, workspaceId } = args
       if (!user) {
         throw new NotAuthenticatedError()
       }
-      const { data, ui } = details
+      const { data, ui } = input
       if (data) {
         try {
           JSON.parse(data.trim())
@@ -121,7 +121,7 @@ module.exports = {
         }
       }
       const workspace = await getWorkspace(workspaceId, token, user)
-      workspace.formMetadata = details
+      workspace.formMetadata = input
       return workspace.save()
     },
 

@@ -274,7 +274,7 @@ describe('user resolver', () => {
           Mutation.createUser(
             {},
             {
-              details: {
+              input: {
                 email: 'user7@example.com',
               },
             }
@@ -289,7 +289,7 @@ describe('user resolver', () => {
       const u = await Mutation.createUser(
         {},
         {
-          details: {
+          input: {
             blah: 'this field will be ignored',
             email: ' test-with-space@example.com ',
             username: ' jane.doe ',
@@ -310,7 +310,7 @@ describe('user resolver', () => {
 
       const u = await Mutation.updateUser(
         {},
-        { details: { email: ' new-email@example.com ' } },
+        { input: { email: ' new-email@example.com ' } },
         context
       )
 
@@ -323,7 +323,7 @@ describe('user resolver', () => {
 
       const u = await Mutation.updateUser(
         {},
-        { details: { email: '', displayName: 'Jane' } },
+        { input: { email: '', displayName: 'Jane' } },
         context
       )
 
@@ -340,7 +340,7 @@ describe('user resolver', () => {
         () =>
           Mutation.updateUser(
             {},
-            { details: { email: 'taken@example.com' } },
+            { input: { email: 'taken@example.com' } },
             context
           ),
         (error) => error.extensions.code === 'EMAIL_ALREADY_EXISTS'
@@ -390,7 +390,7 @@ describe('user resolver', () => {
         {},
         {
           service: 'zotero',
-          details: {
+          input: {
             firstName: 'Jane',
           },
         },

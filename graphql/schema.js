@@ -145,32 +145,28 @@ type Version {
   rename(name: String): Boolean @deprecated(reason: "Use renameVersion mutation at the root instead.")
 }
 
-input ArticleVersionInput {
-  userId: ID!
+input CreateArticleVersionInput {
   major: Boolean
   message: String
 }
 
 input CreateArticleInput {
   title: String!
-  tags: [ID]
-  workspaces: [ID]
+  tags: [ID!]
+  workspaces: [ID!]
 }
 
 input UpdateArticleInput {
-  id: ID!
   title: String!
-  tags: [ID]
-  workspaces: [ID]
+  tags: [ID!]
+  workspaces: [ID!]
 }
 
 input UpdateArticleBibliographyInput {
-  articleId: ID!
   bib: String!
 }
 
 input UpdateArticleMetadataInput {
-  articleId: ID!
   metadata: JSON!
 }
 
@@ -193,13 +189,13 @@ type Article {
   delete(dryRun: Boolean): Boolean @deprecated(reason: "Use deleteArticle mutation at the root instead.")
   removeTags(tags: [ID]!): [Tag] @deprecated(reason: "Use removeArticleTags mutation at the root instead.")
   rename(title: String!): Boolean @deprecated(reason: "Use renameArticle mutation at the root instead.")
-  setPreviewSettings(settings: ArticlePreviewInput!): Article @deprecated(reason: "Use setArticlePreviewSettings mutation at the root instead.")
+  setPreviewSettings(settings: SetArticlePreviewSettingsInput!): Article @deprecated(reason: "Use setArticlePreviewSettings mutation at the root instead.")
   setZoteroLink(zotero: String!): Boolean @deprecated(reason: "Use setArticleZoteroLink mutation at the root instead.")
   setNakalaLink(nakala: String!): Boolean @deprecated(reason: "Use setArticleNakalaLink mutation at the root instead.")
-  updateWorkingVersion(content: WorkingVersionInput!): Article @deprecated(reason: "Use updateArticleWorkingVersion mutation at the root instead.")
+  updateWorkingVersion(content: UpdateArticleWorkingVersionInput!): Article @deprecated(reason: "Use updateArticleWorkingVersion mutation at the root instead.")
   addContributor(userId: ID!): Article @deprecated(reason: "Use addArticleContributor mutation at the root instead.")
   removeContributor(userId: ID!): Article @deprecated(reason: "Use removeArticleContributor mutation at the root instead.")
-  createVersion(articleVersionInput: ArticleVersionInput!): Article @deprecated(reason: "Use createArticleVersion mutation at the root instead.")
+  createVersion(articleVersionInput: CreateArticleVersionInput!): Article @deprecated(reason: "Use createArticleVersion mutation at the root instead.")
 }
 
 type ArticlePreviewSettings {
@@ -207,7 +203,7 @@ type ArticlePreviewSettings {
   template: String
 }
 
-input ArticlePreviewInput {
+input SetArticlePreviewSettingsInput {
   stylesheet: String
   template: String
 }
@@ -249,7 +245,7 @@ type InstanceArticleStats implements InstanceObjectUsageStats {
   years: [InstanceObjectUsageYearlyStats]
 }
 
-input WorkingVersionInput {
+input UpdateArticleWorkingVersionInput {
   bib: String,
   md: String,
   metadata: JSON,
@@ -260,30 +256,34 @@ input YamlFormattingInput {
   strip_markdown: Boolean
 }
 
-input NewUserInput {
+input CreateUserInput {
   email: EmailAddress!
   username: String!
   password: String!
-  passwordC: String!
   displayName: String
   firstName: String
   lastName: String
   institution: String
 }
 
-input NewUserWithAuthInput {
+input CreateUserWithAuthInput {
   displayName: String
   firstName: String
   institution: String
   lastName: String
 }
 
-input UserProfileInput {
+input UpdateUserInput {
   displayName: String
   email: String
   firstName: String
   lastName: String
   institution: String
+}
+
+input ChangePasswordInput {
+  currentPassword: String!
+  newPassword: String!
 }
 
 type WorkspaceArticle {
@@ -357,8 +357,7 @@ input CreateWorkspaceInput {
 }
 
 input SetCorpusArticlesInput {
-  corpusId: ID!
-  articleIds: [ID]
+  articleIds: [ID!]!
 }
 
 type CorpusArticle {
@@ -371,9 +370,13 @@ type CorpusArticle {
   move(order: Int): Corpus @deprecated(reason: "Use moveCorpusArticle mutation at the root instead.")
 }
 
-input ArticleOrder {
+input ArticleOrderInput {
   articleId: ID!
   order: Int!
+}
+
+input UpdateCorpusArticlesOrderInput {
+  articlesOrder: [ArticleOrderInput!]!
 }
 
 input UpdateCorpusInput {
@@ -400,7 +403,7 @@ type Corpus {
   addArticle(articleId: ID!): Corpus @deprecated(reason: "Use addCorpusArticle mutation at the root instead.")
   rename(name: String!): Corpus @deprecated(reason: "Use renameCorpus mutation at the root instead.")
   updateMetadata(metadata: JSON!): Corpus @deprecated(reason: "Use updateCorpusMetadata mutation at the root instead.")
-  updateArticlesOrder(articlesOrderInput: [ArticleOrder!]!): Corpus @deprecated(reason: "Use updateCorpusArticlesOrder mutation at the root instead.")
+  updateArticlesOrder(articlesOrderInput: [ArticleOrderInput!]!): Corpus @deprecated(reason: "Use updateCorpusArticlesOrder mutation at the root instead.")
   delete: Corpus! @deprecated(reason: "Use deleteCorpus mutation at the root instead.")
   update(updateCorpusInput: UpdateCorpusInput!): Corpus! @deprecated(reason: "Use updateCorpus mutation at the root instead.")
 }
@@ -410,7 +413,7 @@ input CreateCorpusInput {
   type: CorpusType!
   description: String
   metadata: JSON
-  workspace: String
+  workspaceId: ID
 }
 
 input FilterCorpusInput {
@@ -421,6 +424,18 @@ input FilterCorpusInput {
 input CorpusFilterInput {
   "List the corpora of this workspace (or the personal corpora of the authenticated user when omitted)"
   workspaceId: ID
+}
+
+input CreateTagInput {
+  name: String!
+  description: String
+  color: HexColorCode!
+}
+
+input UpdateTagInput {
+  name: String
+  description: String
+  color: HexColorCode
 }
 
 input ImportArticleInput {
@@ -492,13 +507,13 @@ type Mutation {
   Create a new user account with email/password authentication.
   Also creates a default article for the new user.
   """
-  createUser(details: NewUserInput!): User!
+  createUser(input: CreateUserInput!): User!
 
   """
   Finalize user account creation after authentication with an external provider (e.g. OIDC).
   Returns a JWT token for the newly created session.
   """
-  createUserWithAuth(details: NewUserWithAuthInput!, service: AuthTokenService!): String
+  createUserWithAuth(service: AuthTokenService!, input: CreateUserWithAuthInput!): String
 
   """
   Log out the currently authenticated user and invalidate the current session.
@@ -540,42 +555,33 @@ type Mutation {
   Change the password of the authenticated user.
   Requires authentication.
   """
-  changePassword(old: String!, new: String!): User
+  changePassword(input: ChangePasswordInput!): User
 
   """
   Update profile information of the authenticated user (display name, first/last name, institution).
   Requires authentication.
   """
-  updateUser(details: UserProfileInput!): User
+  updateUser(input: UpdateUserInput!): User
 
   """
   Create a new article for the authenticated user.
   Optionally assigns tags and workspaces to the article at creation time.
   Requires authentication.
   """
-  createArticle(createArticleInput: CreateArticleInput!): Article
+  createArticle(input: CreateArticleInput!): Article
 
   """
   Create a new tag for the authenticated user.
   Tags can be used to organise and filter articles.
   Requires authentication.
   """
-  createTag(
-    name: String!
-    description: String
-    color: HexColorCode!
-  ): Tag
+  createTag(input: CreateTagInput!): Tag
 
   """
   Update the name, description, or color of an existing tag.
   Requires authentication as the tag owner.
   """
-  updateTag(
-    name: String
-    description: String
-    color: HexColorCode
-    tag: ID!
-  ): Tag
+  updateTag(tagId: ID!, input: UpdateTagInput!): Tag
 
   """
   Delete a tag and remove it from all articles it was applied to.
@@ -607,14 +613,14 @@ type Mutation {
   Create a new workspace.
   The authenticated user becomes the creator and first member of the workspace.
   """
-  createWorkspace(createWorkspaceInput: CreateWorkspaceInput!): Workspace
+  createWorkspace(input: CreateWorkspaceInput!): Workspace
 
   """
   Update the JSON schema form metadata for a workspace.
   Controls the custom metadata form displayed in the workspace editor.
   Requires authentication as a workspace member.
   """
-  updateWorkspaceFormMetadata(details: UpdateWorkspaceFormMetadataInput!, workspaceId: ID!): Workspace
+  updateWorkspaceFormMetadata(workspaceId: ID!, input: UpdateWorkspaceFormMetadataInput!): Workspace
 
   """
   Retrieve a workspace by ID to perform mutations on it (e.g. adding members or articles).
@@ -647,7 +653,7 @@ type Mutation {
   Update an article's title, tags, or workspaces.
   Requires authentication as the article owner.
   """
-  updateArticle(updateArticleInput: UpdateArticleInput!): Article!
+  updateArticle(articleId: ID!, input: UpdateArticleInput!): Article!
 
   """
   Retrieve a corpus by ID to perform mutations on it.
@@ -659,13 +665,13 @@ type Mutation {
   Updates the articles associated with the corpus.
   Existing articles that are not in the list will be removed, and articles not currently present will be added.
   """
-  setCorpusArticles(setCorpusArticlesInput: SetCorpusArticlesInput!): Corpus
+  setCorpusArticles(corpusId: ID!, input: SetCorpusArticlesInput!): Corpus
 
   """
   Create a new corpus in a workspace.
   A corpus groups articles together for publication or export purposes.
   """
-  createCorpus(createCorpusInput: CreateCorpusInput!): Corpus
+  createCorpus(input: CreateCorpusInput!): Corpus
 
   """
   Delete a corpus by ID.
@@ -689,7 +695,7 @@ type Mutation {
   Update a corpus's name, description, or metadata.
   Requires authentication with access to the corpus.
   """
-  updateCorpus(corpusId: ID!, updateCorpusInput: UpdateCorpusInput!): Corpus!
+  updateCorpus(corpusId: ID!, input: UpdateCorpusInput!): Corpus!
 
   """
   Add an article to a corpus.
@@ -713,21 +719,21 @@ type Mutation {
   Reorder the articles within a corpus.
   Requires authentication with access to the corpus.
   """
-  updateCorpusArticlesOrder(corpusId: ID!, articlesOrderInput: [ArticleOrder!]!): Corpus
+  updateCorpusArticlesOrder(corpusId: ID!, input: UpdateCorpusArticlesOrderInput!): Corpus
 
   """
   Update the bibliography of an article from a BibTeX string.
   Returns the updated bibliography as a list of structured entries.
   Requires authentication with access to the article (as owner, contributor, or via a workspace).
   """
-  updateArticleBibliography(input: UpdateArticleBibliographyInput!): [BibliographyEntry]
+  updateArticleBibliography(articleId: ID!, input: UpdateArticleBibliographyInput!): [BibliographyEntry]
 
   """
   Update the metadata of an article's working copy.
   Replaces the entire metadata object stored in the working copy.
   Requires authentication with access to the article (as owner, contributor, or via a workspace).
   """
-  updateArticleMetadata(input: UpdateArticleMetadataInput!): Article
+  updateArticleMetadata(articleId: ID!, input: UpdateArticleMetadataInput!): Article
   
   """
   Import an article from external content (title, Markdown body, BibTeX bibliography, JSON metadata).
@@ -777,13 +783,13 @@ type Mutation {
   Update the preview settings (stylesheet, template) of an article.
   Requires authentication with access to the article.
   """
-  setArticlePreviewSettings(articleId: ID!, settings: ArticlePreviewInput!): Article
+  setArticlePreviewSettings(articleId: ID!, input: SetArticlePreviewSettingsInput!): Article
 
   """
   Update the working version content of an article (markdown, bibliography, metadata).
   Requires authentication with access to the article.
   """
-  updateArticleWorkingVersion(articleId: ID!, content: WorkingVersionInput!): Article
+  updateArticleWorkingVersion(articleId: ID!, input: UpdateArticleWorkingVersionInput!): Article
 
   """
   Add a contributor to an article, granting them write access.
@@ -801,7 +807,7 @@ type Mutation {
   Create a new version snapshot of an article's working copy.
   Requires authentication with access to the article.
   """
-  createArticleVersion(articleId: ID!, articleVersionInput: ArticleVersionInput!): Article
+  createArticleVersion(articleId: ID!, input: CreateArticleVersionInput!): Article
 
   """
   Rename a version by ID (updates its message). Returns the updated version.

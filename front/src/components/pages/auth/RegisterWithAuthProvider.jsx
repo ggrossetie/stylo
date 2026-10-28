@@ -26,12 +26,12 @@ export default function RegisterWithAuthProvider() {
 
   const handleFormSubmit = useCallback(async (event) => {
     event.preventDefault()
-    const details = fromFormData(event.target)
+    const input = fromFormData(event.target)
 
     try {
       const { createUserWithAuth: token } = await query({
         query: queries.createUserWithAuth,
-        variables: { details, service },
+        variables: { service, input },
         // needed to link the session to the http request in the resolver
         withCredentials: true,
       })

@@ -171,8 +171,9 @@ module.exports = {
      * @param {{ userId, token }} context
      */
     async updateArticle(_root, args, context) {
-      const { id, title, tags, workspaces } = args.updateArticleInput
-      const article = await getArticleByContext(id, context)
+      const { articleId } = args
+      const { title, tags, workspaces } = args.input
+      const article = await getArticleByContext(articleId, context)
       if (title) {
         article.title = title
       }
@@ -180,7 +181,7 @@ module.exports = {
         article.tags = tags
       }
       if (Array.isArray(workspaces)) {
-        const currentWorkspaces = await Workspace.findByArticleId(id)
+        const currentWorkspaces = await Workspace.findByArticleId(articleId)
         const currentWorkspacesSet = new Set(
           currentWorkspaces.map((w) => w._id.toString())
         )
@@ -208,7 +209,7 @@ module.exports = {
      */
     async createArticle(_root, args, context) {
       const user = await getUser(context.userId)
-      const { title, tags, workspaces } = args.createArticleInput
+      const { title, tags, workspaces } = args.input
 
       //Add default article + default version
       const yDoc = new Y.Doc({ gc: false })
@@ -328,12 +329,13 @@ module.exports = {
      * Requires authentication with access to the article (as owner, contributor, or via a workspace).
      *
      * @param {null} _root
-     * @param {{ input: { articleId: string, bib: string } }} args
+     * @param {{ articleId: string, input: { bib: string } }} args
      * @param {{ userId: string, token: object }} context
      * @returns {Promise<Array<object>>} Parsed bibliography entries
      */
     async updateArticleBibliography(_root, args, context) {
-      const { articleId, bib } = args.input
+      const { articleId } = args
+      const { bib } = args.input
       const article = await getArticleByContext(articleId, context)
       article.set('workingVersion.bib', bib)
       await article.save()
@@ -346,12 +348,13 @@ module.exports = {
      * Requires authentication with access to the article (as owner, contributor, or via a workspace).
      *
      * @param {null} _root
-     * @param {{ input: { articleId: string, metadata: object } }} args
+     * @param {{ articleId: string, input: { metadata: object } }} args
      * @param {{ userId: string, token: object }} context
      * @returns {Promise<HydratedDocument<import('../models/article').schema>>}
      */
     async updateArticleMetadata(_root, args, context) {
-      const { articleId, metadata } = args.input
+      const { articleId } = args
+      const { metadata } = args.input
       const article = await getArticleByContext(articleId, context)
       article.set('workingVersion.metadata', metadata)
       return await article.save()
@@ -425,14 +428,14 @@ module.exports = {
       return article.tags
     },
 
-    async setArticlePreviewSettings(_root, { articleId, settings }, context) {
+    async setArticlePreviewSettings(_root, { articleId, input }, context) {
       const article = await getArticleByContext(articleId, context)
-      return article.setPreviewSettings(settings)
+      return article.setPreviewSettings(input)
     },
 
-    async updateArticleWorkingVersion(_root, { articleId, content }, context) {
+    async updateArticleWorkingVersion(_root, { articleId, input }, context) {
       const article = await getArticleByContext(articleId, context)
-      return article.updateWorkingVersion(content)
+      return article.updateWorkingVersion(input)
     },
 
     async addArticleContributor(_root, { articleId, userId }, context) {
@@ -452,14 +455,12 @@ module.exports = {
       return article
     },
 
-    async createArticleVersion(
-      _root,
-      { articleId, articleVersionInput },
-      context
-    ) {
+    async createArticleVersion(_root, { articleId, input }, context) {
       const article = await getArticleByContext(articleId, context)
       const result = await createVersion(article, {
-        ...articleVersionInput,
+        major: input.major,
+        message: input.message,
+        userId: context.userId,
         type: 'userAction',
       })
       if (result === false) {
@@ -623,9 +624,11 @@ module.exports = {
     },
 
     /** @deprecated Use createArticleVersion root mutation instead. */
-    async createVersion(article, { articleVersionInput }) {
+    async createVersion(article, { articleVersionInput }, context) {
       const result = await createVersion(article, {
-        ...articleVersionInput,
+        major: articleVersionInput.major,
+        message: articleVersionInput.message,
+        userId: context.userId,
         type: 'userAction',
       })
       if (result === false) {
