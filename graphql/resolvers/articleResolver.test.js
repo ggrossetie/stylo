@@ -700,4 +700,54 @@ describe('article resolver', () => {
       )
     })
   })
+
+  describe('create article version', () => {
+    const context = {
+      user: {},
+      userId: null,
+      token: {},
+    }
+
+    before(async () => {
+      context.user = user5
+      context.userId = user5._id
+    })
+
+    test('uses the authenticated user as version owner', async () => {
+      const article = await Article.create({
+        title: 'Versioned article',
+        owner: [context.userId],
+      })
+
+      const result = await ArticleMutation.createArticleVersion(
+        {},
+        {
+          articleId: article._id,
+          articleVersionInput: { major: true, userId: user2._id },
+        },
+        context
+      )
+
+      const version = await Version.findById(result.versions[0])
+      assert.equal(version.owner.toString(), user5._id.toString())
+      assert.equal(version.version, 1)
+    })
+
+    test('uses the authenticated user as version owner (deprecated nested mutation)', async () => {
+      const article = await Article.create({
+        title: 'Versioned article',
+        owner: [context.userId],
+      })
+
+      const result = await ArticleResolver.createVersion(
+        article,
+        { articleVersionInput: { message: 'v0.1', userId: user2._id } },
+        context
+      )
+
+      const version = await Version.findById(result.versions[0])
+      assert.equal(version.owner.toString(), user5._id.toString())
+      assert.equal(version.message, 'v0.1')
+    })
+  })
 })

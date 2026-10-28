@@ -458,8 +458,11 @@ module.exports = {
       context
     ) {
       const article = await getArticleByContext(articleId, context)
+      const { major, message } = articleVersionInput
       const result = await createVersion(article, {
-        ...articleVersionInput,
+        major,
+        message,
+        userId: context.userId,
         type: 'userAction',
       })
       if (result === false) {
@@ -623,9 +626,12 @@ module.exports = {
     },
 
     /** @deprecated Use createArticleVersion root mutation instead. */
-    async createVersion(article, { articleVersionInput }) {
+    async createVersion(article, { articleVersionInput }, context) {
+      const { major, message } = articleVersionInput
       const result = await createVersion(article, {
-        ...articleVersionInput,
+        major,
+        message,
+        userId: context.userId,
         type: 'userAction',
       })
       if (result === false) {

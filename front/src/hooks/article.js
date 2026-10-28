@@ -525,7 +525,6 @@ export function useArticleVersion({ versionId }) {
 
 export function useArticleVersionActions({ articleId }) {
   const sessionToken = useSelector((state) => state.sessionToken)
-  const activeUser = useSelector((state) => state.activeUser)
   const { mutate } = useMutateData({
     query: getArticleVersions,
     variables: { article: articleId },
@@ -534,7 +533,6 @@ export function useArticleVersionActions({ articleId }) {
     const response = await executeQuery({
       query: createArticleVersion,
       variables: {
-        userId: activeUser._id,
         articleId,
         major: version.major,
         message: version.description,

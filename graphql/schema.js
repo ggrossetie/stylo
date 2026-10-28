@@ -146,7 +146,7 @@ type Version {
 }
 
 input ArticleVersionInput {
-  userId: ID!
+  userId: ID @deprecated(reason: "Ignored, the version owner is the authenticated user.")
   major: Boolean
   message: String
 }

@@ -652,7 +652,7 @@ input ArticlePreviewInput {
 input ArticleVersionInput {
   major: Boolean
   message: String
-  userId: ID!
+  userId: ID @deprecated(reason: "Ignored, the version owner is the authenticated user.")
 }
 
 input CorpusFilterInput {
